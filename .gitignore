@@ -1,1 +1,4 @@
 .idea
+CMakeFiles
+*.o
+*.swp
