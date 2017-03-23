@@ -11,4 +11,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 ")
 
 add_executable(client src/client.cpp)
-add_executable(server src/serve.cpp)
+add_executable(server src/server.cpp)
