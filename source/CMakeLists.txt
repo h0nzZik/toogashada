@@ -3,6 +3,7 @@ project(toogashada)
 
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(SDL2 COMPONENTS ttf REQUIRED)
+find_package(Threads REQUIRED)
 
 # workaround for the trailing whitespace problem
 string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
@@ -14,9 +15,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 	-Wno-error=parentheses \
 	-Wno-error=unused-variable \
 	-Wno-error=unused-parameter \
+	-Wno-error=unused-private-field \
 ")
 
 include_directories(${Boost_INCLUDE_DIRS})
+
+## TODO find package Threads
 
 ## Server
 
@@ -29,11 +33,15 @@ target_link_libraries(server ${Boost_LIBRARIES})
 
 ## Client
 
-add_executable(client src/client.cpp)
+add_executable(client
+	./src/client.cpp
+	./src/ConnectionToServer.cpp
+)
 
 target_link_libraries(client
 	${Boost_LIBRARIES}
 	${SDL2_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
 	#	SDL2_ttf
 )
 
