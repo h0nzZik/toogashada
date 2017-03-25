@@ -11,12 +11,14 @@ class Connection : public IConnection {
 
 		// < IConnection >
 		void send(Message message) override;
-		void listen(std::function<void(Message)> handle) override;
+		void listen(IHandler & handler) override;
 		// </IConnection >
 
 	private:
 		void start_rx_header();
 		void start_rx_data();
+		void received(Message m);
+		bool whatIfDisconnected(boost::system::error_code const & error);
 
 		boost::asio::ip::tcp::socket & socket;
 
@@ -30,5 +32,5 @@ class Connection : public IConnection {
 		static_assert(sizeof(Header) == sizeof(rx_header_buffer), "Packed");
 
 		Message rx_message;
-		std::function<void(Message)> rx_handle;
+		IHandler * handler = nullptr;
 };

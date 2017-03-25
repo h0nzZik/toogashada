@@ -1,15 +1,17 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <set>
+#include <memory>
 
 #include <ctime>
+#include <csignal>
 
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
 #include "ConnectionToClient.hpp"
+#include "Messages.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -22,154 +24,111 @@ std::string make_daytime_string()
 	return ctime(&now);
 }
 
-#if 0
-class tcp_connection
-: public boost::enable_shared_from_this<tcp_connection>
+class tcp_server : private IConnection::IHandler
 {
 	public:
-		using pointer = boost::shared_ptr<tcp_connection>;
-
-		static pointer create(boost::asio::io_service& io_service)
-		{
-			return pointer(new tcp_connection(io_service));
-		}
-
-		tcp::socket& socket()
-		{
-			return _socket;
-		}
-
-		void start()
-		{
-			_remote = _socket.remote_endpoint();
-			cout << "Connection from IP " << _remote.address() << ", port " << _remote.port() << endl;
-			start_rx();
-			start_tx();
-		}
-
-		~tcp_connection() {
-			cout << "~tcp_connection()" << endl;
-			//auto remote = _socket.remote_endpoint();
-			//cout << "Connection closed " << remote.address() << ":" << remote.port() << endl;
-		}
-
-	private:
-		tcp_connection(boost::asio::io_service& io_service)
-			: _socket(io_service), _message{}, _recv_buffer{}
-		{
-		}
-
-		void start_tx() {
-			_message = make_daytime_string();
-
-			boost::asio::async_write(_socket, boost::asio::buffer(_message),
-					boost::bind(&tcp_connection::handle_write, shared_from_this(),
-						boost::asio::placeholders::error,
-						boost::asio::placeholders::bytes_transferred));
-
-		}
-
-		void start_rx() {
-			_socket.async_receive(
-					boost::asio::buffer(_recv_buffer),
-					boost::bind(&tcp_connection::handle_receive, shared_from_this(),
-						boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-
-		}
-
-		void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred)
-		{
-			if ((boost::asio::error::eof == error) ||
-					(boost::asio::error::connection_reset == error))
-			{
-				// handle the disconnect.
-				cout << "Client disconnected " << _remote.address() << ":" << _remote.port() << endl;
-				return;
-
-			}
-
-			cout << "Received " << bytes_transferred << " bytes." << endl;
-			// read the data 
-		}
-
-		void handle_write(const boost::system::error_code& /*error*/,
-				size_t /*bytes_transferred*/)
-		{
-			cout << "Write finished" << endl;
-		}
-
-		tcp::socket _socket;
-		tcp::endpoint _remote;
-		std::string _message;
-		std::array<char, 64> _recv_buffer;
-};
-#endif
-
-class tcp_server
-{
-	public:
-		tcp_server(boost::asio::io_service& io_service, int port)
+		tcp_server(int port)
 			: acceptor(io_service, tcp::endpoint(tcp::v4(), port))
 		{
 			start_accept();
 		}
 
+		~tcp_server();
+
+		void run() {
+			io_service.run();
+		}
+
+		void shutdown() {
+			io_service.stop();
+			// TODO implement this
+		}
+
 	private:
+
+		/* < IConnection::IHandler > */
+		void received(IConnection & connection, Message msg) override;
+		void disconnected(IConnection & connection) override;
+		/* < IConnection::IHandler > */
+
 		void start_accept()
 		{
-			ConnectionToClient::pointer new_connection =
-				ConnectionToClient::create(acceptor.get_io_service());
+			auto conn = new ConnectionToClient(acceptor.get_io_service());
 
-			acceptor.async_accept(
-					new_connection->socket(),
-					boost::bind(&tcp_server::handle_accept, this, new_connection,
-						boost::asio::placeholders::error));
+			// Capturing unique pointers is not easy
+			acceptor.async_accept(conn->socket(),
+					[this, conn](const boost::system::error_code & error){
+
+					if (!error)
+					{
+						cout << "Client " << conn->socket().remote_endpoint() << " connected." << endl;
+						connections.insert(conn);
+
+						conn->listen(*this);
+						// Send some hello message, followed by ping (TODO)
+						conn->send(Message{Tag::Hello, {1,2,3}});
+						send_him_a_few_polygons(*conn);
+					} else {
+						delete conn;
+					}
+
+					start_accept();
+			});
 		}
 
-		void handle_accept(ConnectionToClient::pointer new_connection,
-				const boost::system::error_code& error)
-		{
-			if (!error)
-			{
-				cout << "Client " << new_connection->socket().remote_endpoint() << "connected." << endl;
-				connections.push_back(new_connection);
-				new_connection->listen([new_connection](Message /*m*/) {
-					cout << "Server received message from " << new_connection->socket().remote_endpoint() << endl;
-
-					Message m;
-					m.tag = static_cast<Tag>(12); // why not?
-					m.data = Message::Data{ 3, 4, 5};
-					new_connection->send(move(m));
-	
-				});
-
-				//std::this_thread::sleep_for(2s);
-
-				// Send some hello message
-				Message m;
-				m.tag = static_cast<Tag>(25); // why not?
-				m.data = Message::Data{1, 2, 3, 4, 5};
-				new_connection->send(move(m));
-			}
-
-			start_accept();
+		void send_him_a_few_polygons(ConnectionToClient & client) {
+			MsgNewPolygonalObject npo;
+			npo.object_id = 25;
+			npo.points.push_back(IntPoint{10, 10});
+			npo.points.push_back(IntPoint{10, 20});
+			npo.points.push_back(IntPoint{20, 10});
+			client.send(npo.to_message());
 		}
 
+		boost::asio::io_service io_service;
 		tcp::acceptor acceptor;
-		std::vector<ConnectionToClient::pointer> connections;
+
+		// We do not use smart pointers to ease removal of items from set
+		std::set<ConnectionToClient *> connections;
 };
+
+tcp_server::~tcp_server() {
+	for (ConnectionToClient * conn : connections)
+		delete conn;
+}
+
+void tcp_server::received(IConnection & connection, Message /*msg*/) {
+	auto & conn = dynamic_cast<ConnectionToClient &>(connection);
+	cout << "Server received message from " << conn.socket().remote_endpoint() << endl;	
+}
+
+void tcp_server::disconnected(IConnection & connection) {
+	auto & conn = dynamic_cast<ConnectionToClient &>(connection);
+	cout << "Client " << conn.socket().remote_endpoint() << " disconnected." << endl;
+
+	cout << "Connections before: " << connections.size() << endl;
+	connections.erase(&conn);
+	cout << "Connections after: " << connections.size() << endl;
+}
+
+
+static tcp_server * p_server = nullptr;
+
+static void on_signal(int signal) {
+	if (!p_server)
+		return;
+
+	cout << "Signal " << signal << " caught." << endl;
+	p_server->shutdown();
+}
 
 void server(int port)
 {
-	boost::asio::io_service io_service;
-	tcp_server server(io_service, port);
-	io_service.run(); // TODO tohle potrebujeme i v klientovi!
-	cout << "Service stopped...?" << endl;
+	tcp_server server(port);
+	p_server = &server;
+	std::signal(SIGINT, on_signal);
+
+	server.run();
+	cout << "Server exited normally" << endl;
 }
-
-// Main class of the server
-class GameServer {
-
-};
-
 

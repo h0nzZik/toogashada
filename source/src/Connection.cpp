@@ -2,6 +2,7 @@
 #include <cstring> // std::memcpy
 #include <boost/array.hpp>
 
+#include "Tag.h"
 #include "Connection.h"
 
 using namespace std;
@@ -17,12 +18,23 @@ Connection::~Connection() {
 
 }
 
+bool Connection::whatIfDisconnected(boost::system::error_code const & error) {
+	if ((boost::asio::error::eof == error) || (boost::asio::error::connection_reset == error)) {
+		handler->disconnected(*this);
+		return true;
+	}
+
+	return false;
+}
+
 void Connection::start_rx_header() {
 	async_read(socket, boost::asio::buffer(rx_header_buffer), /*boost::asio::transfer_all(), */[this](
 				const boost::system::error_code& error,
 				std::size_t bytes_transferred){
 
-			cout << "async_read callback" << endl;
+			if (whatIfDisconnected(error))
+				return;
+
 			if (error) {
 				cout << "Reading message header failed" << endl;
 				throw boost::system::system_error(error);
@@ -33,7 +45,6 @@ void Connection::start_rx_header() {
 
 			Header rx_header;
 			memcpy(&rx_header, rx_header_buffer, sizeof(rx_header));
-			cout << "Rx header: tag=" << rx_header.tag << ", len=" << rx_header.len << endl;
 			rx_message = Message{};
 			rx_message.tag = static_cast<Tag>(rx_header.tag);
 			rx_message.data.resize(rx_header.len);
@@ -42,8 +53,9 @@ void Connection::start_rx_header() {
 						const boost::system::error_code& error,
 						std::size_t bytes_transferred){
 	
-					cout << "Received message from " << socket.remote_endpoint() << endl;
-					cout << "Bytes: " << bytes_transferred << endl;
+					if (whatIfDisconnected(error))
+						return;
+
 					if (error) {
 						cout << "Connection::rx error: " << error << endl;
 						throw boost::system::system_error(error);
@@ -52,10 +64,27 @@ void Connection::start_rx_header() {
 					if (bytes_transferred != rx_message.data.size())
 						throw std::runtime_error("Data problem");
 
-					rx_handle(std::move(rx_message));
+					received(std::move(rx_message));
 					start_rx_header();
 			});
 	});
+}
+
+void Connection::received(Message message) {
+	cout << "Received message from " << socket.remote_endpoint() << endl;
+	cout << "  tag=" << int(message.tag) << ", len=" << message.data.size() << endl;
+
+	switch (message.tag) {
+		case Tag::Ping:
+			cout << "Got ping" << endl;
+			message.tag = Tag::Pong;
+			send(std::move(message));
+			return;
+
+		default:
+			handler->received(*this, std::move(message));
+			break;
+	}
 }
 
 void Connection::send(Message message) {
@@ -65,18 +94,13 @@ void Connection::send(Message message) {
 	tx_header.len = message.data.size();
 	uint8_t tx_header_buf[sizeof(Header)];
 	memcpy(tx_header_buf, &tx_header, sizeof(Header));
-	try {
-		size_t cnt = write(socket, boost::asio::buffer(tx_header_buf));
-		cnt += write(socket, boost::asio::buffer(message.data));
-		cout << "Write done (" << cnt << " bytes)" << endl;
-	} catch (exception & e) {
-		cerr << "Connection::send() failed: " << e.what() << endl;
-	}
+	write(socket, boost::asio::buffer(tx_header_buf));
+	write(socket, boost::asio::buffer(message.data));
 }
 
-void Connection::listen(std::function<void(Message)> handle) {
+void Connection::listen(IHandler & handler) {
 	cout << "Listening on " << socket.local_endpoint() << " to " << socket.remote_endpoint() << endl;
-	rx_handle = handle;
+	this->handler = &handler;
 	start_rx_header();
 }
 

@@ -12,12 +12,7 @@ ConnectionToClient::ConnectionToClient(boost::asio::io_service & io_service) :
 }
 
 ConnectionToClient::~ConnectionToClient() {
-	;
-}
-
-ConnectionToClient::pointer ConnectionToClient::create(boost::asio::io_service& io_service)
-{
-	return pointer(new ConnectionToClient(io_service));
+	cout << "~ConnectionToClient()" << endl;
 }
 
 

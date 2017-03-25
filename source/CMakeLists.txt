@@ -21,16 +21,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 
 include_directories(${Boost_INCLUDE_DIRS})
 
+## Common server/client library
+
+add_library(ToogashadaCommon
+	./src/Connection.cpp
+	./src/Messages.cpp
+)
+
 ## Server
 
 add_executable(server
 	./src/server.cpp
 	./src/server_networking.cpp
-	./src/Connection.cpp
 	./src/ConnectionToClient.cpp
 )
 
 target_link_libraries(server
+	ToogashadaCommon
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 )
@@ -40,10 +47,10 @@ target_link_libraries(server
 add_executable(client
 	./src/client.cpp
 	./src/ConnectionToServer.cpp
-	./src/Connection.cpp
 )
 
 target_link_libraries(client
+	ToogashadaCommon
 	${Boost_LIBRARIES}
 	${SDL2_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
