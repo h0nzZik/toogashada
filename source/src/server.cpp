@@ -10,7 +10,7 @@ int main()
 	try {
 		server(2048 + 13);
 	} catch (std::exception& e)	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "main: " << e.what() << std::endl;
 	}
 }
 

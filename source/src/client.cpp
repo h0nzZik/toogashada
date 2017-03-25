@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <boost/asio.hpp>
 #include <string>
+#include <thread>
 
 #include "Message.h"
 #include "ConnectionToServer.h"
@@ -97,6 +98,8 @@ void ClientGui::handle_event(SDL_Event const & e) {
 
 		case SDL_USEREVENT:
 			handle_user_event(e.user);
+			break;
+
 		default:
 			break;
 	}
@@ -118,6 +121,19 @@ void ClientGui::handle_user_event(SDL_UserEvent const &e) {
 		return;
 
 	auto message = unique_ptr<Message>(static_cast<Message *>(e.data1));
+	cout << "From server: " << hex << static_cast<uint32_t>(message->tag) << "\n";
+
+	// TODO make separate function from this
+	cout << "[";
+	bool first = true;
+	for (uint8_t b : message->data) {
+		if (!first)
+			cout << " ";
+		first = false;
+
+		cout << hex << static_cast<int>(b);
+	}
+	cout << "]" << endl;
 }
 
 class Client {
@@ -141,7 +157,15 @@ void Client::run() {
 	conn.listen([this](Message msg) {
 		gui.on_message(std::move(msg));
 	});
+	conn.send(Message{static_cast<Tag>(24), {4, 5, 6}});
 	// TODO send 'hello' message
+	
+	// TODO tohle ve vlakne
+	// io_service.run();
+
+	thread network([&]{
+			conn.run();
+	});
 	gui.run();
 }
 
@@ -151,3 +175,4 @@ int main()
 	Client client;
 	client.run();
 }
+

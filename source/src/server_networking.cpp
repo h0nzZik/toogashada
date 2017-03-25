@@ -1,12 +1,18 @@
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include <ctime>
+
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 
+#include "ConnectionToClient.hpp"
+
 using namespace std;
+using namespace std::chrono_literals;
 using boost::asio::ip::tcp;
 
 std::string make_daytime_string()
@@ -16,6 +22,7 @@ std::string make_daytime_string()
 	return ctime(&now);
 }
 
+#if 0
 class tcp_connection
 : public boost::enable_shared_from_this<tcp_connection>
 {
@@ -96,6 +103,7 @@ class tcp_connection
 		std::string _message;
 		std::array<char, 64> _recv_buffer;
 };
+#endif
 
 class tcp_server
 {
@@ -109,8 +117,8 @@ class tcp_server
 	private:
 		void start_accept()
 		{
-			tcp_connection::pointer new_connection =
-				tcp_connection::create(acceptor.get_io_service());
+			ConnectionToClient::pointer new_connection =
+				ConnectionToClient::create(acceptor.get_io_service());
 
 			acceptor.async_accept(
 					new_connection->socket(),
@@ -118,26 +126,44 @@ class tcp_server
 						boost::asio::placeholders::error));
 		}
 
-		void handle_accept(tcp_connection::pointer new_connection,
+		void handle_accept(ConnectionToClient::pointer new_connection,
 				const boost::system::error_code& error)
 		{
 			if (!error)
 			{
-				new_connection->start();
+				cout << "Client " << new_connection->socket().remote_endpoint() << "connected." << endl;
+				connections.push_back(new_connection);
+				new_connection->listen([new_connection](Message /*m*/) {
+					cout << "Server received message from " << new_connection->socket().remote_endpoint() << endl;
+
+					Message m;
+					m.tag = static_cast<Tag>(12); // why not?
+					m.data = Message::Data{ 3, 4, 5};
+					new_connection->send(move(m));
+	
+				});
+
+				//std::this_thread::sleep_for(2s);
+
+				// Send some hello message
+				Message m;
+				m.tag = static_cast<Tag>(25); // why not?
+				m.data = Message::Data{1, 2, 3, 4, 5};
+				new_connection->send(move(m));
 			}
 
 			start_accept();
 		}
 
 		tcp::acceptor acceptor;
-		//std::vector<tcp_connection::pointer> connections;
+		std::vector<ConnectionToClient::pointer> connections;
 };
 
 void server(int port)
 {
 	boost::asio::io_service io_service;
 	tcp_server server(io_service, port);
-	io_service.run();
+	io_service.run(); // TODO tohle potrebujeme i v klientovi!
 	cout << "Service stopped...?" << endl;
 }
 
