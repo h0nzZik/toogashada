@@ -32,8 +32,8 @@ add_library(ToogashadaCommon
 ## Server
 
 add_executable(server
-	./src/server.cpp
-	./src/server_networking.cpp
+	./src/server_main.cpp
+	./src/Server.cpp
 	./src/ConnectionToClient.cpp
 )
 
@@ -48,6 +48,7 @@ target_link_libraries(server
 add_executable(client
 	./src/client.cpp
 	./src/ConnectionToServer.cpp
+	./src/ClientGui.cpp
 )
 
 target_link_libraries(client
