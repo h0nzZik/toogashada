@@ -1,13 +1,21 @@
+// Standard
 #include <stdexcept>
 #include <memory>
 #include <iostream>
-#include <SDL2/SDL.h>
-#include <boost/asio.hpp>
 #include <string>
 #include <thread>
 
+// Boost
+#include <boost/asio.hpp>
+
+// SDL2
+#include <SDL2/SDL.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
+
+// Project
 #include "Tag.h"
 #include "Message.h"
+#include "Messages.h"
 #include "ConnectionToServer.h"
 
 using namespace std;
@@ -28,6 +36,7 @@ class ClientGui {
 		void handle_user_event(SDL_UserEvent const &e);
 		bool quit = false;
 		SDL_Window * window;
+		SDL_Renderer * renderer;
 		uint32_t rcvd_message_event;
 };
 
@@ -48,9 +57,15 @@ ClientGui::ClientGui()
 	if (rcvd_message_event == static_cast<uint32_t>(-1))
 		throw std::runtime_error("Cannot register events");
 
-	auto screenSurface = SDL_GetWindowSurface( window );
-	SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x20, 0x80, 0xFF ) );
-	SDL_UpdateWindowSurface( window );
+
+	//auto screenSurface = SDL_GetWindowSurface( window );
+	//SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x20, 0x80, 0xFF ) );
+	//SDL_UpdateWindowSurface( window );
+
+	renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
+	if(!renderer)
+		throw std::runtime_error("Cannot create renderer: " + string(SDL_GetError()));
+	SDL_SetRenderDrawColor( renderer, 0xFF, 0xFF, 0xFF, 0xFF );
 }
 
 ClientGui::~ClientGui() {
@@ -92,12 +107,13 @@ void ClientGui::handle_event(SDL_Event const & e) {
 		case SDL_WINDOWEVENT:
 			cout << "Window event" << endl;
 			break;
-
+	
 		case SDL_MOUSEMOTION:
 			cout << "Mouse at [" << e.motion.x << "," << e.motion.y << "]" << endl;
 			break;
 
 		case SDL_USEREVENT:
+			cout << "User event" << endl;
 			handle_user_event(e.user);
 			break;
 
@@ -118,23 +134,49 @@ void ClientGui::on_message(Message msg) {
 }
 
 void ClientGui::handle_user_event(SDL_UserEvent const &e) {
-	if (e.code != Sint32(rcvd_message_event))
+	cout << "User event code: " << e.type << endl;
+	if (e.type != rcvd_message_event) {
+		cout << "User event: unknown code" << endl;
 		return;
+	}
+
+	cout << "User event with correct code" << endl;
 
 	auto message = unique_ptr<Message>(static_cast<Message *>(e.data1));
-	cout << "From server: " << hex << static_cast<uint32_t>(message->tag) << "\n";
+	cout << "From server: " << *message << "\n";
+	switch(message->tag) {
+		case Tag::Hello:
+			cout << "Server says hello." << endl;
+			break;
 
-	// TODO make separate function from this
-	cout << "[";
-	bool first = true;
-	for (uint8_t b : message->data) {
-		if (!first)
-			cout << " ";
-		first = false;
+		case Tag::NewPolygonalObject:
+			{
+				// TODO draw it
+				auto obj = MsgNewPolygonalObject::from(*message);
+				//boxRGBA(surface, 
+				cout << "PolygonalObject" << endl;
+				//boxRGBA(renderer, 10, 10, 50, 30, 255, 200, 0, 128);
 
-		cout << hex << static_cast<int>(b);
+				size_t const n = obj.points.size();
+				auto xs = make_unique<Sint16[]>(n);
+				auto ys = make_unique<Sint16[]>(n);
+				for (size_t i = 0; i < n; i++) {
+					xs[i] = obj.points[i].x;
+					ys[i] = obj.points[i].y;
+				}
+				polygonRGBA(renderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
+				/*
+				int polygonRGBA(SDL_Surface* dst, Sint16* vx, Sint16* vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a); */
+				SDL_RenderPresent( renderer );
+
+
+
+			}
+			break;
+
+		default:
+			break;
 	}
-	cout << "]" << endl;
 }
 
 class Client : private IConnection::IHandler {
@@ -155,7 +197,7 @@ class Client : private IConnection::IHandler {
 
 void Client::received(IConnection & connection, Message msg) {
 	auto & conn = dynamic_cast<ConnectionToServer &>(connection);
-	cout << "Server received message from " << conn.socket().remote_endpoint() << endl;	
+	cout << "Client received message from " << conn.socket().remote_endpoint() << endl;	
 	gui.on_message(std::move(msg));
 }
 

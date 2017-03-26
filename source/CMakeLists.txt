@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(toogashada)
 
 find_package(Boost COMPONENTS system REQUIRED)
-find_package(SDL2 COMPONENTS ttf REQUIRED)
+find_package(SDL2 COMPONENTS ttf gfx REQUIRED)
 find_package(Threads REQUIRED)
 
 # workaround for the trailing whitespace problem
@@ -26,6 +26,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_library(ToogashadaCommon
 	./src/Connection.cpp
 	./src/Messages.cpp
+	./src/Message.cpp
 )
 
 ## Server
@@ -54,6 +55,7 @@ target_link_libraries(client
 	${Boost_LIBRARIES}
 	${SDL2_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
+	SDL2_gfx
 	#	SDL2_ttf
 )
 

@@ -79,9 +79,9 @@ class tcp_server : private IConnection::IHandler
 		void send_him_a_few_polygons(ConnectionToClient & client) {
 			MsgNewPolygonalObject npo;
 			npo.object_id = 25;
-			npo.points.push_back(IntPoint{10, 10});
-			npo.points.push_back(IntPoint{10, 20});
-			npo.points.push_back(IntPoint{20, 10});
+			npo.points.push_back(IntPoint{40, 40});
+			npo.points.push_back(IntPoint{40, 120});
+			npo.points.push_back(IntPoint{120, 40});
 			client.send(npo.to_message());
 		}
 
@@ -106,9 +106,7 @@ void tcp_server::disconnected(IConnection & connection) {
 	auto & conn = dynamic_cast<ConnectionToClient &>(connection);
 	cout << "Client " << conn.socket().remote_endpoint() << " disconnected." << endl;
 
-	cout << "Connections before: " << connections.size() << endl;
 	connections.erase(&conn);
-	cout << "Connections after: " << connections.size() << endl;
 }
 
 

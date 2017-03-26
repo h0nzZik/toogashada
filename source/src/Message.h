@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <stdexcept>
 #include <stdint.h>
 #include <type_traits>
@@ -22,6 +23,8 @@ struct Message {
 	Tag tag;
 	Data data;
 };
+
+std::ostream & operator<<(std::ostream & o, Message const &m);
 
 template < typename T >
 void append(Message & m, T const & object) {

@@ -8,7 +8,7 @@ enum class Tag : uint32_t {
 	Pong, // reply to ping, with the same data
 	GoodBye, // Sent by both client and server before shutting the connection down.
 	NewPolygonalObject, // Sent by server. Data: 4B ID of object
-	// TODO add some tags here
+	ObjectPosition, // 4B object ID, position, speed
 };
 
 
