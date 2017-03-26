@@ -81,7 +81,8 @@ class tcp_server : private IConnection::IHandler
 			npo.object_id = 25;
 			npo.points.push_back(IntPoint{40, 40});
 			npo.points.push_back(IntPoint{40, 120});
-			npo.points.push_back(IntPoint{120, 40});
+			npo.points.push_back(IntPoint{70, 140});
+			npo.points.push_back(IntPoint{140,140});
 			client.send(npo.to_message());
 		}
 
