@@ -27,6 +27,7 @@ add_library(ToogashadaCommon
 	./src/Connection.cpp
 	./src/Messages.cpp
 	./src/Message.cpp
+	./src/TwoDimensionalObjectManager.cpp
 )
 
 ## Server

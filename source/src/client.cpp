@@ -20,13 +20,6 @@ using namespace std;
 
 class TwoDimObject;
 
-class ObjectManager {
-	public:
-		TwoDimObject & getObjectById(uint32_t id);
-	private:
-		std::map<uint32_t, TwoDimObject> _objects;
-};
-
 class Client : private IConnection::IHandler {
 	public:
 		Client();
