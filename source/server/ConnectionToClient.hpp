@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Connection.h"
+#include <common/Connection.h>
 
 class ConnectionToClient : public Connection
 {

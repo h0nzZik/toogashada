@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "Connection.h"
+#include <common/Connection.h>
 
 class ConnectionToServer : public Connection {
 	public:

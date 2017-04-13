@@ -1,8 +1,8 @@
 #ifndef SRC_CLIENTPLAYER_H_
 #define SRC_CLIENTPLAYER_H_
 
-#include "Point.h"
-#include "Angle.h"
+#include <common/Point.h>
+#include <common/Angle.h>
 
 struct ClientPlayer {
 	ClientPlayer() :

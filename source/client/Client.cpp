@@ -1,7 +1,9 @@
 #include <iostream>
 #include <thread>
+
+#include <common/Tag.h>
+
 #include "Client.h"
-#include "Tag.h"
 
 using namespace std;
 

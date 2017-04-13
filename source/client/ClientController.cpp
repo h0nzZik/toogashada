@@ -6,12 +6,13 @@
 #include <SDL.h>
 
 // project
+#include <common/IConnection.h>
+#include <common/Message.h>
+#include <common/Messages.h>
+#include <common/Tag.h>
+
 #include "ClientGui.h"
-#include "IConnection.h"
-#include "Message.h"
-#include "Messages.h"
 #include "RemoteServerWrapper.h"
-#include "Tag.h"
 
 // self
 #include "ClientController.h"

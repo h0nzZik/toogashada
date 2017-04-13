@@ -3,10 +3,11 @@
 #include <set>
 #include <boost/asio.hpp>
 
-#include "IConnection.h"
+#include <common/IConnection.h>
+#include <common/Messages.h>
+#include <common/GameObjectManager.h>
+
 #include "ConnectionToClient.hpp"
-#include "Messages.h"
-#include "GameObjectManager.h"
 
 class Server : private IConnection::IHandler
 {

@@ -2,7 +2,7 @@
 #define SRC_CLIENTCONTROLLER_H_
 
 #include <mutex>
-#include "GameObjectManager.h"
+#include <common/GameObjectManager.h>
 #include "ClientPlayer.h"
 
 class ClientGui;

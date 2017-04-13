@@ -24,18 +24,24 @@ include_directories(${Boost_INCLUDE_DIRS})
 ## Common server/client library
 
 add_library(ToogashadaCommon
-	./src/Connection.cpp
-	./src/Messages.cpp
-	./src/Message.cpp
-	./src/GameObjectManager.cpp
+	./common/Connection.cpp
+	./common/GameObjectManager.cpp
+	./common/Message.cpp
+	./common/TwoDimensionalObject.cpp
+	./common/Messages.cpp
+)
+
+target_include_directories(ToogashadaCommon
+	PUBLIC
+    	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 ## Server
 
 add_executable(server
-	./src/server_main.cpp
-	./src/Server.cpp
-	./src/ConnectionToClient.cpp
+	./server/ConnectionToClient.cpp
+	./server/Server.cpp
+	./server/server_main.cpp
 )
 
 target_link_libraries(server
@@ -47,12 +53,12 @@ target_link_libraries(server
 ## Client
 
 add_executable(client
-	./src/Client.cpp
-	./src/ClientGui.cpp
-	./src/client_main.cpp
-	./src/ClientController.cpp
-	./src/ConnectionToServer.cpp
-	./src/RemoteServerWrapper.cpp
+	./client/client_main.cpp
+	./client/Client.cpp
+	./client/ClientController.cpp
+	./client/ConnectionToServer.cpp
+	./client/RemoteServerWrapper.cpp
+	./client/ClientGui.cpp
 )
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})

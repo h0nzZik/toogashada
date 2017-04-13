@@ -7,9 +7,10 @@
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h>
 
-#include "Tag.h"
-#include "Message.h"
-#include "Messages.h"
+#include <common/Tag.h>
+#include <common/Message.h>
+#include <common/Messages.h>
+
 #include "ClientGui.h"
 
 using namespace std;

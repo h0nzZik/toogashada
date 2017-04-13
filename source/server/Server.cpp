@@ -64,6 +64,13 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	client.send(Message{Tag::Hello, {1,2,3}});
 	send_him_a_few_polygons(client);
 
+	uint32_t const object_id = gameObjects.get_fresh_id();
+	auto object = make_unique<GameObject>(object_id);
+	gameObjects.insert(std::move(object));
+}
+
+void Server::broadcast(Message msg) {
+
 }
 
 void Server::send_him_a_few_polygons(ConnectionToClient & client) {

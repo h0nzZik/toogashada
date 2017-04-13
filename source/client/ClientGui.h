@@ -3,7 +3,7 @@
 #include <vector>
 #include <SDL.h>
 
-#include "Point.h"
+#include <common/Point.h>
 
 struct Message;
 
