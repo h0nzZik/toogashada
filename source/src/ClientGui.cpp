@@ -4,8 +4,8 @@
 #include <memory>
 
 // SDL2
-#include <SDL2/SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL.h>
+#include <SDL2_gfxPrimitives.h>
 
 #include "Tag.h"
 #include "Message.h"
@@ -123,12 +123,7 @@ void ClientGui::handle_user_event(SDL_UserEvent const &e) {
 					ys[i] = obj.points[i].y;
 				}
 				polygonRGBA(renderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
-				/*
-				int polygonRGBA(SDL_Surface* dst, Sint16* vx, Sint16* vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a); */
 				SDL_RenderPresent( renderer );
-
-
-
 			}
 			break;
 

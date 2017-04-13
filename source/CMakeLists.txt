@@ -52,6 +52,7 @@ add_executable(client
 	./src/ClientGui.cpp
 )
 
+target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(client
 	ToogashadaCommon
 	${Boost_LIBRARIES}
