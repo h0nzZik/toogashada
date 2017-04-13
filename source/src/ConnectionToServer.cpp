@@ -11,7 +11,7 @@ ConnectionToServer::ConnectionToServer(string host, string port) :
 	_socket{io_service}
 {
 	tcp::resolver resolver(io_service);
-	tcp::resolver::query query(host, port /*"2061"*/);
+	tcp::resolver::query query(host, port);
 	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 	boost::asio::connect(_socket, endpoint_iterator);
 }

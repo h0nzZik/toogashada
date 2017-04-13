@@ -2,13 +2,12 @@
 
 #include <stdint.h>
 #include "Point.h"
+#include "Angle.h"
 
 class GameObject {
 	public:
 		explicit GameObject(uint32_t object_id) : _object_id(object_id) {}
 		virtual ~GameObject() = default;
-
-		using Angle = int; // -180 to +179
 
 		uint32_t object_id() const { return _object_id; }
 

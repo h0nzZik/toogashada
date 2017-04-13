@@ -6,6 +6,7 @@
 #include "IConnection.h"
 #include "ConnectionToClient.hpp"
 #include "Messages.h"
+#include "GameObjectManager.h"
 
 class Server : private IConnection::IHandler
 {
@@ -22,8 +23,10 @@ class Server : private IConnection::IHandler
 		void received(IConnection & connection, Message msg) override;
 		void disconnected(IConnection & connection) override;
 		/* < IConnection::IHandler > */
+		void broadcast(Message msg);
 
 		void start_accept();
+		void newClientConnected(ConnectionToClient & client);
 
 		void send_him_a_few_polygons(ConnectionToClient & client);
 
@@ -32,6 +35,7 @@ class Server : private IConnection::IHandler
 
 		// We do not use smart pointers to ease removal of items from set
 		std::set<ConnectionToClient *> connections;
+		GameObjectManager gameObjects;
 };
 
 

@@ -4,6 +4,7 @@
 #include "ConnectionToServer.h"
 #include "ClientGui.h"
 #include "ClientController.h"
+#include "RemoteServerWrapper.h"
 
 class Client : private IConnection::IHandler {
 public:
@@ -19,6 +20,7 @@ private:
 
 	ClientGui clientGui;
 	ConnectionToServer serverConnection;
+	RemoteServerWrapper remoteServerWrapper;
 	ClientController clientController;
 };
 

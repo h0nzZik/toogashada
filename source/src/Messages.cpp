@@ -12,29 +12,73 @@ Message MsgNewPolygonalObject::to_message() const {
 
 	append(msg, object_id);
 	append(msg, center);
-	msg.data.push_back(uint8_t(shape.size()));
-	for (IntPoint const & p : shape) {
-		append(msg, p);
-	}
+	append(msg, shape);
 
 	return msg;
 }
 
-MsgNewPolygonalObject MsgNewPolygonalObject::from(Message msg) {
+MsgNewPolygonalObject MsgNewPolygonalObject::from(Message const & msg) {
 	if (msg.tag != tag)
 		throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
 
 	Deserializer d{msg};
 
 	MsgNewPolygonalObject npo;
-	npo.object_id = d.take<uint32_t>();
-	npo.center = d.take<IntPoint>();
-	npo.shape.resize(d.take<uint8_t>());
-	for (IntPoint & p : npo.shape)
-		p = d.take<IntPoint>();
+	npo.object_id = Take<uint32_t>::from(d);
+	npo.center = Take<IntPoint>::from(d);
+	npo.shape = Take<vector<IntPoint>>::from(d);
 
 	if (!d.empty())
 		throw std::range_error("Message should be now empty, but it is not!");
 
 	return npo;
+}
+
+Message MsgNewPlayer::to_message() const {
+	if (player_name.length() > 255)
+		throw std::length_error("Player name can be at most 255 characters long");
+
+	Message msg;
+	msg.tag = tag;
+	append(msg, player_id);
+	append(msg, object_id);
+	append(msg, player_name);
+	return msg;
+}
+
+MsgNewPlayer MsgNewPlayer::from(Message const & msg) {
+	if (msg.tag != tag)
+		throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
+
+	Deserializer d{msg};
+	MsgNewPlayer mnp;
+	mnp.player_id = Take<uint32_t>::from(d);
+	mnp.object_id = Take<uint32_t>::from(d);
+	mnp.player_name = Take<string>::from(d);
+
+	if (!d.empty())
+		throw std::range_error("Message should be now empty, but it is not!");
+
+	return mnp;
+}
+
+Message MsgSetPlayerMovement::to_message() const {
+	Message msg;
+	msg.tag = tag;
+	append(msg, *this);
+	return msg;
+}
+
+MsgSetPlayerMovement MsgSetPlayerMovement::from(Message const & msg)
+{
+	if (msg.tag != tag)
+		throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
+
+	Deserializer d{msg};
+	MsgSetPlayerMovement movement = d.take<MsgSetPlayerMovement>();
+
+	if (!d.empty())
+		throw std::range_error("Message should be now empty, but it is not!");
+
+	return movement;
 }

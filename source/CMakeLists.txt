@@ -52,6 +52,7 @@ add_executable(client
 	./src/client_main.cpp
 	./src/ClientController.cpp
 	./src/ConnectionToServer.cpp
+	./src/RemoteServerWrapper.cpp
 )
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})

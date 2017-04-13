@@ -43,8 +43,6 @@ void ClientGui::update_gui() {
 }
 
 void ClientGui::clear_gui() {
-	// TODO
-	//cout << "Clear gui" << endl;
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
 }

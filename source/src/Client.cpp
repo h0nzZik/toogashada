@@ -8,7 +8,8 @@ using namespace std;
 Client::Client() :
 	clientGui{},
 	serverConnection{"localhost", "2061"},
-	clientController{clientGui}
+	remoteServerWrapper{serverConnection},
+	clientController{clientGui, remoteServerWrapper}
 {
 	;
 }

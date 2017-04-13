@@ -7,8 +7,10 @@
 
 // project
 #include "ClientGui.h"
+#include "IConnection.h"
 #include "Message.h"
 #include "Messages.h"
+#include "RemoteServerWrapper.h"
 #include "Tag.h"
 
 // self
@@ -16,8 +18,8 @@
 
 using namespace std;
 
-ClientController::ClientController(ClientGui & clientGui) :
-	clientGui(clientGui), quit{false}
+ClientController::ClientController(ClientGui & clientGui, RemoteServerWrapper & server) :
+	clientGui(clientGui), remoteServer{server}, quit{false}
 {
 
 }
@@ -73,6 +75,13 @@ void ClientController::redraw() {
 	clientGui.update_gui();
 }
 
+
+/**
+ * A note about how we compute object positions.
+ * Server periodically sends the authoritative information about object positions.
+ * However
+ */
+
 void ClientController::handle_event(SDL_Event const & e) {
 	switch(e.type) {
 		case SDL_QUIT:
@@ -87,7 +96,81 @@ void ClientController::handle_event(SDL_Event const & e) {
 			cout << "Mouse at [" << e.motion.x << "," << e.motion.y << "]" << endl;
 			break;
 
+		case SDL_KEYDOWN:
+			if (e.key.repeat == 0)
+				handleKeyPress(e.key.keysym.scancode);
+			break;
+
+		case SDL_KEYUP:
+			handleKeyRelease(e.key.keysym.scancode);
+			break;
+
 		default:
 			break;
 	}
+}
+
+void ClientController::handleKeyPress(SDL_Scancode code) {
+	cout << "keydown: " << code << endl;
+	Message msg;
+
+	if (code == config.key_down)
+	{
+		msg.tag = Tag::PlayerMovesBackward;
+		pressedKeys.key_down = true;
+	}
+	else if (code == config.key_left)
+	{
+		msg.tag = Tag::PlayerMovesLeft;
+		pressedKeys.key_left = true;
+	}
+	else if (code == config.key_right)
+	{
+		msg.tag = Tag::PlayerMovesRight;
+		pressedKeys.key_right = true;
+	}
+	else if (code == config.key_up)
+	{
+		msg.tag = Tag::PlayerMovesForward;
+		pressedKeys.key_up = true;
+	}
+	else
+		return;
+
+	remoteServer.conn().send(std::move(msg));
+}
+
+void ClientController::handleKeyRelease(SDL_Scancode code) {
+	cout << "keyup: " << code << endl;
+
+	if (code == config.key_down)
+	{
+		pressedKeys.key_down = false;
+	}
+	else if (code == config.key_left)
+	{
+		pressedKeys.key_left = false;
+	}
+	else if (code == config.key_right)
+	{
+		pressedKeys.key_right = false;
+	}
+	else if (code == config.key_up)
+	{
+		pressedKeys.key_up = false;
+	}
+	else
+		return;
+
+	if (!pressedKeys.key_down && !pressedKeys.key_up &&
+			!pressedKeys.key_left && !pressedKeys.key_right)
+		remoteServer.conn().send(Message(Tag::PlayerStops));
+}
+
+ClientController::Config::Config()
+{
+	key_up = SDL_SCANCODE_W;
+	key_down = SDL_SCANCODE_S;
+	key_left = SDL_SCANCODE_A;
+	key_right = SDL_SCANCODE_D;
 }

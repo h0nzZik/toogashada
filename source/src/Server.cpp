@@ -51,15 +51,19 @@ void Server::start_accept() {
 				connections.insert(conn);
 
 				conn->listen(*this);
-				// Send some hello message, followed by ping (TODO)
-				conn->send(Message{Tag::Hello, {1,2,3}});
-				send_him_a_few_polygons(*conn);
+				newClientConnected(*conn);
 			} else {
 				delete conn;
 			}
 
 			start_accept();
 	});
+}
+
+void Server::newClientConnected(ConnectionToClient & client) {
+	client.send(Message{Tag::Hello, {1,2,3}});
+	send_him_a_few_polygons(client);
+
 }
 
 void Server::send_him_a_few_polygons(ConnectionToClient & client) {
