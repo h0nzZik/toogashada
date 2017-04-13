@@ -65,10 +65,10 @@ void Server::start_accept() {
 void Server::send_him_a_few_polygons(ConnectionToClient & client) {
 	MsgNewPolygonalObject npo;
 	npo.object_id = 25;
-	npo.points.push_back(IntPoint{40, 40});
-	npo.points.push_back(IntPoint{40, 120});
-	npo.points.push_back(IntPoint{70, 140});
-	npo.points.push_back(IntPoint{140,140});
+	npo.shape.push_back(IntPoint{40, 40});
+	npo.shape.push_back(IntPoint{40, 120});
+	npo.shape.push_back(IntPoint{70, 140});
+	npo.shape.push_back(IntPoint{140,140});
 	client.send(npo.to_message());
 }
 

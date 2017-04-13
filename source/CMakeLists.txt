@@ -27,7 +27,7 @@ add_library(ToogashadaCommon
 	./src/Connection.cpp
 	./src/Messages.cpp
 	./src/Message.cpp
-	./src/TwoDimensionalObjectManager.cpp
+	./src/GameObjectManager.cpp
 )
 
 ## Server
@@ -47,9 +47,11 @@ target_link_libraries(server
 ## Client
 
 add_executable(client
-	./src/client.cpp
-	./src/ConnectionToServer.cpp
+	./src/Client.cpp
 	./src/ClientGui.cpp
+	./src/client_main.cpp
+	./src/ClientController.cpp
+	./src/ConnectionToServer.cpp
 )
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})

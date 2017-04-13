@@ -12,16 +12,13 @@ class ClientGui {
 		ClientGui();
 		~ClientGui();
 
-		void run();
-		void on_message(Message msg);
-		void render_polygon(std::vector<IntPoint> const & points);
+		void clear_gui();
+		void update_gui();
+		void render_polygon(IntPoint center, std::vector<IntPoint> const & points);
 
 	private:
 		void handle_event(SDL_Event const & e);
-		void handle_user_event(SDL_UserEvent const &e);
-		bool quit = false;
 		SDL_Window * window;
 		SDL_Renderer * renderer;
-		uint32_t rcvd_message_event;
 };
 

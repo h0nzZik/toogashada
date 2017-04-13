@@ -11,9 +11,15 @@ struct MsgNewPolygonalObject {
 	static constexpr Tag tag = Tag::NewPolygonalObject;
 	
 	uint32_t object_id;
-	std::vector<IntPoint> points;
+	IntPoint center;
+	std::vector<IntPoint> shape;
 
 	Message to_message() const;
 
 	static MsgNewPolygonalObject from(Message msg);
+};
+
+struct MsgNewObjectPosition {
+	uint32_t object_id;
+	IntPoint new_center;
 };

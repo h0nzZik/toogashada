@@ -4,15 +4,16 @@
 using namespace std;
 
 Message MsgNewPolygonalObject::to_message() const {
-	if (points.size() > 255)
+	if (shape.size() > 255)
 		throw std::length_error("Polygonal objects can consist of 255 points at most.");
 
 	Message msg;
 	msg.tag = tag;
 
 	append(msg, object_id);
-	msg.data.push_back(uint8_t(points.size()));
-	for (IntPoint const & p : points) {
+	append(msg, center);
+	msg.data.push_back(uint8_t(shape.size()));
+	for (IntPoint const & p : shape) {
 		append(msg, p);
 	}
 
@@ -27,8 +28,9 @@ MsgNewPolygonalObject MsgNewPolygonalObject::from(Message msg) {
 
 	MsgNewPolygonalObject npo;
 	npo.object_id = d.take<uint32_t>();
-	npo.points.resize(d.take<uint8_t>());
-	for (IntPoint & p : npo.points)
+	npo.center = d.take<IntPoint>();
+	npo.shape.resize(d.take<uint8_t>());
+	for (IntPoint & p : npo.shape)
 		p = d.take<IntPoint>();
 
 	if (!d.empty())
