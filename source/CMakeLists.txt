@@ -25,7 +25,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 add_library(ToogashadaCommon
 	./common/Connection.cpp
-	./common/GameObjectManager.cpp
 	./common/Message.cpp
 	./common/TwoDimensionalObject.cpp
 	./common/Messages.cpp
