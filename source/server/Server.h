@@ -32,7 +32,7 @@ class Server : private IConnection::IHandler
 		void start_accept();
 		void newClientConnected(ConnectionToClient & client);
 
-		static IntVector toVector(Player::Movement movement);
+		static Vector toVector(Player::Movement movement);
 		static Message createMessage_NewGameObject(GameObject const & object);
 		static Message createMessage_NewObjectPosition(GameObject const & object);
 		static Message createMessage_NewPlayer(Player const & player);

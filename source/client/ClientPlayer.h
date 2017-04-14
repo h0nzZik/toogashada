@@ -1,8 +1,8 @@
 #ifndef SRC_CLIENTPLAYER_H_
 #define SRC_CLIENTPLAYER_H_
 
-#include <common/Point.h>
 #include <common/Angle.h>
+#include <common/GPoint.h>
 
 struct ClientPlayer {
 	ClientPlayer() :
@@ -14,8 +14,8 @@ struct ClientPlayer {
 		;
 	}
 
-	IntPoint position;
-	IntPoint speed;
+	Point position;
+	Point speed;
 	Angle angularPosition;
 	AngularSpeed angularSpeed;
 };

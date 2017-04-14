@@ -1,7 +1,7 @@
 #pragma once
 
+#include <common/GPoint.h>
 #include <stdint.h>
-#include "Point.h"
 #include "Angle.h"
 
 class GameObject {
@@ -11,12 +11,12 @@ class GameObject {
 
 		uint32_t id() const { return _object_id; }
 
-		IntPoint center;
-		std::vector<IntPoint> shape; // this should be immutable
+		Point center;
+		std::vector<Point> shape; // this should be immutable
 #if 0
 	protected:
-		IntPoint _center;
-		IntPoint _speed;
+		Point _center;
+		Point _speed;
 		Angle _angle;
 		Angle _angular_speed;
 #endif

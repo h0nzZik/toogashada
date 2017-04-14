@@ -1,19 +1,19 @@
 #pragma once
 
+#include <common/GPoint.h>
 #include <stdint.h>
 #include <vector>
 
 #include "Tag.h"
 #include "Message.h"
-#include "Point.h"
 #include "Angle.h"
 
 struct MsgNewPolygonalObject {
 	static constexpr Tag tag = Tag::NewPolygonalObject;
 	
 	uint32_t object_id;
-	IntPoint center;
-	std::vector<IntPoint> shape;
+	Point center;
+	std::vector<Point> shape;
 
 	Message to_message() const;
 
@@ -22,7 +22,7 @@ struct MsgNewPolygonalObject {
 
 struct MsgObjectPosition {
 	uint32_t object_id;
-	IntPoint new_center;
+	Point new_center;
 
 	static constexpr Tag tag = Tag::ObjectPosition;
 	Message to_message() const;
@@ -40,7 +40,7 @@ struct MsgNewPlayer {
 };
 
 struct MsgSetPlayerMovement {
-	IntPoint speed;
+	Point speed;
 	Angle angle;
 	AngularSpeed angularSpeed;
 

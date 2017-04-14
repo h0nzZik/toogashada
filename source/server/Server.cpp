@@ -59,7 +59,7 @@ void Server::playerMoves(ConnectionToClient & client, Player::Movement movement)
 	broadcast(createMessage_NewObjectPosition(player.gameObject()));
 }
 
-IntVector Server::toVector(Player::Movement movement) {
+Vector Server::toVector(Player::Movement movement) {
 	switch(movement) {
 	case Player::Movement::Left:
 		return {-5, 0};
@@ -124,7 +124,7 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	GameObject & object = *_object;
 	gameObjects.insert(std::move(_object));
 	object.shape = playerShape;
-	object.center = {rand() % 200, rand() % 200};
+	object.center = {Scalar(rand() % 200), Scalar(rand() % 200)};
 
 	auto const player_id = players.get_fresh_id();
 	auto _player = make_unique<Player>(player_id, object);
@@ -181,10 +181,10 @@ void Server::broadcast(Message msg) {
 void Server::send_him_a_few_polygons(ConnectionToClient & client) {
 	MsgNewPolygonalObject npo;
 	npo.object_id = 25;
-	npo.shape.push_back(IntPoint{40, 40});
-	npo.shape.push_back(IntPoint{40, 120});
-	npo.shape.push_back(IntPoint{70, 140});
-	npo.shape.push_back(IntPoint{140,140});
+	npo.shape.push_back(Point{40, 40});
+	npo.shape.push_back(Point{40, 120});
+	npo.shape.push_back(Point{70, 140});
+	npo.shape.push_back(Point{140,140});
 	client.send(npo.to_message());
 }
 

@@ -1,19 +1,19 @@
 #pragma once
 
 // Standard
+#include <common/GPoint.h>
 #include <vector>
 
 // Common
-#include <common/Point.h>
 
 template < typename T >
-using PolygonalShape = std::vector<Point<T>>;
+using GPolygonalShape = std::vector<GPoint<T>>;
 
 template < typename T >
-PolygonalShape<T> & operator+=(PolygonalShape<T> & shape, Vector<T> const &vec) {
-	for(Point<T> & p : shape)
+GPolygonalShape<T> & operator+=(GPolygonalShape<T> & shape, GVector<T> const &vec) {
+	for(GPoint<T> & p : shape)
 		p += vec;
 	return *shape;
 }
 
-using IntPolygonalShape = PolygonalShape<int>;
+using IntPolygonalShape = GPolygonalShape<Scalar>;

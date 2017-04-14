@@ -27,8 +27,8 @@ MsgNewPolygonalObject MsgNewPolygonalObject::from(Message const & msg) {
 
 	MsgNewPolygonalObject npo;
 	npo.object_id = Take<uint32_t>::from(d);
-	npo.center = Take<IntPoint>::from(d);
-	npo.shape = Take<vector<IntPoint>>::from(d);
+	npo.center = Take<Point>::from(d);
+	npo.shape = Take<vector<Point>>::from(d);
 
 	if (!d.empty())
 		throw std::range_error("Message should be now empty, but it is not!");

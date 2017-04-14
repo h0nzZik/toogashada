@@ -50,7 +50,7 @@ void ClientGui::clear_gui() {
 }
 
 
-void ClientGui::render_polygon(IntPoint center, std::vector<IntPoint> const & points) {
+void ClientGui::render_polygon(Point center, std::vector<Point> const & points) {
 	size_t const n = points.size();
 	auto xs = make_unique<Sint16[]>(n);
 	auto ys = make_unique<Sint16[]>(n);
