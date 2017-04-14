@@ -13,7 +13,7 @@ struct Vector {
 };
 
 template < typename T >
-Point<T> & operator+=(Point<T> & p, Vector<T> const &v) {
+Point<T> & operator+=(Point<T> & p, Vector<T> v) {
 	p.x += v.x;
 	p.y += v.y;
 	return p;
@@ -40,5 +40,5 @@ Vector<T> operator-(Point<T> const & p1, Point<T> const &p2) {
 
 
 using IntPoint = Point<int>;
-using IntVector = Point<int>;
+using IntVector = Vector<int>;
 

@@ -3,6 +3,8 @@
 
 using namespace std;
 
+// TODO reduce duplicated code
+
 Message MsgNewPolygonalObject::to_message() const {
 	if (shape.size() > 255)
 		throw std::length_error("Polygonal objects can consist of 255 points at most.");
@@ -32,6 +34,27 @@ MsgNewPolygonalObject MsgNewPolygonalObject::from(Message const & msg) {
 		throw std::range_error("Message should be now empty, but it is not!");
 
 	return npo;
+}
+
+Message MsgObjectPosition::to_message() const {
+	Message msg;
+	msg.tag = tag;
+	append(msg, *this);
+	return msg;
+}
+
+MsgObjectPosition MsgObjectPosition::from(Message const &msg) {
+	if (msg.tag != tag)
+		throw std::domain_error("Message tag does not fit MsgObjectPosition");
+
+	Deserializer d{msg};
+
+	MsgObjectPosition mop = d.take<MsgObjectPosition>();
+
+	if (!d.empty())
+		throw std::range_error("Message should be now empty, but it is not!");
+
+	return mop;
 }
 
 Message MsgNewPlayer::to_message() const {

@@ -15,6 +15,10 @@ public:
 	PlayerId id() const { return _id; }
 	GameObject & gameObject() const { return _object; }
 
+	enum class Movement {
+		None, Forward, Backward, Left, Right
+	};
+
 private:
 	PlayerId _id;
 	GameObject & _object;

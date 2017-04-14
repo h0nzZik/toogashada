@@ -27,9 +27,51 @@ void Server::shutdown() {
 	// TODO implement this
 }
 
-void Server::received(IConnection & connection, Message /*msg*/) {
+void Server::received(IConnection & connection, Message msg) {
 	auto & conn = dynamic_cast<ConnectionToClient &>(connection);
-	cout << "Server received message from " << conn.socket().remote_endpoint() << endl;	
+	cout << "Server received message from " << conn.socket().remote_endpoint() << endl;
+	switch(msg.tag) {
+	case Tag::PlayerMovesBackward:
+		return playerMoves(conn, Player::Movement::Backward);
+	case Tag::PlayerMovesForward:
+		return playerMoves(conn, Player::Movement::Forward);
+	case Tag::PlayerMovesLeft:
+		return playerMoves(conn, Player::Movement::Left);
+	case Tag::PlayerMovesRight:
+		return playerMoves(conn, Player::Movement::Right);
+	case Tag::PlayerStops:
+		return playerMoves(conn, Player::Movement::None);
+
+	default:
+		break;
+	}
+}
+
+void Server::playerMoves(ConnectionToClient & client, Player::Movement movement) {
+	if (connection2player[&client] == nullptr) {
+		cerr << "[warn] player does not exist, but moves" << endl;
+		return;
+	}
+
+	Player & player = *connection2player[&client];
+	// This is a bit naive, but as a first experiment
+	player.gameObject().center += toVector(movement);
+	broadcast(createMessage_NewObjectPosition(player.gameObject()));
+}
+
+IntVector Server::toVector(Player::Movement movement) {
+	switch(movement) {
+	case Player::Movement::Left:
+		return {-5, 0};
+	case Player::Movement::Right:
+		return {+5, 0};
+	case Player::Movement::Backward:
+		return {0, -5};
+	case Player::Movement::Forward:
+		return {0, +15};
+	default:
+		return {0, 0}; // exception might be nicer
+	}
 }
 
 void Server::disconnected(IConnection & connection) {
@@ -88,6 +130,7 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	auto _player = make_unique<Player>(player_id, object);
 	Player & player = *_player;
 	players.insert(std::move(_player));
+	connection2player[&client] = &player;
 
 	// Send diffs to all current players.
 	// New player must not be in the set yet.
@@ -111,6 +154,14 @@ Message Server::createMessage_NewGameObject(GameObject const & object) {
 	npo.shape = object.shape;
 	return npo.to_message();
 }
+
+Message Server::createMessage_NewObjectPosition(GameObject const & object) {
+	MsgObjectPosition mop;
+	mop.object_id = object.id();
+	mop.new_center = object.center;
+	return mop.to_message();
+}
+
 Message Server::createMessage_NewPlayer(Player const & player) {
 	MsgNewPlayer mnp;
 	mnp.player_id = player.id();

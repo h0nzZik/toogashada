@@ -35,6 +35,9 @@ void ClientController::received(Message msg) {
 		case Tag::NewPolygonalObject:
 			return received(MsgNewPolygonalObject::from(msg));
 
+		case Tag::ObjectPosition:
+			return received(MsgObjectPosition::from(msg));
+
 		default:
 			break;
 	}
@@ -48,6 +51,10 @@ void ClientController::received(MsgNewPolygonalObject msg) {
 
 	std::lock_guard<std::mutex> guard{mutexGameObjects};
 	gameObjects.insert(move(obj));
+}
+
+void ClientController::received(MsgObjectPosition msg) {
+	gameObjects.getObjectById(msg.object_id).center = msg.new_center;
 }
 
 void ClientController::main_loop() {

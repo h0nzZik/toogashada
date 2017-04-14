@@ -31,8 +31,11 @@ class Server : private IConnection::IHandler
 		void start_accept();
 		void newClientConnected(ConnectionToClient & client);
 
-		Message createMessage_NewGameObject(GameObject const & object);
-		Message createMessage_NewPlayer(Player const & player);
+		static IntVector toVector(Player::Movement movement);
+		static Message createMessage_NewGameObject(GameObject const & object);
+		static Message createMessage_NewObjectPosition(GameObject const & object);
+		static Message createMessage_NewPlayer(Player const & player);
+		void playerMoves(ConnectionToClient & client, Player::Movement movement);
 		void send_him_a_few_polygons(ConnectionToClient & client);
 		void init_player_shape();
 
@@ -41,6 +44,7 @@ class Server : private IConnection::IHandler
 
 		// We do not use smart pointers to ease removal of items from set
 		std::set<ConnectionToClient *> connections;
+		std::map<ConnectionToClient const *, Player *> connection2player;
 		GameObjectManager gameObjects;
 		PlayerManager players;
 		IntPolygonalShape playerShape;

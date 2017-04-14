@@ -20,9 +20,13 @@ struct MsgNewPolygonalObject {
 	static MsgNewPolygonalObject from(Message const &msg);
 };
 
-struct MsgNewObjectPosition {
+struct MsgObjectPosition {
 	uint32_t object_id;
 	IntPoint new_center;
+
+	static constexpr Tag tag = Tag::ObjectPosition;
+	Message to_message() const;
+	static MsgObjectPosition from(Message const &msg);
 };
 
 struct MsgNewPlayer {
