@@ -9,10 +9,10 @@ class GameObject {
 		explicit GameObject(uint32_t object_id) : _object_id(object_id) {}
 		virtual ~GameObject() = default;
 
-		uint32_t object_id() const { return _object_id; }
+		uint32_t id() const { return _object_id; }
 
 		IntPoint center;
-		std::vector<IntPoint> shape;
+		std::vector<IntPoint> shape; // this should be immutable
 #if 0
 	protected:
 		IntPoint _center;

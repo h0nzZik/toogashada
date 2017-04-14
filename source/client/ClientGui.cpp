@@ -40,6 +40,7 @@ ClientGui::~ClientGui() {
 }
 
 void ClientGui::update_gui() {
+	SDL_RenderPresent( renderer );
 	SDL_UpdateWindowSurface( window );
 }
 
@@ -58,6 +59,6 @@ void ClientGui::render_polygon(IntPoint center, std::vector<IntPoint> const & po
 		ys[i] = points[i].y + center.y;
 	}
 	polygonRGBA(renderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
-	SDL_RenderPresent( renderer );
+
 }
 

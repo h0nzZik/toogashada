@@ -59,10 +59,10 @@ uint32_t GenericManager<T>::get_fresh_id() {
 template < typename T >
 void GenericManager<T>::insert(std::unique_ptr<Object> object) {
 	Object * o = object.get();
-	if (_objects_map[o->object_id()] != nullptr)
-		throw std::logic_error(std::string("Object with id ") + std::to_string(o->object_id()) + "is already registered");
+	if (_objects_map[o->id()] != nullptr)
+		throw std::logic_error(std::string("Object with id ") + std::to_string(o->id()) + "is already registered");
 
-	_objects_map[o->object_id()] = o;
+	_objects_map[o->id()] = o;
 	_objects.push_back(std::move(object));
 }
 

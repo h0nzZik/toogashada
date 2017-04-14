@@ -10,6 +10,7 @@ Server::Server(int port)
 	: acceptor(io_service, tcp::endpoint(tcp::v4(), port))
 {
 	start_accept();
+	init_player_shape();
 }
 
 Server::~Server() {
@@ -48,10 +49,11 @@ void Server::start_accept() {
 			if (!error)
 			{
 				cout << "Client " << conn->socket().remote_endpoint() << " connected." << endl;
-				connections.insert(conn);
-
 				conn->listen(*this);
+				// The client is added later, so we can broadcast all changes collectively
+				// and send him full state individually.
 				newClientConnected(*conn);
+				connections.insert(conn);
 			} else {
 				delete conn;
 			}
@@ -60,17 +62,69 @@ void Server::start_accept() {
 	});
 }
 
+void Server::init_player_shape() {
+	playerShape.clear();
+	playerShape.push_back({-10, 0});
+	playerShape.push_back({-20, -10});
+	playerShape.push_back({+20, -10});
+	playerShape.push_back({+10, 0});
+}
+
+// TODO we will need to have some area size.
+
 void Server::newClientConnected(ConnectionToClient & client) {
 	client.send(Message{Tag::Hello, {1,2,3}});
-	send_him_a_few_polygons(client);
+	//send_him_a_few_polygons(client);
 
+	// TODO create a new player. We will need some manager of players.
 	uint32_t const object_id = gameObjects.get_fresh_id();
-	auto object = make_unique<GameObject>(object_id);
-	gameObjects.insert(std::move(object));
+	auto _object = make_unique<GameObject>(object_id);
+	GameObject & object = *_object;
+	gameObjects.insert(std::move(_object));
+	object.shape = playerShape;
+	object.center = {rand() % 200, rand() % 200};
+
+	auto const player_id = players.get_fresh_id();
+	auto _player = make_unique<Player>(player_id, object);
+	Player & player = *_player;
+	players.insert(std::move(_player));
+
+	// Send diffs to all current players.
+	// New player must not be in the set yet.
+	broadcast(createMessage_NewGameObject(object));
+	broadcast(createMessage_NewPlayer(player));
+
+	// Send whole game state to the new player
+	for (GameObject const & object : gameObjects) {
+		client.send(createMessage_NewGameObject(object));
+	}
+
+	for (Player const & player : players) {
+		client.send(createMessage_NewPlayer(player));
+	}
+}
+
+Message Server::createMessage_NewGameObject(GameObject const & object) {
+	MsgNewPolygonalObject npo;
+	npo.object_id = object.id();
+	npo.center = object.center;
+	npo.shape = object.shape;
+	return npo.to_message();
+}
+Message Server::createMessage_NewPlayer(Player const & player) {
+	MsgNewPlayer mnp;
+	mnp.player_id = player.id();
+	mnp.object_id = player.gameObject().id();
+	mnp.player_name = player.name;
+	return mnp.to_message();
 }
 
 void Server::broadcast(Message msg) {
-
+	// A copy of message is created for every connection,
+	// which is not really optimal. We may optimize that later.
+	for (ConnectionToClient * cl : connections) {
+		cl->send(msg);
+	}
 }
 
 void Server::send_him_a_few_polygons(ConnectionToClient & client) {
