@@ -9,6 +9,7 @@
 #include <common/PolygonalShape.h>
 
 #include "ConnectionToClient.hpp"
+#include "GameModel.h"
 #include "PlayerManager.h"
 
 class Server : private IConnection::IHandler
@@ -48,6 +49,7 @@ class Server : private IConnection::IHandler
 		GameObjectManager gameObjects;
 		PlayerManager players;
 		IntPolygonalShape playerShape;
+		GameModel gameModel;
 };
 
 

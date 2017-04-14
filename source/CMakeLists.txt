@@ -41,6 +41,7 @@ add_executable(server
 	./server/ConnectionToClient.cpp
 	./server/Server.cpp
 	./server/server_main.cpp
+	./server/GameModel.cpp
 )
 
 target_link_libraries(server
