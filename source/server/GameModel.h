@@ -4,13 +4,22 @@
 #include <atomic>
 #include <chrono>
 
+#include <common/GameObjectManager.h>
+
+class IBroadcaster;
+
 class GameModel {
 public:
-	GameModel();
+	GameModel(GameObjectManager &gameObjects, IBroadcaster & broadcaster);
 	~GameModel();
 
 private:
 	void main();
+	void do_physics(std::chrono::milliseconds dt);
+
+	GameObjectManager &gameObjects;
+	IBroadcaster & broadcaster;
+
 	std::thread runner;
 	std::atomic<bool> stop;
 	std::chrono::steady_clock::time_point startPoint;

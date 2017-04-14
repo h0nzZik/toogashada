@@ -6,8 +6,9 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
-Server::Server(int port)
-	: acceptor(io_service, tcp::endpoint(tcp::v4(), port))
+Server::Server(int port) :
+		acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
+		gameModel(gameObjects, *this)
 {
 	start_accept();
 	init_player_shape();
@@ -55,7 +56,8 @@ void Server::playerMoves(ConnectionToClient & client, Player::Movement movement)
 
 	Player & player = *connection2player[&client];
 	// This is a bit naive, but as a first experiment
-	player.gameObject().center += toVector(movement);
+	player.gameObject().speed = toVector(movement);
+	//player.gameObject().center += toVector(movement);
 	broadcast(createMessage_NewObjectPosition(player.gameObject()));
 }
 
@@ -186,5 +188,9 @@ void Server::send_him_a_few_polygons(ConnectionToClient & client) {
 	npo.shape.push_back(Point{70, 140});
 	npo.shape.push_back(Point{140,140});
 	client.send(npo.to_message());
+}
+
+void Server::notify(GameObject const & gameObject) {
+	broadcast(createMessage_NewObjectPosition(gameObject));
 }
 

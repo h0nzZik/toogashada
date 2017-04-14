@@ -12,6 +12,7 @@ class GameObject {
 		uint32_t id() const { return _object_id; }
 
 		Point center;
+		Vector speed;
 		std::vector<Point> shape; // this should be immutable
 #if 0
 	protected:

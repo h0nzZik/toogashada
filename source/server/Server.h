@@ -7,12 +7,12 @@
 #include <common/Messages.h>
 #include <common/GameObjectManager.h>
 #include <common/PolygonalShape.h>
-
+#include <server/IBroadcaster.h>
 #include "ConnectionToClient.hpp"
 #include "GameModel.h"
 #include "PlayerManager.h"
 
-class Server : private IConnection::IHandler
+class Server : private IConnection::IHandler, private IBroadcaster
 {
 	public:
 		explicit Server(int port);
@@ -27,7 +27,11 @@ class Server : private IConnection::IHandler
 		void received(IConnection & connection, Message msg) override;
 		void disconnected(IConnection & connection) override;
 		/* < IConnection::IHandler > */
-		void broadcast(Message msg);
+
+		/* < IBroadcaster > */
+		void broadcast(Message msg) override;
+		void notify(GameObject const & gameObject) override;
+		/* </IBroadcaster > */
 
 		void start_accept();
 		void newClientConnected(ConnectionToClient & client);

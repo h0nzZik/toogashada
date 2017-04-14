@@ -19,6 +19,36 @@ struct GVector {
 };
 
 template < typename T >
+bool operator==(GVector<T> const &l, GVector<T> const &r) {
+	return (l.x == r.x) && (l.y == r.y);
+}
+
+template < typename T >
+bool operator!=(GVector<T> const &l, GVector<T> const &r) {
+	return !(l == r);
+}
+
+template < typename T >
+GVector<T> & operator*=(GVector<T> & vector, T scalar) {
+	vector.x *= scalar;
+	vector.y *= scalar;
+	return vector;
+}
+
+template < typename T >
+GVector<T> operator*(GVector<T> const & vector, T scalar) {
+	GVector<T> vec = vector;
+	vec *= scalar;
+	return vec;
+}
+
+template < typename T >
+GVector<T> operator*(T scalar, GVector<T> const & vector) {
+	return vector * scalar;
+}
+
+
+template < typename T >
 GPoint<T> & operator+=(GPoint<T> & p, GVector<T> v) {
 	p.x += v.x;
 	p.y += v.y;
