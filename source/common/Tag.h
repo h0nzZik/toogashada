@@ -19,6 +19,7 @@ enum class Tag : uint32_t {
 
 	_ClientToServer = 0x200,
 	/* Messages from client to server */
+    IntroduceMyPlayer, // sent after connection is made
 	PlayerMovesLeft,
 	PlayerMovesRight,
 	PlayerMovesBackward,

@@ -32,7 +32,8 @@ struct MsgObjectPosition {
 struct MsgNewPlayer {
 	uint32_t player_id;
 	uint32_t object_id;
-	std::string player_name;
+	std::string playerName;
+    std::string playerTeam;
 
 	static constexpr Tag tag = Tag::NewPlayer;
 	Message to_message() const;
@@ -47,4 +48,14 @@ struct MsgSetPlayerMovement {
 	static constexpr Tag tag = Tag::NewPlayer;
 	Message to_message() const;
 	static MsgSetPlayerMovement from(Message const & msg);
+};
+
+struct MsgIntroduceMyPlayer {
+
+	std::string playerName;
+	std::string playerTeam;
+
+    static constexpr Tag tag = Tag::IntroduceMyPlayer;
+    Message to_message() const;
+    static MsgIntroduceMyPlayer from(Message const & msg);
 };

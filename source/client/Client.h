@@ -8,7 +8,9 @@
 
 class Client : private IConnection::IHandler {
 public:
-	Client();
+
+	Client(std::string ip, std::string port, std::string playerName, std::string playerTeam);
+
 	~Client() = default;
 
 	void run();
@@ -22,6 +24,7 @@ private:
 	ConnectionToServer serverConnection;
 	RemoteServerWrapper remoteServerWrapper;
 	ClientController clientController;
+    ClientPlayer clientPlayer;
 };
 
 #endif /* SRC_CLIENT_H_ */

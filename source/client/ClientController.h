@@ -14,7 +14,7 @@ struct MsgObjectPosition;
 
 class ClientController final {
 public:
-	explicit ClientController(ClientGui & clientGui, RemoteServerWrapper & server);
+	explicit ClientController(ClientPlayer &player, ClientGui & clientGui, RemoteServerWrapper & server);
 	~ClientController() = default;
 
 	void received(Message msg);
@@ -30,11 +30,13 @@ private:
 
 	ClientGui & clientGui;
 	RemoteServerWrapper & remoteServer;
+	ClientPlayer &player;
 
 	bool quit;
+
 	GameObjectManager gameObjects;
 	std::mutex mutexGameObjects;
-	ClientPlayer clientPlayer;
+
 
 	struct Config {
 		Config();

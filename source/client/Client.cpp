@@ -2,16 +2,18 @@
 #include <thread>
 
 #include <common/Tag.h>
+#include <common/Messages.h>
 
 #include "Client.h"
 
 using namespace std;
 
-Client::Client() :
+Client::Client(string ip, string port, std::string playerName, std::string playerTeam) :
 	clientGui{},
-	serverConnection{"localhost", "2061"},
+	serverConnection{ip, port},
 	remoteServerWrapper{serverConnection},
-	clientController{clientGui, remoteServerWrapper}
+	clientController{clientPlayer, clientGui, remoteServerWrapper},
+    clientPlayer{playerName, playerTeam}
 {
 	;
 }
@@ -30,7 +32,9 @@ void Client::disconnected(IConnection & connection) {
 
 void Client::run() {
 	serverConnection.listen(*this);
-	serverConnection.send(Message{Tag::Hello, {4, 5, 6}});
+    MsgIntroduceMyPlayer introduceMyPlayer{clientPlayer.mName, clientPlayer.mTeam};
+	serverConnection.send(introduceMyPlayer.to_message());
+
 
 	thread network([&]{
 		serverConnection.run();

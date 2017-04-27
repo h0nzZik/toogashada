@@ -19,11 +19,14 @@
 
 using namespace std;
 
-ClientController::ClientController(ClientGui & clientGui, RemoteServerWrapper & server) :
-	clientGui(clientGui), remoteServer{server}, quit{false}
-{
-
-}
+ClientController::ClientController(ClientPlayer &player,
+								   ClientGui & clientGui,
+								   RemoteServerWrapper & server) :
+	clientGui(clientGui),
+	remoteServer{server},
+    player(player),
+    quit{false}
+{}
 
 void ClientController::received(Message msg) {
 
@@ -70,17 +73,21 @@ void ClientController::main_loop() {
 }
 
 void ClientController::redraw() {
-	clientGui.clear_gui();
+
 	{
 		std::lock_guard<std::mutex> guard{mutexGameObjects};
 		// TODO(h0nzZik): I think it is not needed to lock the whole structure.
 		// We should refine it someday in future.
 
-		for (GameObject const & go : gameObjects) {
-			clientGui.render_polygon(go.center, go.shape);
-		}
+        clientGui.renderGui(gameObjects);
+
+//        for (GameObject const & go : gameObjects) {
+//
+//            clientGui.render_polygon(go.center, go.shape);
+//        }
+
 	}
-	clientGui.update_gui();
+
 }
 
 

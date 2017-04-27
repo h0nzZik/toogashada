@@ -16,7 +16,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 	-Wno-error=unused-variable \
 	-Wno-error=unused-parameter \
 	-Wno-error=unused-private-field \
-	-Wno-error=unused-lambda-capture \
 ")
 
 include_directories(${Boost_INCLUDE_DIRS})
@@ -59,7 +58,7 @@ add_executable(client
 	./client/ConnectionToServer.cpp
 	./client/RemoteServerWrapper.cpp
 	./client/ClientGui.cpp
-)
+        client/SDLDeleter.h client/DrawProp.h)
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(client
@@ -68,6 +67,7 @@ target_link_libraries(client
 	${SDL2_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	SDL2_gfx
+	${Boost_LIBRARIES}
 	#	SDL2_ttf
 )
 

@@ -58,14 +58,18 @@ MsgObjectPosition MsgObjectPosition::from(Message const &msg) {
 }
 
 Message MsgNewPlayer::to_message() const {
-	if (player_name.length() > 255)
+	if (playerName.length() > 255)
 		throw std::length_error("Player name can be at most 255 characters long");
+
+	if (playerTeam.length() > 255)
+		throw std::length_error("Player team can be at most 255 characters long");
 
 	Message msg;
 	msg.tag = tag;
 	append(msg, player_id);
 	append(msg, object_id);
-	append(msg, player_name);
+	append(msg, playerName);
+	append(msg, playerTeam);
 	return msg;
 }
 
@@ -77,7 +81,8 @@ MsgNewPlayer MsgNewPlayer::from(Message const & msg) {
 	MsgNewPlayer mnp;
 	mnp.player_id = Take<uint32_t>::from(d);
 	mnp.object_id = Take<uint32_t>::from(d);
-	mnp.player_name = Take<string>::from(d);
+	mnp.playerName = Take<string>::from(d);
+	mnp.playerTeam = Take<string>::from(d);
 
 	if (!d.empty())
 		throw std::range_error("Message should be now empty, but it is not!");
@@ -104,4 +109,31 @@ MsgSetPlayerMovement MsgSetPlayerMovement::from(Message const & msg)
 		throw std::range_error("Message should be now empty, but it is not!");
 
 	return movement;
+}
+
+Message MsgIntroduceMyPlayer::to_message() const {
+
+    Message msg;
+    msg.tag = tag;
+    append(msg, playerName);
+    append(msg, playerTeam);
+    return msg;
+}
+
+MsgIntroduceMyPlayer MsgIntroduceMyPlayer::from(Message const &msg) {
+
+    if (msg.tag != tag)
+        throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
+
+    Deserializer d{msg};
+    MsgIntroduceMyPlayer introduction;
+
+    introduction.playerName = Take<std::string>::from(d);
+    introduction.playerTeam = Take<std::string>::from(d);
+
+    if (!d.empty())
+        throw std::range_error("Message should be now empty, but it is not!");
+
+    return introduction;
+
 }
