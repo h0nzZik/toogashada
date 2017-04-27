@@ -29,6 +29,7 @@ int main(int argc, const char** argv)
     try {
 
         po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+		po::notify(vm);
         Client client {vm["ip"].as<std::string>(),
                        vm["port"].as<std::string>(),
                        vm["player-name"].as<std::string>(),
