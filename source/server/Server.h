@@ -31,6 +31,7 @@ class Server : private IConnection::IHandler, private IBroadcaster
 		/* < IBroadcaster > */
 		void broadcast(Message msg) override;
 		void notify(GameObject const & gameObject) override;
+		void notify(entity_t entity, AnyComponent const &component) override;
 		/* </IBroadcaster > */
 
 		void start_accept();
@@ -52,7 +53,8 @@ class Server : private IConnection::IHandler, private IBroadcaster
 		std::map<ConnectionToClient const *, Player *> connection2player;
 		GameObjectManager gameObjects;
 		PlayerManager players;
-		IntPolygonalShape playerShape;
+		PolygonalShape playerShape;
+		EntityComponentSystem ecs;
 		GameModel gameModel;
 };
 

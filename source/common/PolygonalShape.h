@@ -16,4 +16,4 @@ GPolygonalShape<T> & operator+=(GPolygonalShape<T> & shape, GVector<T> const &ve
 	return *shape;
 }
 
-using IntPolygonalShape = GPolygonalShape<Scalar>;
+using PolygonalShape = GPolygonalShape<Scalar>;

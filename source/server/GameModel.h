@@ -5,17 +5,20 @@
 #include <chrono>
 
 #include <common/GameObjectManager.h>
+#include <common/EntityComponentSystem.h>
 
 class IBroadcaster;
 
 class GameModel {
 public:
-	GameModel(GameObjectManager &gameObjects, IBroadcaster & broadcaster);
+	GameModel(GameObjectManager &gameObjects, EntityComponentSystem & ecs, IBroadcaster & broadcaster);
 	~GameModel();
 
+	EntityComponentSystem & ecs;
 private:
 	void main();
 	void do_physics(std::chrono::milliseconds dt);
+	void broadcast_new_entity();
 
 	GameObjectManager &gameObjects;
 	IBroadcaster & broadcaster;

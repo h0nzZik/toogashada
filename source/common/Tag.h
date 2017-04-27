@@ -16,6 +16,10 @@ enum class Tag : uint32_t {
 	ObjectPosition, // 4B object ID, position, speed
 	PlayerId, // Sets ID for client's player
 
+	NewEntity,
+	UpdateEntity,
+	DeleteEntity,
+
 
 	_ClientToServer = 0x200,
 	/* Messages from client to server */

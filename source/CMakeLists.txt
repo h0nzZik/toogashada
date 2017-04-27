@@ -27,6 +27,7 @@ add_library(ToogashadaCommon
 	./common/Message.cpp
 	./common/TwoDimensionalObject.cpp
 	./common/Messages.cpp
+	./common/components/EntityID.cpp
 )
 
 target_include_directories(ToogashadaCommon
@@ -34,12 +35,21 @@ target_include_directories(ToogashadaCommon
     	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
+target_include_directories(ToogashadaCommon
+	SYSTEM PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/third_party/cereal/include
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/third_party/EntityPlus
+)
+
+#add_library(Geometry
+#
+#)
+
 ## Server
 
-add_executable(server
+add_library(server
 	./server/ConnectionToClient.cpp
 	./server/Server.cpp
-	./server/server_main.cpp
 	./server/GameModel.cpp
 )
 
@@ -47,6 +57,14 @@ target_link_libraries(server
 	ToogashadaCommon
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
+)
+
+add_executable(server_main
+	./server/server_main.cpp
+)
+
+target_link_libraries(server_main
+	server
 )
 
 ## Client
@@ -71,3 +89,12 @@ target_link_libraries(client
 	#	SDL2_ttf
 )
 
+# Tests
+add_executable(test_server
+	./test/doctest_main.cpp
+	./test/test_server.cpp
+)
+
+target_link_libraries(test_server
+	server
+)

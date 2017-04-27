@@ -12,7 +12,8 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-GameModel::GameModel(GameObjectManager &gameObjects, IBroadcaster & broadcaster) :
+GameModel::GameModel(GameObjectManager &gameObjects, EntityComponentSystem & ecs, IBroadcaster & broadcaster) :
+	ecs{ecs},
 	gameObjects{gameObjects},
 	broadcaster{broadcaster},
 	runner{&GameModel::main, this}
@@ -44,6 +45,16 @@ void GameModel::main() {
 // TODO we should measure the diffeence between client's and server's time.
 
 void GameModel::do_physics(std::chrono::milliseconds dt) {
+	ecs.entityManager.for_each<Position>([&](entity_t entity, Position & pos){
+		if (pos.speed != Vector{0, 0}) {
+			pos.center += pos.speed * Scalar(dt.count() / 1000.0);
+			// TODO some notification
+			// Muzeme mit zpravu o updatu libovolne komponenty...
+			// Potrebuji poslat tuhle komponentu - pozici.
+			//
+		}
+	});
+
 	for (GameObject & gameObject : gameObjects) {
 		if (gameObject.speed != Vector{0, 0}) {
 			gameObject.center += gameObject.speed * Scalar(dt.count() / 1000.0);
@@ -51,3 +62,5 @@ void GameModel::do_physics(std::chrono::milliseconds dt) {
 		}
 	}
 }
+
+

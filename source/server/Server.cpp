@@ -1,6 +1,10 @@
 #include <iostream>
+#include <sstream>
 
-
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/boost_variant.hpp>
+#include <cereal/types/vector.hpp>
+#include <entityplus/entity.h>
 #include "Server.h"
 
 using namespace std;
@@ -8,7 +12,7 @@ using boost::asio::ip::tcp;
 
 Server::Server(int port) :
 		acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
-		gameModel(gameObjects, *this)
+		gameModel(gameObjects, ecs, *this)
 {
 	start_accept();
 	init_player_shape();
@@ -147,6 +151,23 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	for (Player const & player : players) {
 		client.send(createMessage_NewPlayer(player));
 	}
+
+	// Some experiments with EntityComponent
+	// Opravdu bych mohl pridat komponentu pro identitu entit...?
+	entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
+	entity.add_component<Position>();
+	entity.add_component<Shape>(CircleShape{5.1});
+	MsgNewEntity msg;
+	msg.components = EntityComponentSystem::all_components(entity);
+	msg.entity_id = entity.get_component<EntityID>();
+
+	auto msg2 = msg.to_message();
+	broadcast(msg2);
+	client.send(std::move(msg2));
+
+	// Taky musime mit PlayerComponent
+	// Budeme mit zpravu, ktera umi rict 'Nova entita' a seznam komponent.
+	// My chceme updatovat
 }
 
 Message Server::createMessage_NewGameObject(GameObject const & object) {
@@ -192,5 +213,12 @@ void Server::send_him_a_few_polygons(ConnectionToClient & client) {
 
 void Server::notify(GameObject const & gameObject) {
 	broadcast(createMessage_NewObjectPosition(gameObject));
+}
+
+void Server::notify(entity_t entity, AnyComponent const &component) {
+	MsgUpdateEntity mue;
+	mue.entity_id = entity.get_component<EntityID>();
+	mue.components = {component};
+	broadcast(mue.to_message());
 }
 

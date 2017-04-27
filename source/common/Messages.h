@@ -8,6 +8,8 @@
 #include "Message.h"
 #include "Angle.h"
 
+#include "common/components/EntityID.h"
+
 struct MsgNewPolygonalObject {
 	static constexpr Tag tag = Tag::NewPolygonalObject;
 	
@@ -59,3 +61,37 @@ struct MsgIntroduceMyPlayer {
     Message to_message() const;
     static MsgIntroduceMyPlayer from(Message const & msg);
 };
+
+struct AnyComponent;
+
+struct MsgNewEntity {
+	EntityID entity_id;
+	std::vector<AnyComponent> components;
+
+	static constexpr Tag tag = Tag::NewEntity;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(entity_id, components);
+	}
+
+	Message to_message() const;
+	static MsgNewEntity from(Message const & msg);
+};
+
+
+struct MsgUpdateEntity {
+	EntityID entity_id;
+	std::vector<AnyComponent> components;
+
+	static constexpr Tag tag = Tag::UpdateEntity;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(entity_id, components);
+	}
+
+	Message to_message() const;
+	static MsgUpdateEntity from(Message const & msg);
+};
+

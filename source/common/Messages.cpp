@@ -1,4 +1,9 @@
 #include <stdexcept>
+#include <sstream>
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/boost_variant.hpp>
+#include <cereal/types/vector.hpp>
+#include "EntityComponentSystem.h"
 #include "Messages.h"
 
 using namespace std;
@@ -135,5 +140,53 @@ MsgIntroduceMyPlayer MsgIntroduceMyPlayer::from(Message const &msg) {
         throw std::range_error("Message should be now empty, but it is not!");
 
     return introduction;
+}
 
+Message MsgNewEntity::to_message() const {
+	std::stringstream ss; // any stream can be used
+	cereal::BinaryOutputArchive oarchive(ss); // Create an output archive
+
+	oarchive(*this);
+	string s = ss.str();
+	return Message{Tag::NewEntity, {s.begin(), s.end()}};
+}
+
+MsgNewEntity MsgNewEntity::from(Message const & msg) {
+	if (msg.tag != tag)
+		throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
+
+	std::string s;
+	for (char c : msg.data)
+		s.push_back(c);
+
+	std::stringstream ss{s};
+	cereal::BinaryInputArchive iarchive(ss);
+	MsgNewEntity msg2;
+	iarchive(msg2);
+	return msg2;
+}
+
+Message MsgUpdateEntity::to_message() const {
+	std::stringstream ss; // any stream can be used
+	cereal::BinaryOutputArchive oarchive(ss); // Create an output archive
+
+	oarchive(*this);
+	string s = ss.str();
+	return Message{Tag::UpdateEntity, {s.begin(), s.end()}};
+}
+
+MsgUpdateEntity MsgUpdateEntity::from(Message const & msg) {
+	if (msg.tag != tag)
+		throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
+
+	std::string s;
+	for (char c : msg.data)
+		s.push_back(c);
+
+	std::stringstream ss{s};
+
+	cereal::BinaryInputArchive iarchive(ss);
+	MsgUpdateEntity msg2;
+	iarchive(msg2);
+	return msg2;
 }

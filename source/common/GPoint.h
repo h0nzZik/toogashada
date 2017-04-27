@@ -7,6 +7,11 @@ template < typename T >
 struct GPoint {
 	T x;
 	T y;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(x,y);
+	}
 };
 
 /**
@@ -16,6 +21,11 @@ template < typename T >
 struct GVector {
 	T x;
 	T y;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(x,y);
+	}
 };
 
 template < typename T >
