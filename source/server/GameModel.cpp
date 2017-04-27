@@ -28,13 +28,11 @@ GameModel::~GameModel() {
 void GameModel::main() {
 	stop = false;
 	startPoint = realTime = gameTime = chrono::steady_clock::now();
-	cout << "Game model" << endl;
 
 	auto const dt = 16ms;
 
 	while(!stop) {
 		realTime = chrono::steady_clock::now();
-		//cout << "Now: " <<std::chrono::duration_cast<std::chrono::microseconds>(realTime - startPoint).count() << endl;
 
 		do_physics(dt);
 

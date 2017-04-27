@@ -2,9 +2,12 @@
 #include <thread>
 #include <csignal>
 
+#include <boost/program_options.hpp>
+
 #include "Server.h"
 
 using namespace std;
+using namespace boost::program_options;
 
 static Server * p_server = nullptr;
 
@@ -18,6 +21,7 @@ static void on_signal(int signal) {
 
 void server(int port)
 {
+	cout << "Starting server on port " << port << endl;
 	Server server(port);
 	p_server = &server;
 	std::signal(SIGINT, on_signal);
@@ -26,13 +30,25 @@ void server(int port)
 	cout << "Server exited normally" << endl;
 }
 
-int main()
+int main(int argc, char const *argv[])
 {
-	cout << "Server\n";
 	try {
-		server(2048 + 13);
+		options_description options{"Options"};
+		options.add_options()
+			("help,h", "Help screen")
+			("port", value<short>()->default_value(2061), "Port");
+
+		variables_map vm;
+		store(parse_command_line(argc, argv, options), vm);
+
+	    if (vm.count("help")) {
+			std::cout << options << '\n';
+			return 0;
+		}
+
+		server(vm["port"].as<short>());
 	} catch (std::exception& e)	{
-		std::cerr << "main: " << e.what() << std::endl;
+		std::cerr << "Exception: " << e.what() << std::endl;
 	}
 }
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(toogashada)
 
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(SDL2 COMPONENTS ttf gfx REQUIRED)
 find_package(Threads REQUIRED)
 
