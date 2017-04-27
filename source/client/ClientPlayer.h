@@ -1,5 +1,4 @@
-#ifndef SRC_CLIENTPLAYER_H_
-#define SRC_CLIENTPLAYER_H_
+#pragma once
 
 #include <common/Angle.h>
 #include <common/GPoint.h>
@@ -26,4 +25,3 @@ struct ClientPlayer {
 	AngularSpeed angularSpeed;
 };
 
-#endif /* SRC_CLIENTPLAYER_H_ */

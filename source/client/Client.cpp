@@ -1,15 +1,54 @@
 #include <iostream>
 #include <thread>
+#include <utility> // std::move
 
 #include <common/Tag.h>
 #include <common/Messages.h>
 #include <common/ClientMessage.h>
 
+#include "ConnectionToServer.h"
+#include "ClientGui.h"
+#include "ClientController.h"
+#include "RemoteServerWrapper.h"
+#include "ClientPlayer.h"
+
+
 #include "Client.h"
 
 using namespace std;
 
-Client::Client(string ip, string port, std::string playerName, std::string playerTeam) :
+class Client::Impl : private IConnection::IHandler {
+public:
+
+	Impl(std::string ip, std::string port, std::string playerName, std::string playerTeam);
+
+	~Impl() = default;
+
+	void run();
+private:
+	/* < IConnection::IHandler > */
+	void received(IConnection & connection, Message msg) override;
+	void disconnected(IConnection & connection) override;
+	/* < IConnection::IHandler > */
+
+	ClientGui clientGui;
+	ConnectionToServer serverConnection;
+	RemoteServerWrapper remoteServerWrapper;
+	ClientController clientController;
+    ClientPlayer clientPlayer;
+};
+
+Client::~Client() = default;
+
+Client::Client(string ip, string port, std::string playerName, std::string playerTeam) {
+	impl = make_unique<Impl>(move(ip), move(port), move(playerName), move(playerTeam));
+}
+
+void Client::run() {
+	impl->run();
+}
+
+Client::Impl::Impl(string ip, string port, std::string playerName, std::string playerTeam) :
 	clientGui{},
 	serverConnection{ip, port},
 	remoteServerWrapper{serverConnection},
@@ -19,19 +58,19 @@ Client::Client(string ip, string port, std::string playerName, std::string playe
 	;
 }
 
-void Client::received(IConnection & connection, Message msg) {
+void Client::Impl::received(IConnection & connection, Message msg) {
 	auto & conn = dynamic_cast<ConnectionToServer &>(connection);
 	cout << "Client received message from " << conn.socket().remote_endpoint() << endl;
 
 	clientController.received(std::move(msg));
 }
 
-void Client::disconnected(IConnection & connection) {
+void Client::Impl::disconnected(IConnection & connection) {
 	auto & conn = dynamic_cast<ConnectionToServer &>(connection);
-	cout << "Client " << conn.socket().remote_endpoint() << " disconnected." << endl;
+	cout << "Server " << conn.socket().remote_endpoint() << " disconnected." << endl;
 }
 
-void Client::run() {
+void Client::Impl::run() {
 	serverConnection.listen(*this);
 
     ClientMessage msg{MsgIntroduceMyPlayer{clientPlayer.mName, clientPlayer.mTeam}};

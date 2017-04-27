@@ -1,6 +1,7 @@
 //standard
 #include <iostream>
 #include <memory> // make_unique
+#include <mutex>
 
 // SDL
 #include <SDL.h>
@@ -16,6 +17,7 @@
 #include <common/ServerMessage.h>
 #include <common/ClientMessage.h>
 
+#include "ClientPlayer.h"
 #include "ClientGui.h"
 #include "RemoteServerWrapper.h"
 
@@ -24,7 +26,69 @@
 
 using namespace std;
 
-ClientController::ClientController(ClientPlayer &player,
+
+class ClientController::Impl final {
+public:
+	explicit Impl(ClientPlayer &player, ClientGui & clientGui, RemoteServerWrapper & server);
+	~Impl() = default;
+
+	void received(Message msg);
+	void main_loop();
+
+private:
+	class Receiver;
+
+	void redraw();
+	void received(MsgNewPolygonalObject msg);
+	void received(MsgObjectPosition msg);
+	void received(ServerMessage msg);
+	void handle_event(SDL_Event const & e);
+	void handleKeyPress(SDL_Scancode code);
+	void handleKeyRelease(SDL_Scancode code);
+	void send(ClientMessage const & msg);
+
+	ClientGui & clientGui;
+	RemoteServerWrapper & remoteServer;
+	ClientPlayer &player;
+
+	bool quit;
+
+	GameObjectManager gameObjects;
+	std::mutex mutexGameObjects;
+
+	struct PressedKeys {
+		bool key_up = false;
+		bool key_down = false;
+		bool key_left = false;
+		bool key_right = false;
+	};
+
+	PressedKeys pressedKeys;
+
+	Config config;
+	EntityComponentSystem ecs;
+	std::map<EntityID, entity_t> entites;
+};
+
+ClientController::ClientController(
+		ClientPlayer &player,
+		ClientGui & clientGui,
+		RemoteServerWrapper & server) {
+	impl = make_unique<Impl>(player, clientGui, server);
+}
+
+ClientController::~ClientController() = default;
+
+
+void ClientController::received(Message msg) {
+	impl->received(std::move(msg));
+}
+
+void ClientController::main_loop() {
+	impl->main_loop();
+}
+
+ClientController::Impl::Impl(ClientPlayer &player,
 								   ClientGui & clientGui,
 								   RemoteServerWrapper & server) :
 	clientGui(clientGui),
@@ -33,9 +97,9 @@ ClientController::ClientController(ClientPlayer &player,
     quit{false}
 {}
 
-class ClientController::Receiver : public boost::static_visitor<void> {
+class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 	public:
-		Receiver(ClientController & controller) : controller(controller) {}
+		Receiver(ClientController::Impl & controller) : controller(controller) {}
 
 		void operator()(MsgNewPolygonalObject const & msg) {
 			// fallback
@@ -63,10 +127,10 @@ class ClientController::Receiver : public boost::static_visitor<void> {
 		// todo template rest
 
 	private:
-		ClientController & controller;
+		ClientController::Impl & controller;
 };
 
-void ClientController::received(Message msg) {
+void ClientController::Impl::received(Message msg) {
 
 	switch(msg.tag) {
 		case Tag::Hello:
@@ -81,12 +145,12 @@ void ClientController::received(Message msg) {
 	}
 }
 
-void ClientController::received(ServerMessage msg) {
+void ClientController::Impl::received(ServerMessage msg) {
 	Receiver receiver{*this};
 	boost::apply_visitor(receiver, msg.data);
 }
 
-void ClientController::received(MsgNewPolygonalObject msg) {
+void ClientController::Impl::received(MsgNewPolygonalObject msg) {
 	cout << "PolygonalObject with id " << msg.object_id << endl;
 	auto obj = make_unique<GameObject>(msg.object_id);
 	obj->center = msg.center;
@@ -96,11 +160,11 @@ void ClientController::received(MsgNewPolygonalObject msg) {
 	gameObjects.insert(move(obj));
 }
 
-void ClientController::received(MsgObjectPosition msg) {
+void ClientController::Impl::received(MsgObjectPosition msg) {
 	gameObjects.getObjectById(msg.object_id).center = msg.new_center;
 }
 
-void ClientController::main_loop() {
+void ClientController::Impl::main_loop() {
 	while( !quit )
 	{
 		SDL_Event e;
@@ -112,7 +176,7 @@ void ClientController::main_loop() {
 	cout << "Quitting gui\n";
 }
 
-void ClientController::redraw() {
+void ClientController::Impl::redraw() {
 
 	{
 		std::lock_guard<std::mutex> guard{mutexGameObjects};
@@ -137,7 +201,7 @@ void ClientController::redraw() {
  * However
  */
 
-void ClientController::handle_event(SDL_Event const & e) {
+void ClientController::Impl::handle_event(SDL_Event const & e) {
 	switch(e.type) {
 		case SDL_QUIT:
 			quit = true;
@@ -165,11 +229,11 @@ void ClientController::handle_event(SDL_Event const & e) {
 	}
 }
 
-void ClientController::send(ClientMessage const & msg) {
+void ClientController::Impl::send(ClientMessage const & msg) {
 	remoteServer.conn().send(msg.to_message());
 }
 
-void ClientController::handleKeyPress(SDL_Scancode code) {
+void ClientController::Impl::handleKeyPress(SDL_Scancode code) {
 	ClientMessage msg;
 
 	if (code == config.key_down)
@@ -198,7 +262,7 @@ void ClientController::handleKeyPress(SDL_Scancode code) {
 	send(msg);
 }
 
-void ClientController::handleKeyRelease(SDL_Scancode code) {
+void ClientController::Impl::handleKeyRelease(SDL_Scancode code) {
 	cout << "keyup: " << code << endl;
 
 	if (code == config.key_down)
@@ -232,3 +296,5 @@ ClientController::Config::Config()
 	key_left = SDL_SCANCODE_A;
 	key_right = SDL_SCANCODE_D;
 }
+
+
