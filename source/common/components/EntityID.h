@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 /**
  * This component allows us to synchronize entity managers
  * on clients and server. It represents the unique identifier
@@ -11,13 +13,12 @@ public:
 	EntityID(EntityID const &) = default;
 	EntityID & operator=(EntityID const &) = default;
 
-	bool operator==(EntityID const & other) const {return id == other.id;}
-	bool operator<(EntityID const & other) const {return id < other.id;}
-
+	bool operator==(EntityID const & other) const {return _id == other._id;}
+	bool operator<(EntityID const & other) const {return _id < other._id;}
 
 	template < typename Archive >
 	void serialize(Archive & archive) {
-		archive(id);
+		archive(_id);
 	}
 	// TODO separate. Client does not need to create new entities.
 	static EntityID newID() {
@@ -27,12 +28,14 @@ public:
 		return EntityID(id);
 	}
 
+
+	using Id = std::uintmax_t;
+	Id id() const { return _id; }
 private:
-	using Id = int; //std::uintmax_t;
 
-	explicit EntityID(Id id) : id{id} {}
+	explicit EntityID(Id id) : _id{id} {}
 
-	Id id = 0;
+	Id _id = 0;
 
 	static Id last_id;
 };

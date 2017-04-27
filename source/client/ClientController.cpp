@@ -116,6 +116,7 @@ class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 		}
 
 		void operator()(MsgNewEntity const & msg) {
+			cout << "Received entity " << msg.entity_id.id() << endl;
 			controller.entites[msg.entity_id] = controller.ecs.entityManager.create_entity(msg.entity_id);
 		}
 

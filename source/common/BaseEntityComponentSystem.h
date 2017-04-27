@@ -8,7 +8,8 @@
 using TagList = entityplus::tag_list<struct TA, struct TB>; // just an example
 
 namespace detail {
-template < typename Entity, typename AnyComponent, typename ... CompList > struct add_component_impl;
+template < typename Entity, typename AnyComponent, typename ... CompList >
+struct get_component_impl;
 }
 
 template < typename... Components>
@@ -22,33 +23,46 @@ public:
 
 	using AnyComponent = BaseAnyComponent<Components...>;
 
-	static std::vector<AnyComponent> all_components(entity_t entity) {
+	static std::vector<AnyComponent> all_components(entity_t & entity) {
 		std::vector<AnyComponent> v;
-		detail::add_component_impl<entity_t, AnyComponent, Components...>::add_component(v, entity);
-#if 0
-		if (entity.template has_component<Shape>())
-			v.push_back({entity.template get_component<Shape>()});
-		if (entity.template has_component<Position>())
-			v.push_back({entity.template get_component<Position>()});
-#endif
+		detail::get_component_impl<
+			entity_t,
+			AnyComponent,
+			Components...
+		>::get_component(v, entity);
 		return v;
 	}
 
+private:
+	struct vis : public boost::static_visitor<void> {
+		entity_t & entity;
+		explicit vis(entity_t & entity) : entity(entity) {}
+		template < typename T >
+		void operator()(T x) {
+			entity.template add_component<T>(x);
+		}
+	};
+public:
+	static void add_component(entity_t & entity, AnyComponent const & any) {
+		vis v{entity};
+		boost::apply_visitor(v, any.component);
+	}
 };
 
 namespace detail {
-template <typename Entity, typename AnyComponent> struct add_component_impl<Entity, AnyComponent> {
-	static void add_component(std::vector<AnyComponent> & /*v*/, Entity /*entity*/) {
+template <typename Entity, typename AnyComponent>
+struct get_component_impl<Entity, AnyComponent> {
+	static void get_component(std::vector<AnyComponent> & /*v*/, Entity & /*entity*/) {
 
 	}
 };
 
 template < typename Entity, typename AnyComponent, typename Comp, typename ... CompList >
-struct add_component_impl<Entity, AnyComponent, Comp, CompList...> {
-	static void add_component(std::vector<AnyComponent> & v, Entity entity) {
+struct get_component_impl<Entity, AnyComponent, Comp, CompList...> {
+	static void get_component(std::vector<AnyComponent> & v, Entity & entity) {
 		if (entity.template has_component<Comp>())
 			v.push_back({entity.template get_component<Comp>()});
-		add_component_impl<Entity, AnyComponent, CompList...>::add_component(v, entity);
+		get_component_impl<Entity, AnyComponent, CompList...>::get_component(v, entity);
 	}
 };
 
