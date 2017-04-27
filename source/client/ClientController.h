@@ -1,8 +1,10 @@
 #ifndef SRC_CLIENTCONTROLLER_H_
 #define SRC_CLIENTCONTROLLER_H_
 
+#include <memory>
 #include <mutex>
 #include <common/GameObjectManager.h>
+#include <common/EntityComponentSystem.h>
 #include "ClientPlayer.h"
 
 class ClientGui;
@@ -14,6 +16,7 @@ struct MsgObjectPosition;
 struct ServerMessage;
 struct ClientMessage;
 
+
 class ClientController final {
 public:
 	explicit ClientController(ClientPlayer &player, ClientGui & clientGui, RemoteServerWrapper & server);
@@ -24,6 +27,11 @@ public:
 
 private:
 	class Receiver;
+
+	// TODO use pimpl idiom to decrease compilation time
+	class Impl{};
+	std::unique_ptr<Impl> impl;
+
 	void redraw();
 	void received(MsgNewPolygonalObject msg);
 	void received(MsgObjectPosition msg);
@@ -62,6 +70,8 @@ private:
 	PressedKeys pressedKeys;
 
 	Config config;
+	EntityComponentSystem ecs;
+	std::map<EntityID, entity_t> entites;
 };
 
 #endif /* SRC_CLIENTCONTROLLER_H_ */

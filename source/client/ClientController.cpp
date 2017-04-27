@@ -52,7 +52,7 @@ class ClientController::Receiver : public boost::static_visitor<void> {
 		}
 
 		void operator()(MsgNewEntity const & msg) {
-			;
+			controller.entites[msg.entity_id] = controller.ecs.entityManager.create_entity(msg.entity_id);
 		}
 
 		void operator()(MsgUpdateEntity const & msg) {

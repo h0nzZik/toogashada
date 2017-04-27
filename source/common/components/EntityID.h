@@ -12,6 +12,8 @@ public:
 	EntityID & operator=(EntityID const &) = default;
 
 	bool operator==(EntityID const & other) const {return id == other.id;}
+	bool operator<(EntityID const & other) const {return id < other.id;}
+
 
 	template < typename Archive >
 	void serialize(Archive & archive) {
