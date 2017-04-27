@@ -21,10 +21,10 @@ int main(int argc, const char** argv)
     boost::program_options::variables_map vm;
 
     desc.add_options()
-            ("ip", po::value<std::string>()->required(), "Server address")
-            ("port,p", po::value<std::string>()->required(), "Server port")
-            ("player-name,pn", po::value<std::string>()->required())
-            ("player-team,pt", po::value<std::string>());
+            ("ip", po::value<std::string>()->default_value("localhost"), "Server address")
+            ("port,p", po::value<std::string>()->default_value("2061"), "Server port")
+            ("player-name,n", po::value<std::string>()->required())
+            ("player-team,t", po::value<std::string>());
 
     try {
 
@@ -37,7 +37,7 @@ int main(int argc, const char** argv)
 
     } catch(po::error& e) {
 
-        std::cerr << "ERROR: "
+        std::cerr << "Error while parsing commandline:\n"
                   << e.what()
                   << std::endl
                   << std::endl;
