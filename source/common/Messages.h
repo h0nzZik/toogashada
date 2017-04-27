@@ -10,25 +10,28 @@
 
 #include "common/components/EntityID.h"
 
+// Server to client
+// =====================================
+
 struct MsgNewPolygonalObject {
-	static constexpr Tag tag = Tag::NewPolygonalObject;
-	
 	uint32_t object_id;
 	Point center;
 	std::vector<Point> shape;
 
-	Message to_message() const;
-
-	static MsgNewPolygonalObject from(Message const &msg);
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(object_id, center, shape);
+	}
 };
 
 struct MsgObjectPosition {
 	uint32_t object_id;
 	Point new_center;
 
-	static constexpr Tag tag = Tag::ObjectPosition;
-	Message to_message() const;
-	static MsgObjectPosition from(Message const &msg);
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(object_id, new_center);
+	}
 };
 
 struct MsgNewPlayer {
@@ -37,29 +40,10 @@ struct MsgNewPlayer {
 	std::string playerName;
     std::string playerTeam;
 
-	static constexpr Tag tag = Tag::NewPlayer;
-	Message to_message() const;
-	static MsgNewPlayer from(Message const & msg);
-};
-
-struct MsgSetPlayerMovement {
-	Point speed;
-	Angle angle;
-	AngularSpeed angularSpeed;
-
-	static constexpr Tag tag = Tag::NewPlayer;
-	Message to_message() const;
-	static MsgSetPlayerMovement from(Message const & msg);
-};
-
-struct MsgIntroduceMyPlayer {
-
-	std::string playerName;
-	std::string playerTeam;
-
-    static constexpr Tag tag = Tag::IntroduceMyPlayer;
-    Message to_message() const;
-    static MsgIntroduceMyPlayer from(Message const & msg);
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(player_id, object_id, playerName, playerTeam);
+	}
 };
 
 struct AnyComponent;
@@ -68,30 +52,38 @@ struct MsgNewEntity {
 	EntityID entity_id;
 	std::vector<AnyComponent> components;
 
-	static constexpr Tag tag = Tag::NewEntity;
-
 	template < typename Archive >
 	void serialize(Archive & archive) {
 		archive(entity_id, components);
 	}
-
-	Message to_message() const;
-	static MsgNewEntity from(Message const & msg);
 };
-
 
 struct MsgUpdateEntity {
 	EntityID entity_id;
 	std::vector<AnyComponent> components;
 
-	static constexpr Tag tag = Tag::UpdateEntity;
-
 	template < typename Archive >
 	void serialize(Archive & archive) {
 		archive(entity_id, components);
 	}
-
-	Message to_message() const;
-	static MsgUpdateEntity from(Message const & msg);
 };
 
+// Client to server
+// =====================================
+
+struct MsgIntroduceMyPlayer {
+
+	std::string playerName;
+	std::string playerTeam;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(playerName, playerTeam);
+	}
+};
+
+struct MsgPlayerMovesLeft{};
+struct MsgPlayerMovesRight{};
+struct MsgPlayerMovesBackward{};
+struct MsgPlayerMovesForward{};
+struct MsgPlayerStops{};

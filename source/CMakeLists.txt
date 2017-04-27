@@ -26,8 +26,9 @@ add_library(ToogashadaCommon
 	./common/Connection.cpp
 	./common/Message.cpp
 	./common/TwoDimensionalObject.cpp
-	./common/Messages.cpp
 	./common/components/EntityID.cpp
+	./common/ServerMessage.cpp
+	./common/ClientMessage.cpp
 )
 
 target_include_directories(ToogashadaCommon

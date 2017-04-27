@@ -36,7 +36,7 @@ int main(int argc, const char** argv)
                        vm.count("player-team") ? vm["player-team"].as<std::string>() : ""};
         client.run();
 
-    } catch(po::error& e) {
+    } catch(std::exception& e) {
 
         std::cerr << "Error while parsing commandline:\n"
                   << e.what()

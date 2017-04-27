@@ -5,11 +5,16 @@
 // SDL
 #include <SDL.h>
 
+#include <boost/variant/static_visitor.hpp>
+
 // project
 #include <common/IConnection.h>
 #include <common/Message.h>
 #include <common/Messages.h>
 #include <common/Tag.h>
+#include <common/AnyComponent.h>
+#include <common/ServerMessage.h>
+#include <common/ClientMessage.h>
 
 #include "ClientGui.h"
 #include "RemoteServerWrapper.h"
@@ -28,6 +33,39 @@ ClientController::ClientController(ClientPlayer &player,
     quit{false}
 {}
 
+class ClientController::Receiver : public boost::static_visitor<void> {
+	public:
+		Receiver(ClientController & controller) : controller(controller) {}
+
+		void operator()(MsgNewPolygonalObject const & msg) {
+			// fallback
+			controller.received(msg);
+		}
+
+		void operator()(MsgObjectPosition const & msg) {
+			// fallback
+			controller.received(msg);
+		}
+
+		void operator()(MsgNewPlayer const & msg) {
+			;
+		}
+
+		void operator()(MsgNewEntity const & msg) {
+			;
+		}
+
+		void operator()(MsgUpdateEntity const & msg) {
+			;
+		}
+
+
+		// todo template rest
+
+	private:
+		ClientController & controller;
+};
+
 void ClientController::received(Message msg) {
 
 	switch(msg.tag) {
@@ -35,15 +73,17 @@ void ClientController::received(Message msg) {
 			cout << "Server says hello." << endl;
 			break;
 
-		case Tag::NewPolygonalObject:
-			return received(MsgNewPolygonalObject::from(msg));
-
-		case Tag::ObjectPosition:
-			return received(MsgObjectPosition::from(msg));
+		case Tag::UniversalServerMessage:
+			return received(ServerMessage::from(msg));
 
 		default:
 			break;
 	}
+}
+
+void ClientController::received(ServerMessage msg) {
+	Receiver receiver{*this};
+	boost::apply_visitor(receiver, msg.data);
 }
 
 void ClientController::received(MsgNewPolygonalObject msg) {
@@ -104,11 +144,11 @@ void ClientController::handle_event(SDL_Event const & e) {
 			break;
 
 		case SDL_WINDOWEVENT:
-			cout << "Window event" << endl;
+			//cout << "Window event" << endl;
 			break;
 
 		case SDL_MOUSEMOTION:
-			cout << "Mouse at [" << e.motion.x << "," << e.motion.y << "]" << endl;
+			// cout << "Mouse at [" << e.motion.x << "," << e.motion.y << "]" << endl;
 			break;
 
 		case SDL_KEYDOWN:
@@ -125,34 +165,37 @@ void ClientController::handle_event(SDL_Event const & e) {
 	}
 }
 
+void ClientController::send(ClientMessage const & msg) {
+	remoteServer.conn().send(msg.to_message());
+}
+
 void ClientController::handleKeyPress(SDL_Scancode code) {
-	cout << "keydown: " << code << endl;
-	Message msg;
+	ClientMessage msg;
 
 	if (code == config.key_down)
 	{
-		msg.tag = Tag::PlayerMovesBackward;
+		msg = {MsgPlayerMovesBackward{}};
 		pressedKeys.key_down = true;
 	}
 	else if (code == config.key_left)
 	{
-		msg.tag = Tag::PlayerMovesLeft;
+		msg = {MsgPlayerMovesLeft{}};
 		pressedKeys.key_left = true;
 	}
 	else if (code == config.key_right)
 	{
-		msg.tag = Tag::PlayerMovesRight;
+		msg = {MsgPlayerMovesRight{}};
 		pressedKeys.key_right = true;
 	}
 	else if (code == config.key_up)
 	{
-		msg.tag = Tag::PlayerMovesForward;
+		msg = {MsgPlayerMovesForward{}};
 		pressedKeys.key_up = true;
 	}
 	else
 		return;
 
-	remoteServer.conn().send(std::move(msg));
+	send(msg);
 }
 
 void ClientController::handleKeyRelease(SDL_Scancode code) {

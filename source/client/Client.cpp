@@ -3,6 +3,7 @@
 
 #include <common/Tag.h>
 #include <common/Messages.h>
+#include <common/ClientMessage.h>
 
 #include "Client.h"
 
@@ -32,8 +33,9 @@ void Client::disconnected(IConnection & connection) {
 
 void Client::run() {
 	serverConnection.listen(*this);
-    MsgIntroduceMyPlayer introduceMyPlayer{clientPlayer.mName, clientPlayer.mTeam};
-	serverConnection.send(introduceMyPlayer.to_message());
+
+    ClientMessage msg{MsgIntroduceMyPlayer{clientPlayer.mName, clientPlayer.mTeam}};
+	serverConnection.send(msg.to_message());
 
 
 	thread network([&]{

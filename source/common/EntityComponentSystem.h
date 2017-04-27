@@ -6,6 +6,8 @@
 #include <common/components/Shape.h>
 #include <common/components/Position.h>
 
+#include "AnyComponent.h"
+
 // Just an example
 
 struct PlayerIdentity {
@@ -31,17 +33,6 @@ public:
 // TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene entity managery...
 // (mozna).
 
-// 'AnyComponent' contains the same components as 'CompList'
-// except it does not contain EntityID.
-// It is in 'struct' to allow forward declarations.
-struct AnyComponent {
-	boost::variant<Shape, Position> component;
-
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(component);
-	}
-};
 
 using CompList = entityplus::component_list<EntityID, Shape, Position>;
 using TagList = entityplus::tag_list<struct TA, struct TB>; // just an example

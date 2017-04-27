@@ -10,6 +10,7 @@ enum class Tag : uint32_t {
 	GoodBye, // Sent by both client and server before shutting the connection down.
 
 	_ServerToClient = 0x100,
+	UniversalServerMessage, // will eventually replace all others
 	/* Messages from server to client */
 	NewPolygonalObject, // Sent by server. Data: 4B ID of object
 	NewPlayer,
@@ -22,6 +23,7 @@ enum class Tag : uint32_t {
 
 
 	_ClientToServer = 0x200,
+	UniversalClientMessage, // will eventually replace all others
 	/* Messages from client to server */
     IntroduceMyPlayer, // sent after connection is made
 	PlayerMovesLeft,

@@ -11,6 +11,8 @@ class RemoteServerWrapper;
 struct Message;
 struct MsgNewPolygonalObject;
 struct MsgObjectPosition;
+struct ServerMessage;
+struct ClientMessage;
 
 class ClientController final {
 public:
@@ -21,12 +23,15 @@ public:
 	void main_loop();
 
 private:
+	class Receiver;
 	void redraw();
 	void received(MsgNewPolygonalObject msg);
 	void received(MsgObjectPosition msg);
+	void received(ServerMessage msg);
 	void handle_event(SDL_Event const & e);
 	void handleKeyPress(SDL_Scancode code);
 	void handleKeyRelease(SDL_Scancode code);
+	void send(ClientMessage const & msg);
 
 	ClientGui & clientGui;
 	RemoteServerWrapper & remoteServer;

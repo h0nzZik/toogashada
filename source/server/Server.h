@@ -12,6 +12,10 @@
 #include "GameModel.h"
 #include "PlayerManager.h"
 
+struct ServerMessage;
+struct ClientMessage;
+
+
 class Server : private IConnection::IHandler, private IBroadcaster
 {
 	public:
@@ -22,12 +26,17 @@ class Server : private IConnection::IHandler, private IBroadcaster
 		void shutdown();
 
 	private:
+		class Receiver;
+		friend class Server::Receiver;
 
+		void received(ConnectionToClient & connection, ClientMessage msg);
 		/* < IConnection::IHandler > */
 		void received(IConnection & connection, Message msg) override;
 		void disconnected(IConnection & connection) override;
 		/* < IConnection::IHandler > */
 
+		void send(ConnectionToClient & client, ServerMessage const & msg);
+		void broadcast(ServerMessage const & msg);
 		/* < IBroadcaster > */
 		void broadcast(Message msg) override;
 		void notify(GameObject const & gameObject) override;
@@ -38,9 +47,9 @@ class Server : private IConnection::IHandler, private IBroadcaster
 		void newClientConnected(ConnectionToClient & client);
 
 		static Vector toVector(Player::Movement movement);
-		static Message createMessage_NewGameObject(GameObject const & object);
-		static Message createMessage_NewObjectPosition(GameObject const & object);
-		static Message createMessage_NewPlayer(Player const & player);
+		static ServerMessage createMessage_NewGameObject(GameObject const & object);
+		static ServerMessage createMessage_NewObjectPosition(GameObject const & object);
+		static ServerMessage createMessage_NewPlayer(Player const & player);
 		void playerMoves(ConnectionToClient & client, Player::Movement movement);
 		void send_him_a_few_polygons(ConnectionToClient & client);
 		void init_player_shape();

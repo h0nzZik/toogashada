@@ -1,10 +1,19 @@
 #include <iostream>
 #include <sstream>
 
+#include <boost/variant/static_visitor.hpp>
+
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/boost_variant.hpp>
 #include <cereal/types/vector.hpp>
+
 #include <entityplus/entity.h>
+
+#include <common/ServerMessage.h>
+#include <common/ClientMessage.h>
+#include <common/Messages.h>
+
+
 #include "Server.h"
 
 using namespace std;
@@ -32,20 +41,58 @@ void Server::shutdown() {
 	// TODO implement this
 }
 
+class Server::Receiver : public boost::static_visitor<void> {
+public:
+	explicit Receiver(Server & self, ConnectionToClient & connection) :
+	self(self),
+	connection(connection)
+	{
+
+	}
+
+	void operator()(MsgIntroduceMyPlayer const /*& msg*/) {
+
+	}
+
+	void operator()(MsgPlayerMovesLeft const & /*msg*/) {
+		self.playerMoves(connection, Player::Movement::Left);
+	}
+
+	void operator()(MsgPlayerMovesRight const & /*msg*/) {
+		self.playerMoves(connection, Player::Movement::Right);
+	}
+
+	void operator()(MsgPlayerMovesForward const & /*msg*/) {
+		self.playerMoves(connection, Player::Movement::Forward);
+	}
+
+	void operator()(MsgPlayerMovesBackward const & /*msg*/) {
+		self.playerMoves(connection, Player::Movement::Backward);
+	}
+
+	void operator()(MsgPlayerStops const & /*msg*/) {
+		self.playerMoves(connection, Player::Movement::None);
+	}
+
+
+private:
+	Server & self;
+	ConnectionToClient & connection;
+};
+
+
+void Server::received(ConnectionToClient & connection, ClientMessage msg) {
+	Receiver receiver{*this, connection};
+	boost::apply_visitor(receiver, msg.data);
+}
+
+
 void Server::received(IConnection & connection, Message msg) {
 	auto & conn = dynamic_cast<ConnectionToClient &>(connection);
 	cout << "Server received message from " << conn.socket().remote_endpoint() << endl;
 	switch(msg.tag) {
-	case Tag::PlayerMovesBackward:
-		return playerMoves(conn, Player::Movement::Backward);
-	case Tag::PlayerMovesForward:
-		return playerMoves(conn, Player::Movement::Forward);
-	case Tag::PlayerMovesLeft:
-		return playerMoves(conn, Player::Movement::Left);
-	case Tag::PlayerMovesRight:
-		return playerMoves(conn, Player::Movement::Right);
-	case Tag::PlayerStops:
-		return playerMoves(conn, Player::Movement::None);
+	case Tag::UniversalClientMessage:
+		return received(conn, ClientMessage::from(msg));
 
 	default:
 		break;
@@ -61,6 +108,7 @@ void Server::playerMoves(ConnectionToClient & client, Player::Movement movement)
 	Player & player = *connection2player[&client];
 	// This is a bit naive, but as a first experiment
 	player.gameObject().speed = toVector(movement);
+	//cout << "New speed: " << player.gameObject().speed << endl;
 	//player.gameObject().center += toVector(movement);
 	broadcast(createMessage_NewObjectPosition(player.gameObject()));
 }
@@ -145,11 +193,11 @@ void Server::newClientConnected(ConnectionToClient & client) {
 
 	// Send whole game state to the new player
 	for (GameObject const & object : gameObjects) {
-		client.send(createMessage_NewGameObject(object));
+		send(client, createMessage_NewGameObject(object));
 	}
 
 	for (Player const & player : players) {
-		client.send(createMessage_NewPlayer(player));
+		send(client, createMessage_NewPlayer(player));
 	}
 
 	// Some experiments with EntityComponent
@@ -160,37 +208,40 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	MsgNewEntity msg;
 	msg.components = EntityComponentSystem::all_components(entity);
 	msg.entity_id = entity.get_component<EntityID>();
-
-	auto msg2 = msg.to_message();
-	broadcast(msg2);
-	client.send(std::move(msg2));
+	send(client, {msg});
+	broadcast({msg});
 
 	// Taky musime mit PlayerComponent
 	// Budeme mit zpravu, ktera umi rict 'Nova entita' a seznam komponent.
 	// My chceme updatovat
 }
 
-Message Server::createMessage_NewGameObject(GameObject const & object) {
+ServerMessage Server::createMessage_NewGameObject(GameObject const & object) {
 	MsgNewPolygonalObject npo;
 	npo.object_id = object.id();
 	npo.center = object.center;
 	npo.shape = object.shape;
-	return npo.to_message();
+	return ServerMessage {npo};
 }
 
-Message Server::createMessage_NewObjectPosition(GameObject const & object) {
+ServerMessage Server::createMessage_NewObjectPosition(GameObject const & object) {
 	MsgObjectPosition mop;
 	mop.object_id = object.id();
 	mop.new_center = object.center;
-	return mop.to_message();
+	return ServerMessage {mop};
 }
 
-Message Server::createMessage_NewPlayer(Player const & player) {
+ServerMessage Server::createMessage_NewPlayer(Player const & player) {
 	MsgNewPlayer mnp;
 	mnp.player_id = player.id();
 	mnp.object_id = player.gameObject().id();
-	mnp.player_name = player.name;
-	return mnp.to_message();
+	mnp.playerName = player.name;
+	return ServerMessage {mnp};
+}
+
+void Server::send(ConnectionToClient & client, ServerMessage const & msg) {
+	auto m = msg.to_message();
+	client.send(m);
 }
 
 void Server::broadcast(Message msg) {
@@ -208,7 +259,8 @@ void Server::send_him_a_few_polygons(ConnectionToClient & client) {
 	npo.shape.push_back(Point{40, 120});
 	npo.shape.push_back(Point{70, 140});
 	npo.shape.push_back(Point{140,140});
-	client.send(npo.to_message());
+	ServerMessage usm{npo};
+	client.send(usm.to_message());
 }
 
 void Server::notify(GameObject const & gameObject) {
@@ -219,6 +271,11 @@ void Server::notify(entity_t entity, AnyComponent const &component) {
 	MsgUpdateEntity mue;
 	mue.entity_id = entity.get_component<EntityID>();
 	mue.components = {component};
-	broadcast(mue.to_message());
+	ServerMessage usm{mue};
+	broadcast(usm);
+}
+
+void Server::broadcast(ServerMessage const & msg) {
+	broadcast(msg.to_message());
 }
 

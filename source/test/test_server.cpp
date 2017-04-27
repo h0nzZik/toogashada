@@ -1,6 +1,9 @@
 #include <sstream>
+#include <type_traits>
 
+#include <boost/variant/variant.hpp>
 #include <cereal/archives/binary.hpp>
+#include <cereal/types/boost_variant.hpp>
 
 #include "common/components/Position.h"
 #include "doctest.h"
@@ -28,6 +31,30 @@ TEST_CASE("Serialization") {
 	    CHECK(pos.angularSpeed == 1);
 	    CHECK((pos.speed == Vector{-1, 0}));
 	  }
+}
+
+#if 0
+/**
+ * Empty serialization for empty structures
+ */
+template<typename Archive, typename T>
+auto serialize(Archive &, T & x) -> typename std::enable_if<std::is_empty<T>::value>::type
+{
+
+}
+#endif
+struct S{};
+struct T{};
+
+TEST_CASE("Serialization of variant  with empty struct") {
+	using V = boost::variant<S, T>;
+
+	S s{};
+	//serialize(s, s);
+	V v(S{});
+	std::stringstream ss;
+	cereal::BinaryOutputArchive oarchive(ss);
+	oarchive(v);
 }
 
 TEST_CASE("Entity management") {
