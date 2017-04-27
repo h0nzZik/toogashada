@@ -1,0 +1,3 @@
+[submodule "source/third_party/EntityPlus"]
+	path = source/third_party/EntityPlus
+	url = https://github.com/Yelnats321/EntityPlus
