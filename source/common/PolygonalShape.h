@@ -3,6 +3,7 @@
 // Standard
 #include <common/GPoint.h>
 #include <vector>
+#include <ostream>
 
 // Common
 
@@ -14,6 +15,11 @@ GPolygonalShape<T> & operator+=(GPolygonalShape<T> & shape, GVector<T> const &ve
 	for(GPoint<T> & p : shape)
 		p += vec;
 	return *shape;
+}
+
+template < typename T >
+std::ostream & operator<<(std::ostream &o, GPolygonalShape<T> const &shape ) {
+	return o;
 }
 
 using PolygonalShape = GPolygonalShape<Scalar>;

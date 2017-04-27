@@ -99,3 +99,12 @@ add_executable(test_server
 target_link_libraries(test_server
 	server
 )
+
+add_executable(test_common
+	./test/doctest_main.cpp
+	./test/test_EntityComponentSystem.cpp
+)
+
+target_link_libraries(test_common
+	ToogashadaCommon
+)

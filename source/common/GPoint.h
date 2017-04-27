@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 /**
  * GPoint - a generic point
  */
@@ -83,6 +85,17 @@ GVector<T> operator-(GPoint<T> const & p1, GPoint<T> const &p2) {
 	return GPoint<T>{p1.x + p2.x, p1.y + p2.y};
 }
 
+template < typename T >
+std::ostream & operator<<(std::ostream &o, GPoint<T> const &point ) {
+	o << "[" << point.x << "," << point.y << "]";
+	return o;
+}
+
+template < typename T >
+std::ostream & operator<<(std::ostream &o, GVector<T> const &point ) {
+	o << "(" << point.x << "," << point.y << ")";
+	return o;
+}
 
 
 using Scalar = float;

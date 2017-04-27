@@ -7,6 +7,7 @@
 #include "Tag.h"
 #include "Message.h"
 #include "Angle.h"
+#include "EntityComponentSystem.h"
 
 #include "common/components/EntityID.h"
 
@@ -45,8 +46,6 @@ struct MsgNewPlayer {
 		archive(player_id, object_id, playerName, playerTeam);
 	}
 };
-
-struct AnyComponent;
 
 struct MsgNewEntity {
 	EntityID entity_id;

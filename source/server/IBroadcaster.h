@@ -2,10 +2,9 @@
 
 #include <common/Message.h>
 #include <common/EntityComponentSystem.h>
+#include <common/BaseEntityComponentSystem.h>
 
 class GameObject;
-
-struct AnyComponent;
 
 class IBroadcaster {
 public:

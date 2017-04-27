@@ -108,7 +108,7 @@ void Server::playerMoves(ConnectionToClient & client, Player::Movement movement)
 	Player & player = *connection2player[&client];
 	// This is a bit naive, but as a first experiment
 	player.gameObject().speed = toVector(movement);
-	//cout << "New speed: " << player.gameObject().speed << endl;
+	cout << "New speed: " << player.gameObject().speed << endl;
 	//player.gameObject().center += toVector(movement);
 	broadcast(createMessage_NewObjectPosition(player.gameObject()));
 }
@@ -123,6 +123,9 @@ Vector Server::toVector(Player::Movement movement) {
 		return {0, -5};
 	case Player::Movement::Forward:
 		return {0, +15};
+
+	case Player::Movement::None:
+		return {0, 0};
 	default:
 		return {0, 0}; // exception might be nicer
 	}
