@@ -1,3 +1,6 @@
 [submodule "source/third_party/EntityPlus"]
 	path = source/third_party/EntityPlus
 	url = https://github.com/Yelnats321/EntityPlus
+[submodule "source/third_party/cereal"]
+	path = source/third_party/cereal
+	url = https://github.com/USCiLab/cereal
