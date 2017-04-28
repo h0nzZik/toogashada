@@ -8,6 +8,7 @@
 
 struct ServerMessage {
 	using Data = boost::variant<
+//			MsgGameInfo,
 			MsgNewPlayer,
 			MsgNewEntity,
 			MsgUpdateEntity

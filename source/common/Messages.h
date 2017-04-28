@@ -25,6 +25,19 @@ struct MsgNewPlayer {
 	}
 };
 
+/*
+ * But for now, we will make it fixed.
+ */
+struct MsgGameInfo {
+	uint32_t area_size_x;
+	uint32_t area_size_y;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(area_size_x, area_size_y);
+	}
+};
+
 struct MsgNewEntity {
 	EntityID entity_id;
 	std::vector<AnyComponent> components;

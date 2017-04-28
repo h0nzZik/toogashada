@@ -17,6 +17,7 @@
 #include <common/Messages.h>
 #include <common/EntityComponentSystem.h>
 #include <common/Geometry.h>
+#include <common/geometry/RectangularArea.h>
 
 #include "DrawProp.h"
 
@@ -29,6 +30,23 @@ class ClientGui::Impl {
 
     /* const */ int SCREEN_WIDTH;
     /* const */ int SCREEN_HEIGHT;
+
+	geometry::RectangularArea const game_area{{0, 0}, {100, 100}};
+	geometry::RectangularArea drawing_area() const {
+		return {{0, 0}, {Scalar(SCREEN_WIDTH), Scalar(SCREEN_HEIGHT)}};
+	}
+
+	geometry::Point translate(geometry::Point point) {
+		// assume starting points are zero
+		// so no translation is performed
+		Scalar const x_factor = (drawing_area().bottomRight().x - drawing_area().topLeft().x)
+				/ (game_area.bottomRight().x - game_area.topLeft().x);
+
+		Scalar const y_factor = (drawing_area().bottomRight().y - drawing_area().topLeft().y)
+				/ (game_area.bottomRight().y - game_area.topLeft().y);
+
+		return {x_factor * point.x, y_factor * point.y};
+	}
 
     // GUI settings
     DrawProp mapBoundingBoxRatio {
@@ -133,8 +151,9 @@ public:
     	auto xs = make_unique<Sint16[]>(n);
     	auto ys = make_unique<Sint16[]>(n);
     	for (size_t i = 0; i < n; i++) {
-    		xs[i] = points[i].x + center.x;
-    		ys[i] = points[i].y + center.y;
+    		geometry::Point point = translate(center + points[i]);
+    		xs[i] = point.x;
+    		ys[i] = point.y;
     	}
     	polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
     }
