@@ -26,10 +26,11 @@ add_library(ToogashadaCommon
 	./common/Connection.cpp
 	./common/Message.cpp
 	./common/TwoDimensionalObject.cpp
-	./common/components/EntityID.cpp
 	./common/ServerMessage.cpp
 	./common/ClientMessage.cpp
 	./common/Geometry.cpp
+	./common/components/EntityID.cpp
+	./common/components/Shape.cpp
 )
 
 target_include_directories(ToogashadaCommon
@@ -73,7 +74,9 @@ add_library(client
 	./client/ConnectionToServer.cpp
 	./client/RemoteServerWrapper.cpp
 	./client/ClientGui.cpp
-        client/SDLDeleter.h client/DrawProp.h)
+	./client/SDLDeleter.h
+	./client/DrawProp.h
+)
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(client

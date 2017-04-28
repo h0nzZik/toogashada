@@ -1,4 +1,5 @@
 #include <ostream>
+#include <numeric> // accumulate
 #include <cmath>
 
 #include "Geometry.h"
@@ -26,23 +27,67 @@ std::ostream & operator<<(std::ostream &o, CircleShape const &shape ) {
 }
 
 PolygonalShape & operator+=(PolygonalShape & shape, Vector const &vec) {
-	for(Point & p : shape)
-		p += vec;
+	for(auto & v : shape)
+		v += vec;
 	return shape;
 }
 
 PolygonalShape & operator-=(PolygonalShape & shape, Vector const &vec) {
-	for(Point & p : shape)
-		p -= vec;
+	for(auto & v : shape)
+		v -= vec;
 	return shape;
 }
 
 std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape ) {
 	o << "[";
-	for(Point const & point : shape)
-		o << " " << point;
+	for(auto const & vec : shape)
+		o << " " << vec;
 	o << " ]";
 	return o;
 }
 
+std::ostream & operator<<(std::ostream &o, RectangularArea const &area ) {
+	o << "{ area from " << area.topLeft() << " to " << area.bottomRight() << " }";
+	return o;
 }
+
+bool in(Point const & point, RectangularArea const &area) {
+	if (point.x <= area.topLeft().x)
+		return false;
+	if (point.x >= area.bottomRight().x)
+		return false;
+	if (point.y <= area.topLeft().y)
+		return false;
+	if (point.y >= area.bottomRight().y)
+		return false;
+	return true;
+}
+
+bool in(Circle const & circle, RectangularArea const &area) {
+	return in(circle.center, CircleShape{circle.radius}, area);
+}
+
+bool in(Point const & point, CircleShape const & shape, RectangularArea const &area) {
+	if (point.x - shape.radius <= area.topLeft().x)
+		return false;
+	if (point.x + shape.radius >= area.bottomRight().x)
+		return false;
+	if (point.y - shape.radius <= area.topLeft().y)
+		return false;
+	if (point.y + shape.radius >= area.bottomRight().y)
+		return false;
+	return true;
+}
+
+bool in(Point const & point, PolygonalShape const & shape, RectangularArea const &area) {
+	// TODO use accumulate with ranges
+	for (auto const & v : shape) {
+		Point shape_point = point + v;
+		if (!in(shape_point, area))
+			return false;
+	}
+
+	return true;
+}
+
+} // namespace geometry

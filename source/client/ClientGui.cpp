@@ -128,7 +128,7 @@ public:
     	SDL_Quit();
     }
 
-    void render_polygon(Point center, std::vector<Point> const &points) {
+    void render_polygon(Point center, std::vector<Vector> const &points) {
     	size_t const n = points.size();
     	auto xs = make_unique<Sint16[]>(n);
     	auto ys = make_unique<Sint16[]>(n);
@@ -192,7 +192,7 @@ ClientGui::ClientGui()
 
 ClientGui::~ClientGui() = default;
 
-void ClientGui::render_polygon(Point center, std::vector<Point> const & points) {
+void ClientGui::render_polygon(Point center, PolygonalShape const & points) {
 	pimpl->render_polygon(center, points);
 }
 

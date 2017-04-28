@@ -4,7 +4,8 @@
 #include <common/geometry/Vector.h>
 #include <common/geometry/PolygonalShape.h>
 #include <common/geometry/CircleShape.h>
-
+#include <common/geometry/Circle.h>
+#include <common/geometry/RectangularArea.h>
 
 // For streaming operators
 namespace std
@@ -22,6 +23,18 @@ namespace geometry {
 
 
 Scalar distance(Point const &p1, Point const &p2);
+
+inline Vector & operator+=(Vector & v1, Vector const &v2) {
+	v1.x += v2.x;
+	v1.y += v2.y;
+	return v1;
+}
+
+inline Vector & operator-=(Vector & v1, Vector const &v2) {
+	v1.x -= v2.x;
+	v1.y -= v2.y;
+	return v1;
+}
 
 inline Vector & operator*=(Vector & vector, Scalar scalar) {
 	vector.x *= scalar;
@@ -79,5 +92,11 @@ std::ostream & operator<<(std::ostream &o, Point const &point );
 std::ostream & operator<<(std::ostream &o, Vector const &point );
 std::ostream & operator<<(std::ostream &o, CircleShape const &shape );
 std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape );
+std::ostream & operator<<(std::ostream &o, RectangularArea const &area );
+
+bool in(Point const & point, RectangularArea const &area);
+bool in(Circle const & circle, RectangularArea const &area);
+bool in(Point const & point, CircleShape const & shape, RectangularArea const &area);
+bool in(Point const & point, PolygonalShape const & shape, RectangularArea const &area);
 
 } // namespace geometry

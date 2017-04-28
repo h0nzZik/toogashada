@@ -10,5 +10,5 @@ public:
 	virtual ~IBroadcaster() = default;
 
 	virtual void broadcast(Message message) = 0;
-	virtual void notify(entity_t const & entity, AnyComponent const &component) = 0;
+	virtual void updateEntity(entity_t const & entity, AnyComponent const &component) = 0;
 };

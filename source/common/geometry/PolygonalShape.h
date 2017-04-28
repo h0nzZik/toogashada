@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <common/geometry/Point.h>
+#include <common/geometry/Vector.h>
 
 namespace geometry {
-	using PolygonalShape = std::vector<geometry::Point>;
+	using PolygonalShape = std::vector<geometry::Vector>;
 }

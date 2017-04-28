@@ -22,6 +22,7 @@
 #include "ConnectionToClient.hpp"
 #include "GameModel.h"
 #include "Player.h"
+#include "SEntity.h"
 
 #include "Server.h"
 
@@ -138,7 +139,7 @@ private:
 
 	}
 
-	void notify(entity_t const & entity, AnyComponent const &component) override {
+	void updateEntity(entity_t const & entity, AnyComponent const &component) override {
 		MsgUpdateEntity mue;
 		mue.entity_id = entity.get_component<EntityID>();
 		mue.components = {component};
@@ -174,18 +175,13 @@ private:
 		//client.send(Message{Tag::Hello, {1,2,3}});
 
 		sendAllEntities(client);
+		SEntity sentity = gameModel.newPlayer();
 
-		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
-		Position pos;
-		pos.center = {Scalar(rand() % 200), Scalar(rand() % 200)};
-		entity.add_component<Position>(pos);
-		//entity.add_component<Shape>(CircleShape{5.1});
-		entity.add_component<Shape>(playerShape);
+		connection2entity[&client] = sentity.entity;
 
 		MsgNewEntity msg;
-		connection2entity[&client] = entity;
-		msg.components = EntityComponentSystem::all_components(entity);
-		msg.entity_id = entity.get_component<EntityID>();
+		msg.components = EntityComponentSystem::all_components(sentity.entity);
+		msg.entity_id = sentity.entity.get_component<EntityID>();
 		send(client, {msg});
 		broadcast({msg});
 

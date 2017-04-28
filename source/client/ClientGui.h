@@ -18,7 +18,7 @@ public:
     ClientGui();
     ~ClientGui();
 
-    void render_polygon(geometry::Point center, std::vector<geometry::Point> const &points);
+    void render_polygon(geometry::Point center, geometry::PolygonalShape const &points);
 
     void renderGui(EntityComponentSystem & entities);
 

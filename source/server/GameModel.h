@@ -4,6 +4,7 @@
 
 struct EntityComponentSystem;
 class IBroadcaster;
+struct SEntity;
 
 class GameModel {
 public:
@@ -11,6 +12,7 @@ public:
 	~GameModel();
 
 	EntityComponentSystem & ecs;
+	SEntity newPlayer();
 private:
 	class Impl;
 	std::unique_ptr<Impl> pImpl;
