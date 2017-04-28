@@ -3,7 +3,7 @@
 
 #include <boost/variant/variant.hpp>
 
-#include <common/Geometry.h>
+#include <common/GeometricPrimitives.h>
 
 using Shape = boost::variant<PolygonalShape, CircleShape>;
 

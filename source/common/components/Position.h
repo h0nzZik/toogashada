@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/Angle.h>
-#include <common/Geometry.h>
+#include <common/GeometricPrimitives.h>
 
 struct Position {
 	Point center;

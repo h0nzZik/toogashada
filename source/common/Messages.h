@@ -1,6 +1,5 @@
 #pragma once
 
-#include <common/Geometry.h>
 #include <stdint.h>
 #include <vector>
 
@@ -8,6 +7,7 @@
 #include "Message.h"
 #include "Angle.h"
 #include "EntityComponentSystem.h"
+#include "GeometricPrimitives.h"
 
 #include "common/components/EntityID.h"
 

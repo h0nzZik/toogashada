@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
-#include "Scalar.h"
+#include "GeometricPrimitives.h"
+
 
 // For streaming operators
 namespace std
@@ -15,34 +15,7 @@ class basic_ostream;
 typedef basic_ostream<char, char_traits<char> > ostream;
 }
 
-
-struct Point {
-	Scalar x;
-	Scalar y;
-
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(x,y);
-	}
-};
-
-struct Vector {
-	Scalar x;
-	Scalar y;
-
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(x,y);
-	}
-};
-
-inline bool operator==(Vector const &l, Vector const &r) {
-	return (l.x == r.x) && (l.y == r.y);
-}
-
-inline bool operator!=(Vector const &l, Vector const &r) {
-	return !(l == r);
-}
+Scalar distance(Point const &p1, Point const &p2);
 
 inline Vector & operator*=(Vector & vector, Scalar scalar) {
 	vector.x *= scalar;
@@ -66,10 +39,24 @@ inline Point & operator+=(Point & p, Vector v) {
 	return p;
 }
 
+inline Point & operator-=(Point & p, Vector v) {
+	p.x -= v.x;
+	p.y -= v.y;
+	return p;
+}
+
 inline Point operator+(Point const & p, Vector const &v) {
 	Point q = p;
 	q += v;
 	return q;
+}
+
+inline Vector operator+(Vector const &v) {
+	return {+v.x, +v.y};
+}
+
+inline Vector operator-(Vector const &v) {
+	return {-v.x, -v.y};
 }
 
 inline Vector operator+(Vector const & v1, Vector const &v2) {
@@ -77,25 +64,12 @@ inline Vector operator+(Vector const & v1, Vector const &v2) {
 }
 
 inline Vector operator-(Point const & p1, Point const &p2) {
-	return Vector{p1.x + p2.x, p1.y + p2.y};
+	return Vector{p1.x - p2.x, p1.y - p2.y};
 }
-
-std::ostream & operator<<(std::ostream &o, Point const &point );
-std::ostream & operator<<(std::ostream &o, Vector const &point );
-
-struct CircleShape {
-	Scalar radius;
-
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(radius);
-	}
-};
-
-std::ostream & operator<<(std::ostream &o, CircleShape const &shape );
-
-using PolygonalShape = std::vector<Point>;
 
 PolygonalShape & operator+=(PolygonalShape & shape, Vector const &vec);
 
+std::ostream & operator<<(std::ostream &o, Point const &point );
+std::ostream & operator<<(std::ostream &o, Vector const &point );
+std::ostream & operator<<(std::ostream &o, CircleShape const &shape );
 std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape );

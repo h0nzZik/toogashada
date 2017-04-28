@@ -1,6 +1,12 @@
 #include <ostream>
+#include <cmath>
 
 #include "Geometry.h"
+
+Scalar distance(Point const &p1, Point const &p2) {
+	auto d = p2 - p1;
+	return Scalar(std::hypot(d.x, d.y));
+}
 
 std::ostream & operator<<(std::ostream &o, Point const &point ) {
 	o << "[" << point.x << "," << point.y << "]";
@@ -20,6 +26,12 @@ std::ostream & operator<<(std::ostream &o, CircleShape const &shape ) {
 PolygonalShape & operator+=(PolygonalShape & shape, Vector const &vec) {
 	for(Point & p : shape)
 		p += vec;
+	return shape;
+}
+
+PolygonalShape & operator-=(PolygonalShape & shape, Vector const &vec) {
+	for(Point & p : shape)
+		p -= vec;
 	return shape;
 }
 

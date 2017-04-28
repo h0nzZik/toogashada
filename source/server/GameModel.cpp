@@ -5,6 +5,7 @@
 #include <thread>
 #include <atomic>
 
+#include <common/Geometry.h>
 #include <common/EntityComponentSystem.h>
 
 // Server
