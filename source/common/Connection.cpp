@@ -71,8 +71,8 @@ void Connection::start_rx_header() {
 }
 
 void Connection::received(Message message) {
-	cout << "Received message from " << socket.remote_endpoint() << endl;
-	cout << "  tag=" << int(message.tag) << ", len=" << message.data.size() << endl;
+	//cout << "Received message from " << socket.remote_endpoint() << endl;
+	//cout << "  tag=" << int(message.tag) << ", len=" << message.data.size() << endl;
 
 	switch (message.tag) {
 		case Tag::Ping:

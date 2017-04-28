@@ -9,6 +9,8 @@ class GameObject;
 template < typename T > class GenericManager;
 using GameObjectManager = GenericManager<GameObject>;
 
+struct EntityComponentSystem;
+
 class ClientGui {
     class Impl;
     std::unique_ptr<Impl> pimpl;
@@ -19,7 +21,7 @@ public:
 
     void render_polygon(Point center, std::vector<Point> const &points);
 
-    void renderGui(GameObjectManager &gameObjects);
+    void renderGui(GameObjectManager &gameObjects, EntityComponentSystem & entities);
 
     //void drawRect();
 

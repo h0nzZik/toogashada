@@ -13,11 +13,15 @@
 #include <common/ClientMessage.h>
 #include <common/Messages.h>
 
+#include <common/EntityComponentSystem.h>
+
 
 #include "Server.h"
 
 using namespace std;
 using boost::asio::ip::tcp;
+
+// TODO pImpl
 
 Server::Server(int port) :
 		acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
@@ -100,17 +104,25 @@ void Server::received(IConnection & connection, Message msg) {
 }
 
 void Server::playerMoves(ConnectionToClient & client, Player::Movement movement) {
-	if (connection2player[&client] == nullptr) {
+	auto it = connection2entity.find(&client);
+	if (it == connection2entity.end()) {
 		cerr << "[warn] player does not exist, but moves" << endl;
 		return;
 	}
 
-	Player & player = *connection2player[&client];
-	// This is a bit naive, but as a first experiment
-	player.gameObject().speed = toVector(movement);
-	cout << "New speed: " << player.gameObject().speed << endl;
+	entity_t player = it->second;
+	//Player & player = *connection2player[&client];
+	//entity_t player = *connection2entity[&client];
+	player.sync();
+	if (player.has_component<Position>()) {
+		auto newSpeed = toVector(movement);
+		cout << "New speed: " << newSpeed << endl;
+		player.get_component<Position>().speed = newSpeed;
+	}
+
+
 	//player.gameObject().center += toVector(movement);
-	broadcast(createMessage_NewObjectPosition(player.gameObject()));
+	//broadcast(createMessage_NewObjectPosition(player.gameObject()));
 }
 
 Vector Server::toVector(Player::Movement movement) {
@@ -187,7 +199,7 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	auto _player = make_unique<Player>(player_id, object);
 	Player & player = *_player;
 	players.insert(std::move(_player));
-	connection2player[&client] = &player;
+	//connection2player[&client] = &player;
 
 	// Send diffs to all current players.
 	// New player must not be in the set yet.
@@ -206,9 +218,13 @@ void Server::newClientConnected(ConnectionToClient & client) {
 	// Some experiments with EntityComponent
 	// Opravdu bych mohl pridat komponentu pro identitu entit...?
 	entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
-	entity.add_component<Position>();
-	entity.add_component<Shape>(CircleShape{5.1});
+	Position pos;
+	pos.center = object.center;
+	entity.add_component<Position>(pos);
+	//entity.add_component<Shape>(CircleShape{5.1}); // for some reazon it is zero on client
+	entity.add_component<Shape>(playerShape);
 	MsgNewEntity msg;
+	connection2entity[&client] = entity;
 	msg.components = EntityComponentSystem::all_components(entity);
 	msg.entity_id = entity.get_component<EntityID>();
 	send(client, {msg});
@@ -270,7 +286,7 @@ void Server::notify(GameObject const & gameObject) {
 	broadcast(createMessage_NewObjectPosition(gameObject));
 }
 
-void Server::notify(entity_t entity, AnyComponent const &component) {
+void Server::notify(entity_t const &entity, AnyComponent const &component) {
 	MsgUpdateEntity mue;
 	mue.entity_id = entity.get_component<EntityID>();
 	mue.components = {component};

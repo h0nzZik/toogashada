@@ -40,7 +40,7 @@ class Server : private IConnection::IHandler, private IBroadcaster
 		/* < IBroadcaster > */
 		void broadcast(Message msg) override;
 		void notify(GameObject const & gameObject) override;
-		void notify(entity_t entity, AnyComponent const &component) override;
+		void notify(entity_t const & entity, AnyComponent const &component) override;
 		/* </IBroadcaster > */
 
 		void start_accept();
@@ -59,7 +59,8 @@ class Server : private IConnection::IHandler, private IBroadcaster
 
 		// We do not use smart pointers to ease removal of items from set
 		std::set<ConnectionToClient *> connections;
-		std::map<ConnectionToClient const *, Player *> connection2player;
+		//std::map<ConnectionToClient const *, Player *> connection2player;
+		std::map<ConnectionToClient const *, entity_t> connection2entity;
 		GameObjectManager gameObjects;
 		PlayerManager players;
 		PolygonalShape playerShape;

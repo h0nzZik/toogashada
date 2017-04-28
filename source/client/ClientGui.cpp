@@ -10,11 +10,13 @@
 #include <SDL_video.h>
 #include <SDL2_gfxPrimitives.h>
 
+#include <boost/variant/static_visitor.hpp>
 
 #include <common/Tag.h>
 #include <common/Message.h>
 #include <common/Messages.h>
 #include <common/GameObjectManager.h>
+#include <common/EntityComponentSystem.h>
 
 #include "DrawProp.h"
 
@@ -137,18 +139,54 @@ public:
     	polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
     }
 
-    void renderGui(GameObjectManager &gameObjects) {
+    void renderGui(GameObjectManager &gameObjects, EntityComponentSystem & entities) {
+    	using namespace std::placeholders;
+
     	drawAppBg();
 
         drawRect(mapBoundingBox);
         drawRect(infoBoundingBox);
 
+#if 0
     	for (const GameObject &go : gameObjects) {
 
     		render_polygon(go.center, go.shape);
     	}
+#endif
+
+    	entities.entityManager.for_each<Shape, Position>(
+    			std::bind(&Impl::render_entity,this,_1,_2,_3)
+    	);
 
     	render();
+    }
+
+    void render_entity(entity_t const & entity, Shape const & shape, Position const & position) {
+    	//cout << "Rendering entity" << endl;
+    	//cout << "Rendering: " << shape << endl;
+        struct Renderer : public boost::static_visitor<void> {
+        	Impl & self;
+        	entity_t const & entity;
+        	Position const & position;
+        	Renderer(Impl & self, entity_t const & entity, Position const & position ) :
+        		self(self), entity(entity), position(position)
+        	{
+
+        	}
+
+        	void operator()(PolygonalShape const & shape){
+        		cout << "Rendering polygon " << endl;
+        		self.render_polygon(position.center, shape);
+        	}
+
+        	void operator()(CircleShape const & shape) {
+        		cout << "Rendering circle " << endl;
+        		cout << "radius: " << shape.radius << endl;
+        	}
+        };
+    	Renderer renderer{*this, entity, position};
+        boost::apply_visitor(renderer, shape);
+        cout << "center: " << position.center << endl;
     }
 
     //void drawRect();
@@ -173,8 +211,8 @@ void ClientGui::render_polygon(Point center, std::vector<Point> const & points) 
 	pimpl->render_polygon(center, points);
 }
 
-void ClientGui::renderGui(GameObjectManager &gameObjects) {
-	pimpl->renderGui(gameObjects);
+void ClientGui::renderGui(GameObjectManager &gameObjects, EntityComponentSystem & entities) {
+	pimpl->renderGui(gameObjects, entities);
 }
 
 void ClientGui::drawRect(DrawProp &dp) {

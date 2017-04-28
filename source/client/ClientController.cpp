@@ -30,7 +30,12 @@ using namespace std;
 
 class ClientController::Impl final {
 public:
-	explicit Impl(ClientPlayer &player, ClientGui & clientGui, RemoteServerWrapper & server);
+	Impl(ClientPlayer &player, ClientGui & clientGui, RemoteServerWrapper & server) :
+		clientGui(clientGui),remoteServer{server},
+		player(player),	quit{false}
+	{
+
+    }
 	~Impl() = default;
 
 	void received(Message msg);
@@ -71,32 +76,6 @@ private:
 	std::map<EntityID, entity_t> entites;
 };
 
-ClientController::ClientController(
-		ClientPlayer &player,
-		ClientGui & clientGui,
-		RemoteServerWrapper & server) {
-	impl = make_unique<Impl>(player, clientGui, server);
-}
-
-ClientController::~ClientController() = default;
-
-
-void ClientController::received(Message msg) {
-	impl->received(std::move(msg));
-}
-
-void ClientController::main_loop() {
-	impl->main_loop();
-}
-
-ClientController::Impl::Impl(ClientPlayer &player,
-								   ClientGui & clientGui,
-								   RemoteServerWrapper & server) :
-	clientGui(clientGui),
-	remoteServer{server},
-    player(player),
-    quit{false}
-{}
 
 class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 	public:
@@ -117,6 +96,7 @@ class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 		}
 
 		void operator()(MsgNewEntity const & msg) {
+			std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
 			cout << "Received new entity " << msg.entity_id.id() << endl;
 			controller.entites[msg.entity_id] = controller.ecs.entityManager.create_entity(msg.entity_id);
 			auto & entity = controller.entites[msg.entity_id];
@@ -179,21 +159,11 @@ void ClientController::Impl::main_loop() {
 }
 
 void ClientController::Impl::redraw() {
+	std::lock_guard<std::mutex> guard{mutexGameObjects};
+	// TODO(h0nzZik): I think it is not needed to lock everything.
+	// We should refine it someday in future.
 
-	{
-		std::lock_guard<std::mutex> guard{mutexGameObjects};
-		// TODO(h0nzZik): I think it is not needed to lock the whole structure.
-		// We should refine it someday in future.
-
-        clientGui.renderGui(gameObjects);
-
-//        for (GameObject const & go : gameObjects) {
-//
-//            clientGui.render_polygon(go.center, go.shape);
-//        }
-
-	}
-
+	clientGui.renderGui(gameObjects, ecs);
 }
 
 
@@ -289,6 +259,24 @@ void ClientController::Impl::handleKeyRelease(SDL_Scancode code) {
 	if (!pressedKeys.key_down && !pressedKeys.key_up &&
 			!pressedKeys.key_left && !pressedKeys.key_right)
 		remoteServer.conn().send(Message(Tag::PlayerStops));
+}
+
+ClientController::ClientController(
+		ClientPlayer &player,
+		ClientGui & clientGui,
+		RemoteServerWrapper & server) {
+	impl = make_unique<Impl>(player, clientGui, server);
+}
+
+ClientController::~ClientController() = default;
+
+
+void ClientController::received(Message msg) {
+	impl->received(std::move(msg));
+}
+
+void ClientController::main_loop() {
+	impl->main_loop();
 }
 
 ClientController::Config::Config()

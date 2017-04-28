@@ -13,5 +13,5 @@ public:
 
 	virtual void broadcast(Message message) = 0;
 	virtual void notify(GameObject const & gameObject) = 0;
-	virtual void notify(entity_t entity, AnyComponent const &component) = 0;
+	virtual void notify(entity_t const & entity, AnyComponent const &component) = 0;
 };

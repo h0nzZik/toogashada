@@ -1,12 +1,12 @@
 #pragma once
 
-#include <thread>
-#include <atomic>
-#include <chrono>
+#include <memory> // std::unique_ptr
 
-#include <common/GameObjectManager.h>
-#include <common/EntityComponentSystem.h>
+class GameObject;
+template < typename T > class GenericManager;
+using GameObjectManager = GenericManager<GameObject>;
 
+struct EntityComponentSystem;
 class IBroadcaster;
 
 class GameModel {
@@ -16,17 +16,7 @@ public:
 
 	EntityComponentSystem & ecs;
 private:
-	void main();
-	void do_physics(std::chrono::milliseconds dt);
-	void broadcast_new_entity();
-
-	GameObjectManager &gameObjects;
-	IBroadcaster & broadcaster;
-
-	std::thread runner;
-	std::atomic<bool> stop;
-	std::chrono::steady_clock::time_point startPoint;
-	std::chrono::steady_clock::time_point realTime;
-	std::chrono::steady_clock::time_point gameTime;
+	class Impl;
+	std::unique_ptr<Impl> pImpl;
 };
 
