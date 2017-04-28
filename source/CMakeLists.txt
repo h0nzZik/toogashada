@@ -43,10 +43,6 @@ target_include_directories(ToogashadaCommon
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/third_party/EntityPlus
 )
 
-#add_library(Geometry
-#
-#)
-
 ## Server
 
 add_library(server
@@ -71,8 +67,7 @@ target_link_libraries(server_main
 
 ## Client
 
-add_executable(client
-	./client/client_main.cpp
+add_library(client
 	./client/Client.cpp
 	./client/ClientController.cpp
 	./client/ConnectionToServer.cpp
@@ -91,21 +86,24 @@ target_link_libraries(client
 	#	SDL2_ttf
 )
 
+add_executable(client_main
+	./client/client_main.cpp
+)
+
+target_link_libraries(client_main
+	client
+)
+
 # Tests
-add_executable(test_server
+add_executable(tester
 	./test/doctest_main.cpp
 	./test/test_server.cpp
-)
-
-target_link_libraries(test_server
-	server
-)
-
-add_executable(test_common
-	./test/doctest_main.cpp
+	./test/test_geometry.cpp
 	./test/test_EntityComponentSystem.cpp
 )
 
-target_link_libraries(test_common
+target_link_libraries(tester
 	ToogashadaCommon
+	server
+	client
 )
