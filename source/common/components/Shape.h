@@ -3,12 +3,8 @@
 
 #include <boost/variant/variant.hpp>
 
-#include <common/PolygonalShape.h>
-#include <common/CircleShape.h>
+#include <common/Geometry.h>
 
-template < typename T >
-using GShape = boost::variant<GPolygonalShape<T>, GCircleShape<T>>;
-
-using Shape = GShape<Scalar>;
+using Shape = boost::variant<PolygonalShape, CircleShape>;
 
 #endif /* COMMON_COMPONENTS_SHAPE_H_ */

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/Angle.h>
-#include <common/GPoint.h>
+#include <common/Geometry.h>
 
 struct ClientPlayer {
 	ClientPlayer(std::string name, std::string team) :

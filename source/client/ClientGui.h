@@ -1,7 +1,7 @@
 #pragma once
 
+#include <common/Geometry.h>
 #include <memory>
-#include <common/GPoint.h>
 
 struct DrawProp;
 struct Message;

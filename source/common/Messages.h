@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/GPoint.h>
+#include <common/Geometry.h>
 #include <stdint.h>
 #include <vector>
 

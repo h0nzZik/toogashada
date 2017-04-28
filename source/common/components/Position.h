@@ -1,12 +1,11 @@
 #pragma once
 
-#include <common/GPoint.h>
 #include <common/Angle.h>
+#include <common/Geometry.h>
 
-template < typename T >
-struct GPosition {
-	GPoint<T> center;
-	GVector<T> speed;
+struct Position {
+	Point center;
+	Vector speed;
 	Angle rotation;
 	Angle angularSpeed;
 
@@ -15,5 +14,3 @@ struct GPosition {
 		archive(center, speed, rotation, angularSpeed);
 	}
 };
-
-using Position = GPosition<Scalar>;

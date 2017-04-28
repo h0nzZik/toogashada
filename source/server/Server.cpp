@@ -14,7 +14,7 @@
 #include <common/ClientMessage.h>
 #include <common/IConnection.h>
 #include <common/Messages.h>
-#include <common/PolygonalShape.h>
+#include <common/Geometry.h>
 #include <common/ServerMessage.h>
 #include <common/EntityComponentSystem.h>
 

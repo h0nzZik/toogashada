@@ -29,6 +29,7 @@ add_library(ToogashadaCommon
 	./common/components/EntityID.cpp
 	./common/ServerMessage.cpp
 	./common/ClientMessage.cpp
+	./common/Geometry.cpp
 )
 
 target_include_directories(ToogashadaCommon
