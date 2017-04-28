@@ -16,6 +16,7 @@
 #include <common/AnyComponent.h>
 #include <common/ServerMessage.h>
 #include <common/ClientMessage.h>
+#include <common/GameObjectManager.h>
 
 #include "ClientPlayer.h"
 #include "ClientGui.h"
@@ -116,16 +117,16 @@ class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 		}
 
 		void operator()(MsgNewEntity const & msg) {
-			cout << "Received entity " << msg.entity_id.id() << endl;
+			cout << "Received new entity " << msg.entity_id.id() << endl;
 			controller.entites[msg.entity_id] = controller.ecs.entityManager.create_entity(msg.entity_id);
+			auto & entity = controller.entites[msg.entity_id];
+			EntityComponentSystem::add_components(entity, msg.components);
 		}
 
 		void operator()(MsgUpdateEntity const & msg) {
-			;
+			cout << "Received update of entity " << msg.entity_id.id() << endl;;
+			EntityComponentSystem::update_components(controller.entites[msg.entity_id], msg.components);
 		}
-
-
-		// todo template rest
 
 	private:
 		ClientController::Impl & controller;

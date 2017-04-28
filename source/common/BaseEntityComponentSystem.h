@@ -34,18 +34,46 @@ public:
 	}
 
 private:
-	struct vis : public boost::static_visitor<void> {
+	struct adder : public boost::static_visitor<void> {
 		entity_t & entity;
-		explicit vis(entity_t & entity) : entity(entity) {}
+		explicit adder(entity_t & entity) : entity(entity) {}
 		template < typename T >
 		void operator()(T x) {
 			entity.template add_component<T>(x);
 		}
 	};
+
+	struct updater : public boost::static_visitor<void> {
+		entity_t & entity;
+		explicit updater(entity_t & entity) : entity(entity) {}
+		template < typename T >
+		void operator()(T x) {
+			entity.template get_component<T>() = std::move(x);
+			entity.template add_component<T>(x);
+		}
+	};
+
 public:
 	static void add_component(entity_t & entity, AnyComponent const & any) {
-		vis v{entity};
+		adder v{entity};
 		boost::apply_visitor(v, any.component);
+	}
+
+	static void add_components(entity_t & entity, std::vector<AnyComponent> const & components) {
+		for(AnyComponent const & component : components) {
+			add_component(entity, component);
+		}
+	}
+
+	static void update_component(entity_t & entity, AnyComponent const & any) {
+		updater v{entity};
+		boost::apply_visitor(v, any.component);
+	}
+
+	static void update_components(entity_t & entity, std::vector<AnyComponent> const & components) {
+		for(AnyComponent const & component : components) {
+			update_component(entity, component);
+		}
 	}
 };
 

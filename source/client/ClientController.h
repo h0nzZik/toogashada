@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <SDL_scancode.h>
 
 struct ClientPlayer;
 class ClientGui;
