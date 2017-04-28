@@ -29,7 +29,8 @@ add_library(ToogashadaCommon
 	./common/ServerMessage.cpp
 	./common/ClientMessage.cpp
 	./common/Geometry.cpp
-	./common/geometry/Collision.cpp
+	./common/geometry/collision.cpp
+	./common/geometry/Polygon.cpp
 	./common/components/EntityID.cpp
 	./common/components/Shape.cpp
 )

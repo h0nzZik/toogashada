@@ -23,6 +23,10 @@ Vector project(Vector const &a, Vector const &b) {
 	return (dot(a, b) / size(b)) * (b / size(b));
 }
 
+Vector unit(Vector const &v) {
+	return v / size(v);
+}
+
 Scalar distance(Point const &p1, Point const &p2) {
 	auto d = p2 - p1;
 	return Scalar(std::hypot(d.x, d.y));

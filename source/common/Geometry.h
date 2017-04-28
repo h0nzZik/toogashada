@@ -24,6 +24,8 @@ namespace geometry {
 
 Scalar distance(Point const &p1, Point const &p2);
 
+Vector unit(Vector const &v);
+
 Scalar cos(Vector const &a, Vector const &b);
 
 // Size of vector
