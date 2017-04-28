@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory> // make_unique
 #include <mutex>
+#include <map>
 
 // SDL
 #include <SDL.h>
@@ -16,7 +17,6 @@
 #include <common/AnyComponent.h>
 #include <common/ServerMessage.h>
 #include <common/ClientMessage.h>
-#include <common/GameObjectManager.h>
 
 #include "ClientPlayer.h"
 #include "ClientGui.h"
@@ -45,8 +45,6 @@ private:
 	class Receiver;
 
 	void redraw();
-	void received(MsgNewPolygonalObject msg);
-	void received(MsgObjectPosition msg);
 	void received(ServerMessage msg);
 	void handle_event(SDL_Event const & e);
 	void handleKeyPress(SDL_Scancode code);
@@ -59,7 +57,7 @@ private:
 
 	bool quit;
 
-	GameObjectManager gameObjects;
+	//GameObjectManager gameObjects;
 	std::mutex mutexGameObjects;
 
 	struct PressedKeys {
@@ -80,16 +78,6 @@ private:
 class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 	public:
 		Receiver(ClientController::Impl & controller) : controller(controller) {}
-
-		void operator()(MsgNewPolygonalObject const & msg) {
-			// fallback
-			controller.received(msg);
-		}
-
-		void operator()(MsgObjectPosition const & msg) {
-			// fallback
-			controller.received(msg);
-		}
 
 		void operator()(MsgNewPlayer const & msg) {
 			;
@@ -132,20 +120,6 @@ void ClientController::Impl::received(ServerMessage msg) {
 	boost::apply_visitor(receiver, msg.data);
 }
 
-void ClientController::Impl::received(MsgNewPolygonalObject msg) {
-	cout << "PolygonalObject with id " << msg.object_id << endl;
-	auto obj = make_unique<GameObject>(msg.object_id);
-	obj->center = msg.center;
-	obj->shape = move(msg.shape);
-
-	std::lock_guard<std::mutex> guard{mutexGameObjects};
-	gameObjects.insert(move(obj));
-}
-
-void ClientController::Impl::received(MsgObjectPosition msg) {
-	gameObjects.getObjectById(msg.object_id).center = msg.new_center;
-}
-
 void ClientController::Impl::main_loop() {
 	while( !quit )
 	{
@@ -163,7 +137,7 @@ void ClientController::Impl::redraw() {
 	// TODO(h0nzZik): I think it is not needed to lock everything.
 	// We should refine it someday in future.
 
-	clientGui.renderGui(gameObjects, ecs);
+	clientGui.renderGui(ecs);
 }
 
 

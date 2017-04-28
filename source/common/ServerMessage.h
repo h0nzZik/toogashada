@@ -6,8 +6,6 @@
 
 struct ServerMessage {
 	using Data = boost::variant<
-			MsgNewPolygonalObject,
-			MsgObjectPosition,
 			MsgNewPlayer,
 			MsgNewEntity,
 			MsgUpdateEntity

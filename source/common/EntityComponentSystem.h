@@ -8,7 +8,6 @@
 // TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene entity managery...
 // (mozna).
 
-
 /**
  * Here we define which components we use.
  * We use inheritance here to create a new type,

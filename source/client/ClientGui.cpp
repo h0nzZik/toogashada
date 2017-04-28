@@ -15,7 +15,6 @@
 #include <common/Tag.h>
 #include <common/Message.h>
 #include <common/Messages.h>
-#include <common/GameObjectManager.h>
 #include <common/EntityComponentSystem.h>
 
 #include "DrawProp.h"
@@ -139,25 +138,15 @@ public:
     	polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
     }
 
-    void renderGui(GameObjectManager &gameObjects, EntityComponentSystem & entities) {
+    void renderGui(EntityComponentSystem & entities) {
     	using namespace std::placeholders;
 
     	drawAppBg();
-
         drawRect(mapBoundingBox);
         drawRect(infoBoundingBox);
-
-#if 0
-    	for (const GameObject &go : gameObjects) {
-
-    		render_polygon(go.center, go.shape);
-    	}
-#endif
-
     	entities.entityManager.for_each<Shape, Position>(
     			std::bind(&Impl::render_entity,this,_1,_2,_3)
     	);
-
     	render();
     }
 
@@ -211,8 +200,8 @@ void ClientGui::render_polygon(Point center, std::vector<Point> const & points) 
 	pimpl->render_polygon(center, points);
 }
 
-void ClientGui::renderGui(GameObjectManager &gameObjects, EntityComponentSystem & entities) {
-	pimpl->renderGui(gameObjects, entities);
+void ClientGui::renderGui(EntityComponentSystem & entities) {
+	pimpl->renderGui(entities);
 }
 
 void ClientGui::drawRect(DrawProp &dp) {

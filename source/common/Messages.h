@@ -14,27 +14,6 @@
 // Server to client
 // =====================================
 
-struct MsgNewPolygonalObject {
-	uint32_t object_id;
-	Point center;
-	std::vector<Point> shape;
-
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(object_id, center, shape);
-	}
-};
-
-struct MsgObjectPosition {
-	uint32_t object_id;
-	Point new_center;
-
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(object_id, new_center);
-	}
-};
-
 struct MsgNewPlayer {
 	uint32_t player_id;
 	uint32_t object_id;

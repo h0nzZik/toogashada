@@ -12,7 +12,6 @@
 #include <entityplus/entity.h>
 
 #include <common/ClientMessage.h>
-#include <common/GameObjectManager.h>
 #include <common/IConnection.h>
 #include <common/Messages.h>
 #include <common/PolygonalShape.h>
@@ -22,7 +21,7 @@
 #include <server/IBroadcaster.h>
 #include "ConnectionToClient.hpp"
 #include "GameModel.h"
-#include "PlayerManager.h"
+#include "Player.h"
 
 #include "Server.h"
 
@@ -34,7 +33,7 @@ class Server::Impl : private IConnection::IHandler, private IBroadcaster
 public:
 	explicit Impl(int port) :
 	acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
-	gameModel(gameObjects, ecs, *this)
+	gameModel(ecs, *this)
 	{
 		start_accept();
 		init_player_shape();
@@ -138,9 +137,7 @@ private:
 		}
 
 	}
-	void notify(GameObject const & gameObject) override {
-		broadcast(createMessage_NewObjectPosition(gameObject));
-	}
+
 	void notify(entity_t const & entity, AnyComponent const &component) override {
 		MsgUpdateEntity mue;
 		mue.entity_id = entity.get_component<EntityID>();
@@ -174,45 +171,15 @@ private:
 	}
 
 	void newClientConnected(ConnectionToClient & client) {
-		client.send(Message{Tag::Hello, {1,2,3}});
-		//send_him_a_few_polygons(client);
+		//client.send(Message{Tag::Hello, {1,2,3}});
 
-		// TODO create a new player. We will need some manager of players.
-		uint32_t const object_id = gameObjects.get_fresh_id();
-		auto _object = make_unique<GameObject>(object_id);
-		GameObject & object = *_object;
-		gameObjects.insert(std::move(_object));
-		object.shape = playerShape;
-		object.center = {Scalar(rand() % 200), Scalar(rand() % 200)};
-
-		auto const player_id = players.get_fresh_id();
-		auto _player = make_unique<Player>(player_id, object);
-		Player & player = *_player;
-		players.insert(std::move(_player));
-		//connection2player[&client] = &player;
-
-		// Send diffs to all current players.
-		// New player must not be in the set yet.
-		broadcast(createMessage_NewGameObject(object));
-		broadcast(createMessage_NewPlayer(player));
-
-		// Send whole game state to the new player
-		for (GameObject const & object : gameObjects) {
-			send(client, createMessage_NewGameObject(object));
-		}
-
-		for (Player const & player : players) {
-			send(client, createMessage_NewPlayer(player));
-		}
-
-		// Some experiments with EntityComponent
-		// Opravdu bych mohl pridat komponentu pro identitu entit...?
 		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
 		Position pos;
-		pos.center = object.center;
+		pos.center = {Scalar(rand() % 200), Scalar(rand() % 200)};
 		entity.add_component<Position>(pos);
-		//entity.add_component<Shape>(CircleShape{5.1}); // for some reazon it is zero on client
+		//entity.add_component<Shape>(CircleShape{5.1});
 		entity.add_component<Shape>(playerShape);
+
 		MsgNewEntity msg;
 		connection2entity[&client] = entity;
 		msg.components = EntityComponentSystem::all_components(entity);
@@ -221,8 +188,6 @@ private:
 		broadcast({msg});
 
 		// Taky musime mit PlayerComponent
-		// Budeme mit zpravu, ktera umi rict 'Nova entita' a seznam komponent.
-		// My chceme updatovat
 	}
 
 	static Vector toVector(Player::Movement movement) {
@@ -241,29 +206,6 @@ private:
 		default:
 			return {0, 0}; // exception might be nicer
 		}
-	}
-
-	static ServerMessage createMessage_NewGameObject(GameObject const & object) {
-		MsgNewPolygonalObject npo;
-		npo.object_id = object.id();
-		npo.center = object.center;
-		npo.shape = object.shape;
-		return ServerMessage {npo};
-	}
-
-	static ServerMessage createMessage_NewObjectPosition(GameObject const & object) {
-		MsgObjectPosition mop;
-		mop.object_id = object.id();
-		mop.new_center = object.center;
-		return ServerMessage {mop};
-	}
-
-	static ServerMessage createMessage_NewPlayer(Player const & player) {
-		MsgNewPlayer mnp;
-		mnp.player_id = player.id();
-		mnp.object_id = player.gameObject().id();
-		mnp.playerName = player.name;
-		return ServerMessage {mnp};
 	}
 
 	void playerMoves(ConnectionToClient & client, Player::Movement movement) {
@@ -301,10 +243,7 @@ private:
 
 	// We do not use smart pointers to ease removal of items from set
 	std::set<ConnectionToClient *> connections;
-	//std::map<ConnectionToClient const *, Player *> connection2player;
 	std::map<ConnectionToClient const *, entity_t> connection2entity;
-	GameObjectManager gameObjects;
-	PlayerManager players;
 	PolygonalShape playerShape;
 	EntityComponentSystem ecs;
 	GameModel gameModel;

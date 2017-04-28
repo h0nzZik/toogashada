@@ -5,9 +5,6 @@
 
 struct DrawProp;
 struct Message;
-class GameObject;
-template < typename T > class GenericManager;
-using GameObjectManager = GenericManager<GameObject>;
 
 struct EntityComponentSystem;
 
@@ -21,7 +18,7 @@ public:
 
     void render_polygon(Point center, std::vector<Point> const &points);
 
-    void renderGui(GameObjectManager &gameObjects, EntityComponentSystem & entities);
+    void renderGui(EntityComponentSystem & entities);
 
     //void drawRect();
 

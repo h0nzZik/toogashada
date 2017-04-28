@@ -5,7 +5,6 @@
 #include <thread>
 #include <atomic>
 
-#include <common/GameObjectManager.h>
 #include <common/EntityComponentSystem.h>
 
 // Server
@@ -19,9 +18,8 @@ using namespace std::chrono_literals;
 
 class GameModel::Impl {
 public:
-	Impl(GameObjectManager &gameObjects, EntityComponentSystem & ecs, IBroadcaster & broadcaster) :
+	Impl(EntityComponentSystem & ecs, IBroadcaster & broadcaster) :
 		ecs{ecs},
-		gameObjects{gameObjects},
 		broadcaster{broadcaster},
 		runner{&Impl::main, this}
 	{ }
@@ -63,18 +61,8 @@ private:
 				//
 			}
 		});
-
-#if 0
-		for (GameObject & gameObject : gameObjects) {
-			if (gameObject.speed != Vector{0, 0}) {
-				gameObject.center += gameObject.speed * Scalar(dt.count() / 1000.0);
-				broadcaster.notify(gameObject);
-			}
-		}
-#endif
 	}
 
-	GameObjectManager &gameObjects;
 	IBroadcaster & broadcaster;
 
 	std::thread runner;
@@ -84,10 +72,10 @@ private:
 	std::chrono::steady_clock::time_point gameTime;
 };
 
-GameModel::GameModel(GameObjectManager &gameObjects, EntityComponentSystem & ecs, IBroadcaster & broadcaster) :
+GameModel::GameModel(EntityComponentSystem & ecs, IBroadcaster & broadcaster) :
 		ecs(ecs)
 {
-	pImpl = make_unique<Impl>(gameObjects, ecs, broadcaster);
+	pImpl = make_unique<Impl>(ecs, broadcaster);
 }
 
 GameModel::~GameModel() = default;
