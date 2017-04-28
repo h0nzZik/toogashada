@@ -1,6 +1,9 @@
 #pragma once
 
-#include "GeometricPrimitives.h"
+#include <common/geometry/Point.h>
+#include <common/geometry/Vector.h>
+#include <common/geometry/PolygonalShape.h>
+#include <common/geometry/CircleShape.h>
 
 
 // For streaming operators
@@ -14,6 +17,9 @@ template <class charT, class traits>
 class basic_ostream;
 typedef basic_ostream<char, char_traits<char> > ostream;
 }
+
+namespace geometry {
+
 
 Scalar distance(Point const &p1, Point const &p2);
 
@@ -73,3 +79,5 @@ std::ostream & operator<<(std::ostream &o, Point const &point );
 std::ostream & operator<<(std::ostream &o, Vector const &point );
 std::ostream & operator<<(std::ostream &o, CircleShape const &shape );
 std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape );
+
+} // namespace geometry

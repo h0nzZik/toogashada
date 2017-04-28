@@ -2,12 +2,9 @@
 
 #include <stdint.h>
 #include <vector>
+#include <string>
 
-#include "Tag.h"
-#include "Message.h"
-#include "Angle.h"
 #include "EntityComponentSystem.h"
-#include "GeometricPrimitives.h"
 
 #include "common/components/EntityID.h"
 

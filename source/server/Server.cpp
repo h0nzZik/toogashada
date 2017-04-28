@@ -201,16 +201,16 @@ private:
 		});
 	}
 
-	static Vector toVector(Player::Movement movement) {
+	static geometry::Vector toVector(Player::Movement movement) {
 		switch(movement) {
 		case Player::Movement::Left:
-			return {-5, 0};
+			return {-15, 0};
 		case Player::Movement::Right:
-			return {+5, 0};
+			return {+15, 0};
 		case Player::Movement::Backward:
-			return {0, -5};
-		case Player::Movement::Forward:
 			return {0, +15};
+		case Player::Movement::Forward:
+			return {0, -45};
 
 		case Player::Movement::None:
 			return {0, 0};
@@ -255,7 +255,7 @@ private:
 	// We do not use smart pointers to ease removal of items from set
 	std::set<ConnectionToClient *> connections;
 	std::map<ConnectionToClient const *, entity_t> connection2entity;
-	PolygonalShape playerShape;
+	geometry::PolygonalShape playerShape;
 	EntityComponentSystem ecs;
 	GameModel gameModel;
 };

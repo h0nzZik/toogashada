@@ -29,7 +29,7 @@ TEST_CASE("Serialization") {
 	    Position pos;
 	    iarchive(pos); // Read the data from the archive
 	    CHECK(pos.angularSpeed == 1);
-	    CHECK((pos.speed == Vector{-1, 0}));
+	    CHECK((pos.speed == geometry::Vector{-1, 0}));
 	  }
 }
 

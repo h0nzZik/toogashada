@@ -3,8 +3,9 @@
 
 #include <boost/variant/variant.hpp>
 
-#include <common/GeometricPrimitives.h>
+#include <common/geometry/CircleShape.h>
+#include <common/geometry/PolygonalShape.h>
 
-using Shape = boost::variant<PolygonalShape, CircleShape>;
+using Shape = boost::variant<geometry::PolygonalShape, geometry::CircleShape>;
 
 #endif /* COMMON_COMPONENTS_SHAPE_H_ */

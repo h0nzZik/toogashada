@@ -32,6 +32,9 @@ public:
 
 	EntityComponentSystem & ecs;
 private:
+	struct Area {
+
+	};
 
 	// TODO we should measure the diffeence between client's and server's time.
 
@@ -53,7 +56,7 @@ private:
 
 	void do_physics(std::chrono::milliseconds dt) {
 		ecs.entityManager.for_each<Position>([&](entity_t const & entity, Position & pos){
-			if (pos.speed != Vector{0, 0}) {
+			if (pos.speed != geometry::Vector{0, 0}) {
 				pos.center += pos.speed * Scalar(dt.count() / 1000.0);
 				broadcaster.notify(entity, {pos});
 				// TODO some notification

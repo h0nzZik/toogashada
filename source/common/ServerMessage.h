@@ -2,7 +2,9 @@
 
 #include <boost/variant/variant.hpp>
 
-#include "Messages.h"
+#include <common/Tag.h>
+#include <common/Message.h>
+#include <common/Messages.h>
 
 struct ServerMessage {
 	using Data = boost::variant<

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <common/Geometry.h>
 #include <memory>
+
+#include <common/geometry/Point.h>
+#include <common/geometry/PolygonalShape.h>
 
 struct DrawProp;
 struct Message;
@@ -16,7 +18,7 @@ public:
     ClientGui();
     ~ClientGui();
 
-    void render_polygon(Point center, std::vector<Point> const &points);
+    void render_polygon(geometry::Point center, std::vector<geometry::Point> const &points);
 
     void renderGui(EntityComponentSystem & entities);
 

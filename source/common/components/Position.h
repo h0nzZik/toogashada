@@ -1,13 +1,14 @@
 #pragma once
 
-#include <common/Angle.h>
-#include <common/GeometricPrimitives.h>
+#include <common/geometry/Angle.h>
+#include <common/geometry/Point.h>
+#include <common/geometry/Vector.h>
 
 struct Position {
-	Point center;
-	Vector speed;
-	Angle rotation;
-	Angle angularSpeed;
+	geometry::Point center;
+	geometry::Vector speed;
+	geometry::Angle rotation;
+	geometry::AngularSpeed angularSpeed;
 
 	template < typename Archive >
 	void serialize(Archive & archive) {

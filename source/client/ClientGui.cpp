@@ -16,13 +16,14 @@
 #include <common/Message.h>
 #include <common/Messages.h>
 #include <common/EntityComponentSystem.h>
+#include <common/Geometry.h>
 
 #include "DrawProp.h"
 
 #include "ClientGui.h"
 
 using namespace std;
-
+using namespace geometry;
 
 class ClientGui::Impl {
 

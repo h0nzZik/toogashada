@@ -3,6 +3,8 @@
 
 #include "Geometry.h"
 
+namespace geometry {
+
 Scalar distance(Point const &p1, Point const &p2) {
 	auto d = p2 - p1;
 	return Scalar(std::hypot(d.x, d.y));
@@ -41,4 +43,6 @@ std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape ) {
 		o << " " << point;
 	o << " ]";
 	return o;
+}
+
 }
