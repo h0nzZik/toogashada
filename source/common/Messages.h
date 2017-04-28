@@ -14,6 +14,8 @@
 // Server to client
 // =====================================
 
+// TODO: this will not be needed.
+// We will send it as a new entity
 struct MsgNewPlayer {
 	uint32_t player_id;
 	uint32_t object_id;

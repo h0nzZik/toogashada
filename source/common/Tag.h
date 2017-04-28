@@ -12,10 +12,7 @@ enum class Tag : uint32_t {
 	_ServerToClient = 0x100,
 	UniversalServerMessage, // will eventually replace all others
 	/* Messages from server to client */
-	NewPolygonalObject, // Sent by server. Data: 4B ID of object
 	NewPlayer,
-	ObjectPosition, // 4B object ID, position, speed
-	PlayerId, // Sets ID for client's player
 
 	NewEntity,
 	UpdateEntity,

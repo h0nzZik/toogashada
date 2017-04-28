@@ -173,6 +173,8 @@ private:
 	void newClientConnected(ConnectionToClient & client) {
 		//client.send(Message{Tag::Hello, {1,2,3}});
 
+		sendAllEntities(client);
+
 		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
 		Position pos;
 		pos.center = {Scalar(rand() % 200), Scalar(rand() % 200)};
@@ -188,6 +190,15 @@ private:
 		broadcast({msg});
 
 		// Taky musime mit PlayerComponent
+	}
+
+	void sendAllEntities(ConnectionToClient & client) {
+		ecs.entityManager.for_each<EntityID>([&](entity_t entity, EntityID const & id){
+			MsgNewEntity msg;
+			msg.entity_id = id;
+			msg.components = EntityComponentSystem::all_components(entity);
+			send(client, {msg});
+		});
 	}
 
 	static Vector toVector(Player::Movement movement) {

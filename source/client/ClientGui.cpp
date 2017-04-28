@@ -151,8 +151,6 @@ public:
     }
 
     void render_entity(entity_t const & entity, Shape const & shape, Position const & position) {
-    	//cout << "Rendering entity" << endl;
-    	//cout << "Rendering: " << shape << endl;
         struct Renderer : public boost::static_visitor<void> {
         	Impl & self;
         	entity_t const & entity;
@@ -164,18 +162,15 @@ public:
         	}
 
         	void operator()(PolygonalShape const & shape){
-        		cout << "Rendering polygon " << endl;
         		self.render_polygon(position.center, shape);
         	}
 
-        	void operator()(CircleShape const & shape) {
-        		cout << "Rendering circle " << endl;
-        		cout << "radius: " << shape.radius << endl;
+        	void operator()(CircleShape const & /*shape*/) {
+
         	}
         };
     	Renderer renderer{*this, entity, position};
         boost::apply_visitor(renderer, shape);
-        cout << "center: " << position.center << endl;
     }
 
     //void drawRect();
