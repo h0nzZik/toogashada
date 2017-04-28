@@ -6,6 +6,23 @@
 
 namespace geometry {
 
+Scalar size(Vector const &vec) {
+	return std::hypot(vec.x, vec.y);
+}
+
+// Dot product
+Scalar dot(Vector const &v1, Vector const &v2) {
+	return v1.x*v2.x + v1.y*v2.y;
+}
+
+Scalar cos(Vector const &a, Vector const &b) {
+	return dot(a, b) / (size(a) * size(b));
+}
+
+Vector project(Vector const &a, Vector const &b) {
+	return (dot(a, b) / size(b)) * (b / size(b));
+}
+
 Scalar distance(Point const &p1, Point const &p2) {
 	auto d = p2 - p1;
 	return Scalar(std::hypot(d.x, d.y));

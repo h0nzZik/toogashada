@@ -24,6 +24,16 @@ namespace geometry {
 
 Scalar distance(Point const &p1, Point const &p2);
 
+Scalar cos(Vector const &a, Vector const &b);
+
+// Size of vector
+Scalar size(Vector const &vec);
+
+// Dot product
+Scalar dot(Vector const &v1, Vector const &v2);
+
+Vector project(Vector const &v1, Vector const &v2);
+
 inline Vector & operator+=(Vector & v1, Vector const &v2) {
 	v1.x += v2.x;
 	v1.y += v2.y;
@@ -51,6 +61,11 @@ inline Vector operator*(Vector const & vector, Scalar scalar) {
 inline Vector operator*(Scalar scalar, Vector const & vector) {
 	return vector * scalar;
 }
+
+inline Vector operator/(Vector const & vector, Scalar scalar) {
+	return vector * (1.0/scalar);
+}
+
 
 inline Point & operator+=(Point & p, Vector v) {
 	p.x += v.x;

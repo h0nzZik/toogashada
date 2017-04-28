@@ -4,7 +4,8 @@
 
 namespace geometry {
 
-struct CircleShape {
+class CircleShape {
+public:
 	Scalar radius;
 
 	template < typename Archive >
