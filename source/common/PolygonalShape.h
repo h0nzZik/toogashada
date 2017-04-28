@@ -19,6 +19,10 @@ GPolygonalShape<T> & operator+=(GPolygonalShape<T> & shape, GVector<T> const &ve
 
 template < typename T >
 std::ostream & operator<<(std::ostream &o, GPolygonalShape<T> const &shape ) {
+	o << "[";
+	for(GPoint<T> const & point : shape)
+		o << " " << point;
+	o << " ]";
 	return o;
 }
 
