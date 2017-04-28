@@ -1,12 +1,16 @@
 /**
  * See https://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
  */
-#include <common/geometry/collision.h>
+
 #include <limits>
 #include <algorithm>
 
+#include <boost/variant/static_visitor.hpp>
+
 #include <common/Geometry.h>
 #include <common/geometry/Circle.h>
+
+#include <common/geometry/collision.h>
 
 using namespace std;
 
@@ -17,11 +21,12 @@ bool collision(Circle const &c1, Circle const &c2) {
 }
 
 MinMax minmaxProjection(Polygon const &polygon, Vector axis) {
-	MinMax minmax = {Scalar(0), numeric_limits<Scalar>::max()};
+	MinMax minmax = {numeric_limits<Scalar>::max(), numeric_limits<Scalar>::min()};
 	for(Point const & point : polygon) {
 		Vector v = point - Point{0,0};
-		minmax.min = min(minmax.min, dot(v, axis));
-		minmax.max = min(minmax.max, dot(v, axis));
+		auto d = dot(v, axis);
+		minmax.min = min(minmax.min, d);
+		minmax.max = max(minmax.max, d);
 	}
 	return minmax;
 }
@@ -40,7 +45,8 @@ void getNormals(std::vector<Vector> &normals, Polygon const &polygon) {
 
 	Point prev = polygon.back();
 	for(auto const & curr : polygon) {
-		normals.push_back(unit(curr - prev));
+		auto v = unit(curr - prev);
+		normals.push_back(Vector{-v.y, v.x});
 		prev = curr;
 	}
 }
@@ -64,6 +70,55 @@ bool collision(Polygon const &polygon, Circle const &circle) {
 
 bool collision(Circle const &circle, Polygon const &polygon) {
 	return collision(polygon, circle);
+}
+
+namespace {
+
+template < typename Object1 >
+class CollisionVisitor1 : public boost::static_visitor<bool>{
+	Object1 const & object1;
+public:
+	explicit CollisionVisitor1(Object1 const & object1) :
+		object1(object1) {
+	}
+
+	template < typename Object2 >
+	bool operator()(Object2 const & object2) {
+		return collision(object1, object2);
+	}
+};
+
+}
+
+bool collision(Polygon const &polygon, Object2D const &object) {
+	CollisionVisitor1<Polygon> visitor{polygon};
+	return boost::apply_visitor(visitor, object);
+}
+
+bool collision(Circle const &circle, Object2D const &object) {
+	CollisionVisitor1<Circle> visitor{circle};
+	return boost::apply_visitor(visitor, object);
+}
+
+namespace {
+class CollisionVisitor2 : public boost::static_visitor<bool>{
+	Object2D const & object1;
+public:
+	explicit CollisionVisitor2(Object2D const & object1) :
+		object1(object1) {
+	}
+
+	template < typename Object2 >
+	bool operator()(Object2 const & object2) {
+		CollisionVisitor1<Object2> visitor{object2};
+		return boost::apply_visitor(visitor, object1);
+	}
+};
+}
+
+bool collision(Object2D const &object1, Object2D const &object2) {
+	CollisionVisitor2 visitor{object1};
+	return boost::apply_visitor(visitor, object2);
 }
 
 } // namespace geometry

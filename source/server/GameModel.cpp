@@ -7,6 +7,8 @@
 
 #include <common/Geometry.h>
 #include <common/EntityComponentSystem.h>
+#include <common/geometry/collision.h>
+#include <common/geometry/Object2D.h>
 
 // Server
 #include "IBroadcaster.h"
@@ -46,12 +48,21 @@ public:
 		// TODO collision with other players
 		// TODO counter. We might reject the player.
 		int counter = 0;
+		bool have_collision;
 		do{
 			pos.center = {
 					Scalar(rand() % int(game_area.bottomRight().x)),
 					Scalar(rand() % int(game_area.bottomRight().y))
 			};
-		}while(++counter < 50 && !geometry::in(pos.center, playerShape, game_area));
+
+			auto newPlayerObject2d = createObject2D(pos.center, 0, playerShape);
+
+			have_collision = false;
+			ecs.entityManager.for_each<Position, Shape>([&](auto, Position const &p, Shape const &shape){
+				auto oldObject2d = createObject2D(p.center, 0, shape);
+				have_collision = have_collision || geometry::collision(newPlayerObject2d, oldObject2d);
+			});
+		}while(++counter < 50 && (have_collision || !geometry::in(pos.center, playerShape, game_area)));
 
 		if (counter >= 50)
 			throw std::runtime_error("Cannot fit player to area");
@@ -91,13 +102,27 @@ private:
 		ecs.entityManager.for_each<Position, Shape>(std::bind(&Impl::update_position, this, _1, _2, _3));
 	}
 
+	// TODO: make less computations. We may store the final objects somewhere.
+	// FIXME they freeze after first collision
 	void update_position(entity_t const & entity, Position & pos, Shape const &shape) {
 		if (pos.speed == geometry::Vector{0, 0})
 			return;
 
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
-		if (in(new_center, shape, game_area))
+		auto currentObject2d = createObject2D(pos.center, 0, shape);
+		bool have_collision = false;
+		ecs.entityManager.for_each<Position, Shape>([&](entity_t curr_entity, Position const &p, Shape const &shape){
+			if (curr_entity == entity)
+				return;
+			auto oldObject2d = createObject2D(p.center, 0, shape);
+			have_collision = have_collision || geometry::collision(currentObject2d, oldObject2d);
+		});
+
+		if (have_collision || !in(new_center, shape, game_area)) {
+			pos.speed = -pos.speed;
+		} else {
 			pos.center = new_center;
+		}
 
 		broadcaster.updateEntity(entity, {pos});
 	}

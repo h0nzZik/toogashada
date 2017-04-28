@@ -1,5 +1,6 @@
 #pragma once
 
+#include <common/geometry/Point.h>
 #include <common/geometry/CircleShape.h>
 
 namespace geometry {

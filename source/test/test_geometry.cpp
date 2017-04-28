@@ -1,6 +1,7 @@
 #include <common/geometry/collision.h>
 #include <iostream>
 #include <common/Geometry.h>
+#include <common/geometry/Object2D.h>
 #include "doctest.h"
 
 using namespace std;
@@ -27,16 +28,31 @@ TEST_CASE("Basic geometry") {
 	}
 
 	SUBCASE("Collision") {
-		auto tr1 = Polygon{{1.0, 1.0}, {1.0, 2.0}, {2.0, 2.0}};
+		auto tr1 = Polygon{{1.0, 1.0}, {1.0, 2.0}, {2.0, 1.0}};
 		auto tr2 = Polygon{{1.5, 2}, {2.5, 2}, {2.5, 1}};
 
 		SUBCASE("Along given axis") {
-			CHECK(false == gapAlongAxis(Vector{1, 1}, tr1, tr2));
-			CHECK(true == gapAlongAxis(Vector{-1, 1}, tr1, tr2));
+			CHECK(true == gapAlongAxis(Vector{1, 1}, tr1, tr2));
+			CHECK(false == gapAlongAxis(Vector{-1, 1}, tr1, tr2));
 		}
 
-		SUBCASE("Full") {
+		SUBCASE("Full - simple") {
 			CHECK(false == collision(tr1, tr2));
+		}
+
+		SUBCASE("Full - real game objects") {
+			geometry::PolygonalShape const playerShape = {
+				{-10, 0},
+				{-20, -10},
+				{+20, -10},
+				{+10, 0}
+			};
+			auto obj1 = createObject2D({0, 0}, 0, playerShape);
+			auto obj2 = createObject2D({10, 0}, 0, playerShape);
+			CHECK(collision(obj1, obj2));
+
+
+
 		}
 	}
 }
