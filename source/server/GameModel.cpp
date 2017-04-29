@@ -7,6 +7,7 @@
 #include <atomic>
 
 #include <common/Geometry.h>
+#include <common/ServerMessage.h>
 #include <common/EntityComponentSystem.h>
 #include <common/geometry/collision.h>
 #include <common/geometry/Object2D.h>
@@ -67,6 +68,13 @@ public:
 		});
 
 		return info;
+	}
+
+	void removePlayer(SEntity const &entity) {
+		entity_t e = entity.entity;
+		ServerMessage msg{MsgDeleteEntity{e.get_component<EntityID>()}};
+		broadcaster.broadcast(msg.to_message());
+		e.destroy();
 	}
 
 	SEntity newPlayer() {
@@ -220,4 +228,8 @@ GameModel::~GameModel() = default;
 
 SEntity GameModel::newPlayer() {
 	return pImpl->newPlayer();
+}
+
+void GameModel::removePlayer(SEntity const &entity) {
+	return pImpl->removePlayer(entity);
 }

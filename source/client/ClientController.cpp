@@ -111,15 +111,19 @@ class ClientController::Impl::Receiver : public boost::static_visitor<void> {
 
 		void operator()(MsgNewEntity const & msg) {
 			std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
-			//cout << "Received new entity " << msg.entity_id.id() << endl;
 			controller.entites[msg.entity_id] = controller.ecs.entityManager.create_entity(msg.entity_id);
 			auto & entity = controller.entites[msg.entity_id];
 			EntityComponentSystem::add_components(entity, msg.components);
 		}
 
 		void operator()(MsgUpdateEntity const & msg) {
-			//cout << "Received update of entity " << msg.entity_id.id() << endl;
+			std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
 			EntityComponentSystem::update_components(controller.entites[msg.entity_id], msg.components);
+		}
+
+		void operator()(MsgDeleteEntity const & msg) {
+			std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
+			controller.entites[msg.entity_id].destroy();
 		}
 
 	private:

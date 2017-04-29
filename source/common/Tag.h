@@ -7,17 +7,10 @@ enum class Tag : uint32_t {
 	Hello, // Both client and server can send this.
 	Ping, // Can be used to measure RTT.
 	Pong, // reply to ping, with the same data
-	GoodBye, // Sent by both client and server before shutting the connection down.
 
 	_ServerToClient = 0x100,
 	UniversalServerMessage, // will eventually replace all others
 	/* Messages from server to client */
-	NewPlayer,
-
-	NewEntity,
-	UpdateEntity,
-	DeleteEntity,
-
 
 	_ClientToServer = 0x200,
 	UniversalClientMessage, // will eventually replace all others

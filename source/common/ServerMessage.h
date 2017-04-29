@@ -11,7 +11,8 @@ struct ServerMessage {
 //			MsgGameInfo,
 			MsgNewPlayer,
 			MsgNewEntity,
-			MsgUpdateEntity
+			MsgUpdateEntity,
+			MsgDeleteEntity
 			>;
 
 	Data data;

@@ -58,6 +58,15 @@ struct MsgUpdateEntity {
 	}
 };
 
+struct MsgDeleteEntity {
+	EntityID entity_id;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(entity_id);
+	}
+};
+
 // Client to server
 // =====================================
 

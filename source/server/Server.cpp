@@ -116,7 +116,12 @@ private:
 		auto & conn = dynamic_cast<ConnectionToClient &>(connection);
 		cout << "Client " << conn.socket().remote_endpoint() << " disconnected." << endl;
 
+		entity_t entity = connection2entity.at(&conn);
+		connection2entity.erase(&conn);
 		connections.erase(&conn);
+		delete &conn;
+
+		gameModel.removePlayer({entity});
 	}
 	/* </IConnection::IHandler > */
 
