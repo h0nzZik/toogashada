@@ -3,6 +3,7 @@
 #include <memory> // make_unique
 #include <mutex>
 #include <map>
+#include <thread>
 
 // SDL
 #include <SDL.h>
@@ -39,9 +40,30 @@ public:
 	~Impl() = default;
 
 	void received(Message msg);
-	void main_loop();
+	void main_loop() {
+		const auto constexpr dt = 16ms;
+		const auto clientStartPoint = chrono::steady_clock::now();
+		auto clientGameTime = clientStartPoint;
+		bool const limit_speed = true;
+		while( !quit )
+		{
+			iter();
+			clientGameTime += dt;
+			if (limit_speed)
+				this_thread::sleep_until(clientGameTime);
+		}
+		cout << "Quitting gui\n";
+	}
 
 private:
+	void iter() {
+		SDL_Event e;
+		while( SDL_PollEvent( &e ) != 0 )
+			handle_event(e);
+
+		redraw();
+	}
+
 	class Receiver;
 
 	void redraw();
@@ -118,18 +140,6 @@ void ClientController::Impl::received(Message msg) {
 void ClientController::Impl::received(ServerMessage msg) {
 	Receiver receiver{*this};
 	boost::apply_visitor(receiver, msg.data);
-}
-
-void ClientController::Impl::main_loop() {
-	while( !quit )
-	{
-		SDL_Event e;
-		while( SDL_PollEvent( &e ) != 0 )
-			handle_event(e);
-
-		redraw();
-	}
-	cout << "Quitting gui\n";
 }
 
 void ClientController::Impl::redraw() {
@@ -209,7 +219,7 @@ void ClientController::Impl::handleKeyPress(SDL_Scancode code) {
 }
 
 void ClientController::Impl::handleKeyRelease(SDL_Scancode code) {
-	cout << "keyup: " << code << endl;
+	cout << "keydown: " << code << endl;
 
 	if (code == config.key_down)
 	{
