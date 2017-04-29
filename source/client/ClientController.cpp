@@ -55,6 +55,10 @@ public:
 		cout << "Quitting gui\n";
 	}
 
+	void stop() {
+		quit = true;
+	}
+
 private:
 	void iter() {
 		SDL_Event e;
@@ -261,6 +265,10 @@ void ClientController::received(Message msg) {
 
 void ClientController::main_loop() {
 	impl->main_loop();
+}
+
+void ClientController::stop() {
+	impl->stop();
 }
 
 ClientController::Config::Config()

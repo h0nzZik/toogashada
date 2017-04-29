@@ -82,5 +82,11 @@ TEST_CASE("Basic geometry") {
 			Polygon p4{{43,15}, {33,5}, {73,5}, {63,15}};
 			CHECK(!testCollision(p3, p4));
 		}
+
+		SUBCASE("Another killers") {
+			Polygon p1{{23.6798,68.5203}, {13.6798,58.5203}, {53.6798,58.5203}, {43.6798,68.5203} };
+			Polygon p2{{67.48,63.9601}, {57.48,53.9601}, {97.48,53.9601}, {87.48,63.9601}};
+			CHECK(!testCollision(p1, p2));
+		}
 	}
 }

@@ -24,3 +24,6 @@ void ConnectionToServer::run()
 	io_service.run();
 }
 
+void ConnectionToServer::stop() {
+	io_service.stop();
+}

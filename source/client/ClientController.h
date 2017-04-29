@@ -15,6 +15,7 @@ public:
 
 	void received(Message msg);
 	void main_loop();
+	void stop();
 
 private:
 	class Impl;

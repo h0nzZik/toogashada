@@ -10,6 +10,7 @@ class ConnectionToServer : public Connection {
 		~ConnectionToServer() = default;
 
 		void run();
+		void stop();
 
 		boost::asio::ip::tcp::socket & socket() { return _socket; }
 

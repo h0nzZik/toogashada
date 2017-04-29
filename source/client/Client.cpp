@@ -68,6 +68,7 @@ void Client::Impl::received(IConnection & connection, Message msg) {
 void Client::Impl::disconnected(IConnection & connection) {
 	auto & conn = dynamic_cast<ConnectionToServer &>(connection);
 	cout << "Server " << conn.socket().remote_endpoint() << " disconnected." << endl;
+	clientController.stop();
 }
 
 void Client::Impl::run() {
@@ -81,4 +82,7 @@ void Client::Impl::run() {
 		serverConnection.run();
 	});
 	clientController.main_loop();
+
+	serverConnection.stop();
+	network.join();
 }

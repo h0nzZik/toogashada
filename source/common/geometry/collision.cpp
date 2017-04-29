@@ -22,9 +22,9 @@ bool collision(Circle const &c1, Circle const &c2) {
 }
 
 MinMax minmaxProjection(Polygon const &polygon, Vector axis) {
-	MinMax minmax = {numeric_limits<Scalar>::max(), numeric_limits<Scalar>::min()};
+	MinMax minmax = {numeric_limits<Scalar>::max(), numeric_limits<Scalar>::lowest()};
 	for(Point const & point : polygon) {
-		auto d = size(projection(point - Point{0,0}, axis));
+		auto d = (point - Point{0,0}) * axis;
 		minmax.min = min(minmax.min, d);
 		minmax.max = max(minmax.max, d);
 	}

@@ -52,6 +52,7 @@ public:
 
 	CollisionInfo collidesWithSomething(geometry::Object2D const &object, entity_t const * entity = nullptr) {;
 		CollisionInfo info;
+		info.happened = false;
 		ecs.entityManager.for_each<geometry::Object2D>([&](auto oldEntity, geometry::Object2D const &oldObject){
 			if (info.happened)
 				return;
@@ -131,32 +132,27 @@ private:
 		);
 	}
 
-	// TODO: make less computations. We may store the final objects somewhere.
-	// FIXME they freeze after first collision
 	void update_position(entity_t const & entity, Position & pos, Shape const &shape, geometry::Object2D & oldObject) {
 		if (std::fabs(pos.speed.x) < 0.01 && std::fabs(pos.speed.y) < 0.01)
 			return;
 
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
-		auto currentObject2d = createObject2D(pos.center, 0, shape);
+		auto currentObject2d = createObject2D(new_center, 0, shape);
 
 		CollisionInfo colInfoBefore = collidesWithSomething(oldObject, &entity);
 		CollisionInfo colInfoNow = collidesWithSomething(currentObject2d, &entity);
 
-		log() << "before " << oldObject;
-		log() << "after " << currentObject2d;
-
 		if (colInfoBefore) {
 			log() << "Entity " << entity.get_component<EntityID>().id() << " had collision before";
 			//log() << "  obj:" << oldObject;
-			//log() << "  with: " << colInfoBefore.with.get_component<EntityID>().id();
+			log() << "  with: " << colInfoBefore.with.get_component<EntityID>().id();
 			//log() << "  obj:" << colInfoBefore.with.get_component<geometry::Object2D>();
 		}
 
 		if (colInfoNow) {
 			log() << "Entity " << entity.get_component<EntityID>().id() << " have collision now";
 			      //<< "  obj:" << currentObject2d << '\n'
-			      //<< "  with: " << colInfoNow.with.get_component<EntityID>().id()
+			log() << "  with: " << colInfoNow.with.get_component<EntityID>().id();
 			      //<< "  obj:" << colInfoNow.with.get_component<geometry::Object2D>() << '\n';
 		}
 
@@ -175,16 +171,6 @@ private:
 			log() << "Collision was already there -> continue";
 		}
 
-
-#if 0
-		if (false && (colInfoNow || !in(new_center, shape, game_area))) {
-			pos.speed = geometry::Vector{0,0};
-			//pos.speed = -pos.speed;
-		} else {
-			pos.center = new_center;
-			oldObject = currentObject2d;
-		}
-#endif
 		pos.center = new_center;
 		oldObject = currentObject2d;
 		broadcaster.updateEntity(entity, {pos});
