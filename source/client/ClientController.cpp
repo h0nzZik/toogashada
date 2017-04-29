@@ -219,8 +219,6 @@ void ClientController::Impl::handleKeyPress(SDL_Scancode code) {
 }
 
 void ClientController::Impl::handleKeyRelease(SDL_Scancode code) {
-	cout << "keydown: " << code << endl;
-
 	if (code == config.key_down)
 	{
 		pressedKeys.key_down = false;
@@ -241,8 +239,10 @@ void ClientController::Impl::handleKeyRelease(SDL_Scancode code) {
 		return;
 
 	if (!pressedKeys.key_down && !pressedKeys.key_up &&
-			!pressedKeys.key_left && !pressedKeys.key_right)
-		remoteServer.conn().send(Message(Tag::PlayerStops));
+			!pressedKeys.key_left && !pressedKeys.key_right) {
+		ClientMessage m{MsgPlayerStops{}};
+		remoteServer.conn().send(m.to_message());
+	}
 }
 
 ClientController::ClientController(

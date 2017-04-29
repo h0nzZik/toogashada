@@ -37,7 +37,6 @@ public:
 	gameModel(ecs, *this)
 	{
 		start_accept();
-		init_player_shape();
 	}
 
 	~Impl() {
@@ -237,21 +236,12 @@ private:
 		//broadcast(createMessage_NewObjectPosition(player.gameObject()));
 	}
 
-	void init_player_shape() {
-		playerShape.clear();
-		playerShape.push_back({-10, 0});
-		playerShape.push_back({-20, -10});
-		playerShape.push_back({+20, -10});
-		playerShape.push_back({+10, 0});
-	}
-
 	boost::asio::io_service io_service;
 	boost::asio::ip::tcp::acceptor acceptor;
 
 	// We do not use smart pointers to ease removal of items from set
 	std::set<ConnectionToClient *> connections;
 	std::map<ConnectionToClient const *, entity_t> connection2entity;
-	geometry::PolygonalShape playerShape;
 	EntityComponentSystem ecs;
 	GameModel gameModel;
 };

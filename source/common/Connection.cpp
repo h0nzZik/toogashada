@@ -88,6 +88,7 @@ void Connection::received(Message message) {
 }
 
 void Connection::send(Message message) {
+	try {
 	(void)message;
 	Header tx_header;
 	tx_header.tag = static_cast<uint32_t>(message.tag);
@@ -96,6 +97,10 @@ void Connection::send(Message message) {
 	memcpy(tx_header_buf, &tx_header, sizeof(Header));
 	write(socket, boost::asio::buffer(tx_header_buf));
 	write(socket, boost::asio::buffer(message.data));
+	} catch(exception & e) {
+		cout << "Connection::send: " << e.what() << endl;
+		handler->disconnected(*this);
+	}
 }
 
 void Connection::listen(IHandler & handler) {

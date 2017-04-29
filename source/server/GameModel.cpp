@@ -1,4 +1,5 @@
 // Standard
+#include <cmath>
 #include <chrono>
 #include <iostream>
 #include <ctime>
@@ -92,7 +93,7 @@ public:
 		if (counter >= 50)
 			throw std::runtime_error("Cannot fit player to area");
 
-		cout << "Found place for player on " << counter << "th try" << endl;
+		log() << "Found place for player on " << counter << "th try";
 
 		entity.add_component<Position>(pos);
 		//entity.add_component<Shape>(CircleShape{5.1});
@@ -132,8 +133,8 @@ private:
 
 	// TODO: make less computations. We may store the final objects somewhere.
 	// FIXME they freeze after first collision
-	void update_position(entity_t const & entity, Position & pos, Shape const &shape, geometry::Object2D const & oldObject) {
-		if (pos.speed == geometry::Vector{0, 0})
+	void update_position(entity_t const & entity, Position & pos, Shape const &shape, geometry::Object2D & oldObject) {
+		if (std::fabs(pos.speed.x) < 0.01 && std::fabs(pos.speed.y) < 0.01)
 			return;
 
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
@@ -142,27 +143,74 @@ private:
 		CollisionInfo colInfoBefore = collidesWithSomething(oldObject, &entity);
 		CollisionInfo colInfoNow = collidesWithSomething(currentObject2d, &entity);
 
+		log() << "before " << oldObject;
+		log() << "after " << currentObject2d;
+
 		if (colInfoBefore) {
-			cout << "Entity " << entity.get_component<EntityID>().id() << " had collision before" << endl;
-			cout << "  obj:" << oldObject << endl;
-			cout << "  with: " << colInfoBefore.with.get_component<EntityID>().id() << endl;
-			cout << "  obj:" << colInfoBefore.with.get_component<geometry::Object2D>() << endl;
+			log() << "Entity " << entity.get_component<EntityID>().id() << " had collision before";
+			//log() << "  obj:" << oldObject;
+			//log() << "  with: " << colInfoBefore.with.get_component<EntityID>().id();
+			//log() << "  obj:" << colInfoBefore.with.get_component<geometry::Object2D>();
 		}
 
 		if (colInfoNow) {
-			cout << "Entity " << entity.get_component<EntityID>().id() << " have collision now" << endl;
-			cout << "  obj:" << currentObject2d << endl;
-			cout << "  with: " << colInfoNow.with.get_component<EntityID>().id() << endl;
-			cout << "  obj:" << colInfoNow.with.get_component<geometry::Object2D>() << endl;
+			log() << "Entity " << entity.get_component<EntityID>().id() << " have collision now";
+			      //<< "  obj:" << currentObject2d << '\n'
+			      //<< "  with: " << colInfoNow.with.get_component<EntityID>().id()
+			      //<< "  obj:" << colInfoNow.with.get_component<geometry::Object2D>() << '\n';
 		}
 
-		if (colInfoNow || !in(new_center, shape, game_area)) {
+		if (!in(new_center, shape, game_area))
+		{
+			pos.speed = geometry::Vector{0,0};
+			return;
+		}
+
+		if (colInfoNow && !colInfoBefore) {
+			pos.speed = geometry::Vector{0,0};
+			return;
+		}
+
+		if (colInfoNow && colInfoBefore) {
+			log() << "Collision was already there -> continue";
+		}
+
+
+#if 0
+		if (false && (colInfoNow || !in(new_center, shape, game_area))) {
+			pos.speed = geometry::Vector{0,0};
 			//pos.speed = -pos.speed;
 		} else {
 			pos.center = new_center;
+			oldObject = currentObject2d;
+		}
+#endif
+		pos.center = new_center;
+		oldObject = currentObject2d;
+		broadcaster.updateEntity(entity, {pos});
+	}
+
+	class Log {
+		ostream &o;
+	public:
+		explicit Log(ostream &o) : o(o) {}
+		~Log() {
+			o << endl;
 		}
 
-		broadcaster.updateEntity(entity, {pos});
+		operator ostream&(){
+			return o;
+		}
+
+		template < typename T >
+		ostream & operator<<(T const &x) {
+			o << x;
+			return o;
+		}
+	};
+	Log log() {
+		cout << "[GameModel, " << (gameTime - startPoint).count() << "]";
+		return Log(cout);
 	}
 
 	IBroadcaster & broadcaster;

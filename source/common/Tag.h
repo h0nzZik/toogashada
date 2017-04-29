@@ -23,11 +23,6 @@ enum class Tag : uint32_t {
 	UniversalClientMessage, // will eventually replace all others
 	/* Messages from client to server */
     IntroduceMyPlayer, // sent after connection is made
-	PlayerMovesLeft,
-	PlayerMovesRight,
-	PlayerMovesBackward,
-	PlayerMovesForward,
-	PlayerStops
 };
 
 
