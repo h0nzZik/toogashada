@@ -33,6 +33,12 @@ public:
 	bool operator!=(Circle const &other) const {
 		return !(*this == other);
 	}
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(center);
+		archive(radius);
+	}
 };
 
 } // namespace geometry

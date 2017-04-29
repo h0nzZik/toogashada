@@ -40,6 +40,21 @@ public:
 			{+10, 0}
 	};
 
+	bool collidesWithSomething(geometry::Object2D const &object, entity_t const * entity = nullptr) {
+		bool have_collision = false;
+		ecs.entityManager.for_each<geometry::Object2D>([&](auto oldEntity, geometry::Object2D const &oldObject){
+			if (have_collision)
+				return;
+
+			if (entity && (oldEntity == *entity))
+				return;
+
+			have_collision = geometry::collision(object, oldObject);
+		});
+
+		return have_collision;
+	}
+
 	SEntity newPlayer() {
 		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
 		Position pos;
@@ -48,6 +63,7 @@ public:
 		// TODO collision with other players
 		// TODO counter. We might reject the player.
 		int counter = 0;
+		geometry::Object2D object2d;
 		bool have_collision;
 		do{
 			pos.center = {
@@ -55,13 +71,9 @@ public:
 					Scalar(rand() % int(game_area.bottomRight().y))
 			};
 
-			auto newPlayerObject2d = createObject2D(pos.center, 0, playerShape);
+			object2d = createObject2D(pos.center, 0, playerShape);
+			have_collision = collidesWithSomething(object2d);
 
-			have_collision = false;
-			ecs.entityManager.for_each<Position, Shape>([&](auto, Position const &p, Shape const &shape){
-				auto oldObject2d = createObject2D(p.center, 0, shape);
-				have_collision = have_collision || geometry::collision(newPlayerObject2d, oldObject2d);
-			});
 		}while(++counter < 50 && (have_collision || !geometry::in(pos.center, playerShape, game_area)));
 
 		if (counter >= 50)
@@ -72,6 +84,7 @@ public:
 		entity.add_component<Position>(pos);
 		//entity.add_component<Shape>(CircleShape{5.1});
 		entity.add_component<Shape>(playerShape);
+		entity.add_component<geometry::Object2D>(std::move(object2d));
 
 		return SEntity{entity};
 	}
@@ -99,27 +112,31 @@ private:
 
 	void do_physics() {
 		using namespace std::placeholders;
-		ecs.entityManager.for_each<Position, Shape>(std::bind(&Impl::update_position, this, _1, _2, _3));
+		ecs.entityManager.for_each<Position, Shape, geometry::Object2D>(
+				std::bind(&Impl::update_position, this, _1, _2, _3, _4)
+		);
 	}
 
 	// TODO: make less computations. We may store the final objects somewhere.
 	// FIXME they freeze after first collision
-	void update_position(entity_t const & entity, Position & pos, Shape const &shape) {
+	void update_position(entity_t const & entity, Position & pos, Shape const &shape, geometry::Object2D const & oldObject) {
 		if (pos.speed == geometry::Vector{0, 0})
 			return;
 
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
 		auto currentObject2d = createObject2D(pos.center, 0, shape);
-		bool have_collision = false;
-		ecs.entityManager.for_each<Position, Shape>([&](entity_t curr_entity, Position const &p, Shape const &shape){
-			if (curr_entity == entity)
-				return;
-			auto oldObject2d = createObject2D(p.center, 0, shape);
-			have_collision = have_collision || geometry::collision(currentObject2d, oldObject2d);
-		});
+		bool hadCollisionBefore = collidesWithSomething(oldObject, &entity);
+		bool nowHaveCollision = collidesWithSomething(currentObject2d, &entity);
 
-		if (have_collision || !in(new_center, shape, game_area)) {
-			pos.speed = -pos.speed;
+		if (hadCollisionBefore) {
+			cout << "Entity " << entity.get_component<EntityID>().id() << " had collision before" << endl;
+		}
+
+		if (nowHaveCollision)
+			cout << "Entity " << entity.get_component<EntityID>().id() << "have collision now" << endl;
+
+		if (nowHaveCollision || !in(new_center, shape, game_area)) {
+			//pos.speed = -pos.speed;
 		} else {
 			pos.center = new_center;
 		}

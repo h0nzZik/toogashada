@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <algorithm>
+#include <set>
 
 #include <boost/variant/static_visitor.hpp>
 
@@ -39,20 +40,25 @@ bool gapAlongAxis(Vector axis, Polygon const &p1, Polygon const &p2) {
 	return (r1.max < r2.min) || (r2.max < r1.min);
 }
 
-void getNormals(std::vector<Vector> &normals, Polygon const &polygon) {
+void getNormals(std::set<Vector> &normals, Polygon const &polygon) {
 	if (polygon.empty())
 		return;
 
 	Point prev = polygon.back();
 	for(auto const & curr : polygon) {
-		auto v = unit(curr - prev);
-		normals.push_back(Vector{-v.y, v.x});
+		auto v1 = unit(curr - prev);
+		Vector v2 = {-v1.y, v1.x};
+		//if (v2.x < 0)
+		//	v2 = -v2;
+
+		//normals.insert(rightNormal(unit(curr - prev)));
+		normals.insert(leftNormal(unit(curr - prev)));
 		prev = curr;
 	}
 }
 
 bool collision(Polygon const &p1, Polygon const &p2) {
-	std::vector<Vector> normals;
+	std::set<Vector> normals;
 	getNormals(normals, p1);
 	getNormals(normals, p2);
 

@@ -3,6 +3,7 @@
 #include <common/components/EntityID.h>
 #include <common/components/Shape.h>
 #include <common/components/Position.h>
+#include <common/geometry/Object2D.h>
 #include "BaseEntityComponentSystem.h"
 
 // TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene entity managery...
@@ -15,7 +16,8 @@
  */
 struct EntityComponentSystem : public BaseEntityComponentSystem<
 		Shape,
-		Position
+		Position,
+		geometry::Object2D
 >{};
 
 using AnyComponent = typename EntityComponentSystem::AnyComponent;

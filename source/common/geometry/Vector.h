@@ -22,4 +22,10 @@ inline bool operator!=(Vector const &l, Vector const &r) {
 	return !(l == r);
 }
 
+// To be able to insert them to set
+inline bool operator<(Vector const &l, Vector const &r) {
+	return (l.x < r.x) || ((l.x == r.x)&& (l.y < r.y));
+}
+
+
 } // namespace geometry

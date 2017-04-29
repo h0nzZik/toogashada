@@ -36,6 +36,16 @@ Scalar dot(Vector const &v1, Vector const &v2);
 
 Vector project(Vector const &v1, Vector const &v2);
 
+// TODO: implement convex shapes etc.
+
+inline Vector leftNormal(Vector const &v) {
+	return {v.y, -v.x};
+}
+
+inline Vector rightNormal(Vector const &v) {
+	return {-v.y, v.x};
+}
+
 inline Vector & operator+=(Vector & v1, Vector const &v2) {
 	v1.x += v2.x;
 	v1.y += v2.y;
