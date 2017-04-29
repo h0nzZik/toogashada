@@ -24,8 +24,8 @@ TEST_CASE("Basic geometry") {
 	}
 
 	SUBCASE("Projection") {
-		CHECK((project(Vector{4, 4}, Vector{0, 1}) == Vector{0, 4}));
-		CHECK((project({3, 3}, {0.5, 0}) == Vector{3, 0}));
+		CHECK((projection(Vector{4, 4}, Vector{0, 1}) == Vector{0, 4}));
+		CHECK((projection({3, 3}, {0.5, 0}) == Vector{3, 0}));
 	}
 
 #if 0

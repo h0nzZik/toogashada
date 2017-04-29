@@ -19,8 +19,8 @@ Scalar cos(Vector const &a, Vector const &b) {
 	return dot(a, b) / (size(a) * size(b));
 }
 
-Vector project(Vector const &a, Vector const &b) {
-	return (dot(a, b) / size(b)) * (b / size(b));
+Vector projection(Vector const &v, Vector const &s) {
+	return ((v*s)/(s*s))*s;
 }
 
 Vector unit(Vector const &v) {

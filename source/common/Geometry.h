@@ -39,7 +39,10 @@ inline Scalar operator*(Vector const &v1, Vector const &v2) {
 	return dot(v1, v2);
 }
 
-Vector project(Vector const &v1, Vector const &v2);
+/**
+ * @brief projects v to the direction of s
+ */
+Vector projection(Vector const &v, Vector const &s);
 
 // TODO: implement convex shapes etc.
 
