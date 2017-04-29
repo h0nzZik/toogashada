@@ -47,6 +47,12 @@ std::ostream & operator<<(std::ostream &o, CircleShape const &shape ) {
 	return o;
 }
 
+std::ostream & operator<<(std::ostream &o, Circle const &c) {
+	o << "{ circ at " << c.center << ", r: " << c.radius << " }";
+	return o;
+}
+
+
 PolygonalShape & operator+=(PolygonalShape & shape, Vector const &vec) {
 	for(auto & v : shape)
 		v += vec;
@@ -65,6 +71,15 @@ std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape ) {
 		o << " " << vec;
 	o << " ]";
 	return o;
+}
+
+std::ostream & operator<<(std::ostream &o, Polygon const &p) {
+	o << "[";
+	for(auto const & pt : p)
+		o << " " << pt;
+	o << " ]";
+	return o;
+
 }
 
 std::ostream & operator<<(std::ostream &o, RectangularArea const &area ) {

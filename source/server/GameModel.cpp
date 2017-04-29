@@ -40,19 +40,31 @@ public:
 			{+10, 0}
 	};
 
-	bool collidesWithSomething(geometry::Object2D const &object, entity_t const * entity = nullptr) {
-		bool have_collision = false;
+	struct CollisionInfo {
+		bool happened = false;
+		entity_t with;
+
+		operator bool() const {
+			return happened;
+		}
+	};
+
+	CollisionInfo collidesWithSomething(geometry::Object2D const &object, entity_t const * entity = nullptr) {;
+		CollisionInfo info;
 		ecs.entityManager.for_each<geometry::Object2D>([&](auto oldEntity, geometry::Object2D const &oldObject){
-			if (have_collision)
+			if (info.happened)
 				return;
 
 			if (entity && (oldEntity == *entity))
 				return;
 
-			have_collision = geometry::collision(object, oldObject);
+			if (geometry::collision(object, oldObject)) {
+				info.happened = true;
+				info.with = oldEntity;
+			}
 		});
 
-		return have_collision;
+		return info;
 	}
 
 	SEntity newPlayer() {
@@ -64,7 +76,8 @@ public:
 		// TODO counter. We might reject the player.
 		int counter = 0;
 		geometry::Object2D object2d;
-		bool have_collision;
+
+		CollisionInfo colInfo;
 		do{
 			pos.center = {
 					Scalar(rand() % int(game_area.bottomRight().x)),
@@ -72,9 +85,9 @@ public:
 			};
 
 			object2d = createObject2D(pos.center, 0, playerShape);
-			have_collision = collidesWithSomething(object2d);
+			colInfo = collidesWithSomething(object2d);
 
-		}while(++counter < 50 && (have_collision || !geometry::in(pos.center, playerShape, game_area)));
+		}while(++counter < 50 && (colInfo || !geometry::in(pos.center, playerShape, game_area)));
 
 		if (counter >= 50)
 			throw std::runtime_error("Cannot fit player to area");
@@ -125,17 +138,25 @@ private:
 
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
 		auto currentObject2d = createObject2D(pos.center, 0, shape);
-		bool hadCollisionBefore = collidesWithSomething(oldObject, &entity);
-		bool nowHaveCollision = collidesWithSomething(currentObject2d, &entity);
 
-		if (hadCollisionBefore) {
+		CollisionInfo colInfoBefore = collidesWithSomething(oldObject, &entity);
+		CollisionInfo colInfoNow = collidesWithSomething(currentObject2d, &entity);
+
+		if (colInfoBefore) {
 			cout << "Entity " << entity.get_component<EntityID>().id() << " had collision before" << endl;
+			cout << "  obj:" << oldObject << endl;
+			cout << "  with: " << colInfoBefore.with.get_component<EntityID>().id() << endl;
+			cout << "  obj:" << colInfoBefore.with.get_component<geometry::Object2D>() << endl;
 		}
 
-		if (nowHaveCollision)
-			cout << "Entity " << entity.get_component<EntityID>().id() << "have collision now" << endl;
+		if (colInfoNow) {
+			cout << "Entity " << entity.get_component<EntityID>().id() << " have collision now" << endl;
+			cout << "  obj:" << currentObject2d << endl;
+			cout << "  with: " << colInfoNow.with.get_component<EntityID>().id() << endl;
+			cout << "  obj:" << colInfoNow.with.get_component<geometry::Object2D>() << endl;
+		}
 
-		if (nowHaveCollision || !in(new_center, shape, game_area)) {
+		if (colInfoNow || !in(new_center, shape, game_area)) {
 			//pos.speed = -pos.speed;
 		} else {
 			pos.center = new_center;

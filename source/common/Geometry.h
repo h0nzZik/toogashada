@@ -5,6 +5,7 @@
 #include <common/geometry/PolygonalShape.h>
 #include <common/geometry/CircleShape.h>
 #include <common/geometry/Circle.h>
+#include <common/geometry/Polygon.h>
 #include <common/geometry/RectangularArea.h>
 
 // For streaming operators
@@ -33,6 +34,10 @@ Scalar size(Vector const &vec);
 
 // Dot product
 Scalar dot(Vector const &v1, Vector const &v2);
+
+inline Scalar operator*(Vector const &v1, Vector const &v2) {
+	return dot(v1, v2);
+}
 
 Vector project(Vector const &v1, Vector const &v2);
 
@@ -118,7 +123,9 @@ PolygonalShape & operator+=(PolygonalShape & shape, Vector const &vec);
 std::ostream & operator<<(std::ostream &o, Point const &point );
 std::ostream & operator<<(std::ostream &o, Vector const &point );
 std::ostream & operator<<(std::ostream &o, CircleShape const &shape );
+std::ostream & operator<<(std::ostream &o, Circle const &c);
 std::ostream & operator<<(std::ostream &o, PolygonalShape const &shape );
+std::ostream & operator<<(std::ostream &o, Polygon const &p);
 std::ostream & operator<<(std::ostream &o, RectangularArea const &area );
 
 bool in(Point const & point, RectangularArea const &area);

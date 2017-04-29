@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 #include <common/geometry/Point.h>
 #include <common/geometry/CircleShape.h>
 

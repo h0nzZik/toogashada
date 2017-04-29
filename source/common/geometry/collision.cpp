@@ -25,7 +25,9 @@ MinMax minmaxProjection(Polygon const &polygon, Vector axis) {
 	MinMax minmax = {numeric_limits<Scalar>::max(), numeric_limits<Scalar>::min()};
 	for(Point const & point : polygon) {
 		Vector v = point - Point{0,0};
-		auto d = dot(v, axis);
+		//auto d = dot(v, axis);
+		auto res = ((v * axis)/(axis*axis))*axis;
+		auto d = size(res);
 		minmax.min = min(minmax.min, d);
 		minmax.max = max(minmax.max, d);
 	}
