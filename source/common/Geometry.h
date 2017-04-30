@@ -44,6 +44,9 @@ inline Scalar operator*(Vector const &v1, Vector const &v2) {
  */
 Vector projection(Vector const &v, Vector const &s);
 
+// @returns 't' for projected point, which is 'A + t*direction'
+Scalar projection(Point const &p, Point const &A, Point const &B);
+
 // TODO: implement convex shapes etc.
 
 inline Vector leftNormal(Vector const &v) {

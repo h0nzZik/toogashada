@@ -75,25 +75,18 @@ bool collision(Polygon const &polygon, Circle const &circle) {
 			return true;
 	}
 
-	return false;
 	// Something is wrong down there
 	assert(polygon.size() >= 3);
-	Point const * prev = &polygon.back();
-	for (Point const & vertex : polygon ) {
-		Vector const toLine = *prev - vertex;
-		Vector const toCenter = circle.center - vertex;
-		Scalar p = unit(toLine) * toCenter;
-		if (p >= 0 && p <= size(toLine)) {
-			// Center is near the edge
-			// measure distance
-			Point projectedCircle = vertex + p*toLine;
-			// We compute only collision with line segment.
-			// We do not care whether the circle is inside the polygon
-			// or not.
-			if (size(projectedCircle - circle.center))
-				return true;
+	Point const * lineFrom = &polygon.back();
+	for (Point const & lineTo : polygon ) {
+
+		Scalar const t = projection(circle.center, *lineFrom, lineTo);
+		if (t >= 0 && t <= 1) {
+			Point const projectedCenter = *lineFrom + t*(lineTo - *lineFrom);
+			if (size(projectedCenter - circle.center) <= circle.radius)
+					return true;
 		}
-		prev = &vertex;
+		lineFrom = &lineTo;
 	}
 
 	return false;

@@ -23,6 +23,14 @@ Vector projection(Vector const &v, Vector const &s) {
 	return ((v*s)/(s*s))*s;
 }
 
+Scalar projection(Point const &p, Point const &A, Point const &B) {
+	// http://stackoverflow.com/a/15187473/6209703
+	Vector const direction = B - A;
+	Scalar const t = ((p.x - A.x)*(B.x - A.x) + (p.y - A.y)*(B.y-A.y)) / (direction.x*direction.x+direction.y*direction.y);
+	//t=[(Cx-Ax)(Bx-Ax)+(Cy-Ay)(By-Ay)]/[(Bx-Ax)^2+(By-Ay)^2]
+	return t;
+}
+
 Vector unit(Vector const &v) {
 	return v / size(v);
 }
