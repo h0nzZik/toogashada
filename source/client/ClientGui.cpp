@@ -26,26 +26,29 @@
 using namespace std;
 using namespace geometry;
 
+// TODO standalone class for game area
+
 class ClientGui::Impl {
 
     /* const */ int SCREEN_WIDTH;
     /* const */ int SCREEN_HEIGHT;
 
 	geometry::RectangularArea const game_area{{0, 0}, {100, 100}};
+
+	const int border_size = 1;
 	geometry::RectangularArea drawing_area() const {
-		return {{0, 0}, {Scalar(SCREEN_WIDTH), Scalar(SCREEN_HEIGHT)}};
+		auto m = std::min(SCREEN_WIDTH, SCREEN_HEIGHT);
+		return {{Scalar(border_size), Scalar(border_size)}, {Scalar(m-border_size), Scalar(m-border_size)}};
+	}
+
+
+	Scalar getFactor() {
+		return (drawing_area().bottomRight().x - drawing_area().topLeft().x)
+						/ (game_area.bottomRight().x - game_area.topLeft().x);
 	}
 
 	geometry::Point translate(geometry::Point point) {
-		// assume starting points are zero
-		// so no translation is performed
-		Scalar const x_factor = (drawing_area().bottomRight().x - drawing_area().topLeft().x)
-				/ (game_area.bottomRight().x - game_area.topLeft().x);
-
-		Scalar const y_factor = (drawing_area().bottomRight().y - drawing_area().topLeft().y)
-				/ (game_area.bottomRight().y - game_area.topLeft().y);
-
-		return {x_factor * point.x, y_factor * point.y};
+		return { border_size + point.x * getFactor(), border_size + point.y * getFactor() };
 	}
 
     // GUI settings
@@ -127,6 +130,8 @@ public:
     	SCREEN_WIDTH = static_cast<int>(dm.w * 0.9);
     	SCREEN_HEIGHT = static_cast<int>(dm.h * 0.9);
 
+    	cout << "Width: " << SCREEN_WIDTH << " Height: " << SCREEN_HEIGHT << endl;
+
     	mWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     	if (!mWindow)
     		throw std::runtime_error("Cannot create window: " + string(SDL_GetError()));
@@ -164,6 +169,8 @@ public:
     	drawAppBg();
         drawRect(mapBoundingBox);
         drawRect(infoBoundingBox);
+        auto da = drawing_area();
+        rectangleRGBA(mRenderer, da.topLeft().x-1, da.topLeft().y-1, da.bottomRight().x+1, da.bottomRight().y+1, 255, 20, 20, 255);
     	entities.entityManager.for_each<Shape, Position>(
     			std::bind(&Impl::render_entity,this,_1,_2,_3)
     	);
@@ -185,8 +192,9 @@ public:
         		self.render_polygon(position.center, shape);
         	}
 
-        	void operator()(CircleShape const & /*shape*/) {
-
+        	void operator()(CircleShape const & shape) {
+        		Point center = self.translate(position.center);
+        		filledCircleRGBA(self.mRenderer, center.x, center.y, shape.radius * self.getFactor() , 0, 0, 255, 255);
         	}
         };
     	Renderer renderer{*this, entity, position};
@@ -210,10 +218,6 @@ ClientGui::ClientGui()
 }
 
 ClientGui::~ClientGui() = default;
-
-void ClientGui::render_polygon(Point center, PolygonalShape const & points) {
-	pimpl->render_polygon(center, points);
-}
 
 void ClientGui::renderGui(EntityComponentSystem & entities) {
 	pimpl->renderGui(entities);

@@ -51,6 +51,7 @@ public:
 		}
 	};
 
+	// TODO rather return a vector of colliding entites
 	CollisionInfo collidesWithSomething(geometry::Object2D const &object, entity_t const * entity = nullptr) {;
 		CollisionInfo info;
 		info.happened = false;

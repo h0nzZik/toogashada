@@ -36,6 +36,18 @@ public:
 	acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
 	gameModel(ecs, *this)
 	{
+		// A circle
+		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
+		entity.add_component<Shape>(geometry::CircleShape{10});
+		Position pos;
+		pos.speed = {0,0};
+		pos.center = geometry::Point{30, 30};
+		pos.angularSpeed = 0;
+		pos.rotation = 0;
+		entity.add_component<Position>(pos);
+		entity.add_component<geometry::Object2D>(geometry::createObject2D(
+				pos.center, 0,entity.get_component<Shape>()));
+
 		start_accept();
 	}
 
@@ -102,7 +114,7 @@ private:
 	/* < IConnection::IHandler > */
 	void received(IConnection & connection, Message msg) override {
 		auto & conn = dynamic_cast<ConnectionToClient &>(connection);
-		cout << "Server received message from " << conn.socket().remote_endpoint() << endl;
+		//cout << "Server received message from " << conn.socket().remote_endpoint() << endl;
 		switch(msg.tag) {
 		case Tag::UniversalClientMessage:
 			return received(conn, ClientMessage::from(msg));
@@ -232,7 +244,7 @@ private:
 		player.sync();
 		if (player.has_component<Position>()) {
 			auto newSpeed = toVector(movement);
-			cout << "New speed: " << newSpeed << endl;
+			//cout << "New speed: " << newSpeed << endl;
 			player.get_component<Position>().speed = newSpeed;
 		}
 

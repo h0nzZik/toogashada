@@ -2,6 +2,7 @@
  * See https://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
  */
 
+#include <cassert>
 #include <limits>
 #include <algorithm>
 #include <set>
@@ -45,12 +46,6 @@ void getNormals(std::set<Vector> &normals, Polygon const &polygon) {
 
 	Point prev = polygon.back();
 	for(auto const & curr : polygon) {
-		auto v1 = unit(curr - prev);
-		Vector v2 = {-v1.y, v1.x};
-		//if (v2.x < 0)
-		//	v2 = -v2;
-
-		//normals.insert(rightNormal(unit(curr - prev)));
 		normals.insert(leftNormal(unit(curr - prev)));
 		prev = curr;
 	}
@@ -69,7 +64,38 @@ bool collision(Polygon const &p1, Polygon const &p2) {
 	return true;
 }
 
+// TODO na zacatek nekam pridam kruh
+
+// Does not detect full containing
 bool collision(Polygon const &polygon, Circle const &circle) {
+
+	// Near vertex
+	for(Point const & vertex : polygon) {
+		if (distance(vertex, circle.center) <= circle.radius)
+			return true;
+	}
+
+	return false;
+	// Something is wrong down there
+	assert(polygon.size() >= 3);
+	Point const * prev = &polygon.back();
+	for (Point const & vertex : polygon ) {
+		Vector const toLine = *prev - vertex;
+		Vector const toCenter = circle.center - vertex;
+		Scalar p = unit(toLine) * toCenter;
+		if (p >= 0 && p <= size(toLine)) {
+			// Center is near the edge
+			// measure distance
+			Point projectedCircle = vertex + p*toLine;
+			// We compute only collision with line segment.
+			// We do not care whether the circle is inside the polygon
+			// or not.
+			if (size(projectedCircle - circle.center))
+				return true;
+		}
+		prev = &vertex;
+	}
+
 	return false;
 }
 

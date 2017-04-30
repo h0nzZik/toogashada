@@ -2,11 +2,7 @@
 
 #include <memory>
 
-#include <common/geometry/Point.h>
-#include <common/geometry/PolygonalShape.h>
-
 struct DrawProp;
-struct Message;
 
 struct EntityComponentSystem;
 
@@ -17,8 +13,6 @@ class ClientGui {
 public:
     ClientGui();
     ~ClientGui();
-
-    void render_polygon(geometry::Point center, geometry::PolygonalShape const &points);
 
     void renderGui(EntityComponentSystem & entities);
 
