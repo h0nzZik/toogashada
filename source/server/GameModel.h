@@ -13,7 +13,8 @@ public:
 
 	EntityComponentSystem & ecs;
 	SEntity newPlayer();
-	void removePlayer(SEntity const &entity);
+	void newBullet();
+	void removeEntity(SEntity const &entity);
 private:
 	class Impl;
 	std::unique_ptr<Impl> pImpl;

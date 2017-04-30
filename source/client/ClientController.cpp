@@ -220,6 +220,10 @@ void ClientController::Impl::handleKeyPress(SDL_Scancode code) {
 		msg = {MsgPlayerMovesForward{}};
 		pressedKeys.key_up = true;
 	}
+	else if (code == config.key_shoot)
+	{
+		msg = {MsgPlayerShoots{}};
+	}
 	else
 		return;
 
@@ -281,6 +285,7 @@ ClientController::Config::Config()
 	key_down = SDL_SCANCODE_S;
 	key_left = SDL_SCANCODE_A;
 	key_right = SDL_SCANCODE_D;
+	key_shoot = SDL_SCANCODE_SPACE;
 }
 
 

@@ -1,5 +1,6 @@
 // Standard
 #include <cmath>
+#include <random>
 #include <chrono>
 #include <iostream>
 #include <ctime>
@@ -71,15 +72,61 @@ public:
 		return info;
 	}
 
-	void removePlayer(SEntity const &entity) {
-		entity_t e = entity.entity;
-		ServerMessage msg{MsgDeleteEntity{e.get_component<EntityID>()}};
+	void removeEntity(entity_t entity) {
+		ServerMessage msg{MsgDeleteEntity{entity.get_component<EntityID>()}};
 		broadcaster.broadcast(msg.to_message());
-		e.destroy();
+		entity.destroy();
+	}
+
+	std::random_device d{};
+	std::default_random_engine randomEngine{d()};
+
+	geometry::Point randomPoint() {
+		return {
+			Scalar(randomEngine() % int(game_area.bottomRight().x)),
+			Scalar(randomEngine() % int(game_area.bottomRight().y))
+		};
+	}
+
+	entity_t newEntity() {
+		return ecs.entityManager.create_entity(EntityID::newID());
+	}
+
+	void newBullet() {
+		entity_t entity = newEntity();
+		Position pos;
+		pos.speed = {20, 20};
+		pos.center = randomPoint();
+		entity.add_component<Position>(pos);
+		entity.add_component<Shape>(geometry::CircleShape{3});
+		entity.add_component<Explosive>();
+		computeObjectIfNeeded(entity);
+		entity.sync();
+
+		MsgNewEntity msg;
+		msg.components = EntityComponentSystem::all_components(entity);
+		msg.entity_id = entity.get_component<EntityID>();
+		ServerMessage sm{msg};
+		broadcaster.broadcast(sm.to_message());
+	}
+
+	void computeObjectIfNeeded(entity_t entity) {
+		if (!entity.has_component<Position>())
+			return;
+		if (!entity.has_component<Shape>())
+			return;
+		if (entity.has_component<geometry::Object2D>())
+			return;
+
+		Shape const & shape = entity.get_component<Shape>();
+		Position const & position = entity.get_component<Position>();
+		entity.add_component<geometry::Object2D>(
+				geometry::createObject2D(position.center, position.rotation, shape)
+		);
 	}
 
 	SEntity newPlayer() {
-		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
+		entity_t entity = newEntity();
 		Position pos;
 
 		// Hope it will eventually find a good place.
@@ -90,11 +137,7 @@ public:
 
 		CollisionInfo colInfo;
 		do{
-			pos.center = {
-					Scalar(rand() % int(game_area.bottomRight().x)),
-					Scalar(rand() % int(game_area.bottomRight().y))
-			};
-
+			pos.center = randomPoint();
 			object2d = createObject2D(pos.center, 0, playerShape);
 			colInfo = collidesWithSomething(object2d);
 
@@ -114,8 +157,8 @@ public:
 	}
 
 	EntityComponentSystem & ecs;
-private:
 
+private:
 	geometry::RectangularArea const game_area{{0, 0}, {100, 100}};
 	// TODO we should measure the diffeence between client's and server's time.
 
@@ -141,6 +184,26 @@ private:
 		);
 	}
 
+	void explosiveCollision(entity_t explosive_entity) {
+		log() << "Explosive collision";
+		removeEntity(explosive_entity);
+	}
+
+	void collisionHappened(entity_t a, Position & posa, entity_t b) {
+		posa.speed = geometry::Vector{0,0};
+		if (a.has_component<Explosive>())
+			explosiveCollision(a);
+		//if (b.has_component<Explosive>())
+		//	explosiveCollision(b);
+	}
+
+	void collisionHappenedWithArea(entity_t entity, Position & pos) {
+		pos.speed = geometry::Vector{0,0};
+
+		if (entity.has_component<Explosive>())
+			explosiveCollision(entity);
+	}
+
 	void update_position(entity_t const & entity, Position & pos, Shape const &shape, geometry::Object2D & oldObject) {
 		if (std::fabs(pos.speed.x) < 0.01 && std::fabs(pos.speed.y) < 0.01)
 			return;
@@ -148,37 +211,18 @@ private:
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
 		auto currentObject2d = createObject2D(new_center, 0, shape);
 
-		CollisionInfo colInfoBefore = collidesWithSomething(oldObject, &entity);
 		CollisionInfo colInfoNow = collidesWithSomething(currentObject2d, &entity);
-
-		if (colInfoBefore) {
-			log() << "Entity " << entity.get_component<EntityID>().id() << " had collision before";
-			//log() << "  obj:" << oldObject;
-			log() << "  with: " << colInfoBefore.with.get_component<EntityID>().id();
-			//log() << "  obj:" << colInfoBefore.with.get_component<geometry::Object2D>();
-		}
 
 		if (colInfoNow) {
 			log() << "Entity " << entity.get_component<EntityID>().id() << " have collision now";
-			      //<< "  obj:" << currentObject2d << '\n'
 			log() << "  with: " << colInfoNow.with.get_component<EntityID>().id();
-			      //<< "  obj:" << colInfoNow.with.get_component<geometry::Object2D>() << '\n';
 		}
 
 		if (!in(new_center, shape, game_area))
-		{
-			pos.speed = geometry::Vector{0,0};
-			return;
-		}
+			return collisionHappenedWithArea(entity, pos);
 
-		if (colInfoNow && !colInfoBefore) {
-			pos.speed = geometry::Vector{0,0};
-			return;
-		}
-
-		if (colInfoNow && colInfoBefore) {
-			log() << "Collision was already there -> continue";
-		}
+		if (colInfoNow)
+			return collisionHappened(entity, pos, colInfoNow.with);
 
 		pos.center = new_center;
 		oldObject = currentObject2d;
@@ -231,6 +275,10 @@ SEntity GameModel::newPlayer() {
 	return pImpl->newPlayer();
 }
 
-void GameModel::removePlayer(SEntity const &entity) {
-	return pImpl->removePlayer(entity);
+void GameModel::newBullet() {
+	return pImpl->newBullet();
+}
+
+void GameModel::removeEntity(SEntity const &entity) {
+	return pImpl->removeEntity(entity.entity);
 }

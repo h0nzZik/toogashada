@@ -86,3 +86,4 @@ struct MsgPlayerMovesRight{};
 struct MsgPlayerMovesBackward{};
 struct MsgPlayerMovesForward{};
 struct MsgPlayerStops{};
+struct MsgPlayerShoots{};

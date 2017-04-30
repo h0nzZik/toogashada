@@ -28,6 +28,7 @@ private:
 		SDL_Scancode key_down;
 		SDL_Scancode key_left;
 		SDL_Scancode key_right;
+		SDL_Scancode key_shoot;
 	};
 };
 

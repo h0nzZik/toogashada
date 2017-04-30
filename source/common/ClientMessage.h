@@ -13,7 +13,8 @@ struct ClientMessage {
 			MsgPlayerMovesRight,
 			MsgPlayerMovesForward,
 			MsgPlayerMovesBackward,
-			MsgPlayerStops
+			MsgPlayerStops,
+			MsgPlayerShoots
 			>;
 
 	Data data;

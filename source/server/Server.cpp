@@ -106,6 +106,12 @@ private:
 			self.playerMoves(connection, Player::Movement::None);
 		}
 
+		void operator()(MsgPlayerShoots const & /*msg*/) {
+			/* generate new random moving object */
+			// TODO refactor to game model
+			self.gameModel.newBullet();
+		}
+
 	private:
 		Impl & self;
 		ConnectionToClient & connection;
@@ -133,7 +139,7 @@ private:
 		connections.erase(&conn);
 		delete &conn;
 
-		gameModel.removePlayer({entity});
+		gameModel.removeEntity({entity});
 	}
 	/* </IConnection::IHandler > */
 
