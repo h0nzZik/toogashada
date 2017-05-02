@@ -3,6 +3,30 @@
 #include <memory>
 #include <SDL_scancode.h>
 
+#include <iostream>
+#include <mutex>
+#include <map>
+#include <thread>
+
+// SDL
+#include <SDL.h>
+
+// Boost
+#include <boost/variant/static_visitor.hpp>
+
+// project
+#include <common/IConnection.h>
+#include <common/Message.h>
+#include <common/Messages.h>
+#include <common/Tag.h>
+#include <common/AnyComponent.h>
+#include <common/ServerMessage.h>
+#include <common/ClientMessage.h>
+
+#include "ClientPlayer.h"
+#include "ClientGui.h"
+#include "RemoteServerWrapper.h"
+
 struct ClientPlayer;
 class ClientGui;
 class RemoteServerWrapper;
@@ -11,15 +35,13 @@ struct Message;
 class ClientController final {
 public:
 	explicit ClientController(ClientPlayer &player, ClientGui & clientGui, RemoteServerWrapper & server);
-	~ClientController();
 
 	void received(Message msg);
 	void main_loop();
+	void loopWork();
 	void stop();
 
 private:
-	class Impl;
-	std::unique_ptr<Impl> impl;
 
 	struct Config {
 		Config();
@@ -28,7 +50,38 @@ private:
 		SDL_Scancode key_down;
 		SDL_Scancode key_left;
 		SDL_Scancode key_right;
-		SDL_Scancode key_shoot;
+		SDL_Scancode key_fire;
 	};
+
+	std::map<SDL_Scancode, std::pair<PlayerAction,bool>> keyMap {
+			{SDL_SCANCODE_W, {PlayerAction::Up, 0}},
+			{SDL_SCANCODE_S, {PlayerAction::Down, 0}},
+			{SDL_SCANCODE_A, {PlayerAction::Left, 0}},
+			{SDL_SCANCODE_D, {PlayerAction::Right, 0}},
+			{SDL_SCANCODE_SPACE, {PlayerAction::Fire, 0}}
+	};
+
+	class Receiver;
+
+	void redraw();
+	void received(ServerMessage msg);
+	void dispatchKeyStates();
+	void handle_event(SDL_Event const & e);
+	void handleKeyPress(SDL_Scancode code);
+	void handleKeyRelease(SDL_Scancode code);
+	void send(ClientMessage const & msg);
+
+	ClientGui & clientGui;
+	RemoteServerWrapper & remoteServer;
+	ClientPlayer &player;
+
+	bool continueLoop;
+
+	//GameObjectManager gameObjects;
+	std::mutex mutexGameObjects;
+
+
+	EntityComponentSystem ecs;
+	std::map<EntityID, entity_t> entites;
 };
 

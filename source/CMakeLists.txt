@@ -34,7 +34,7 @@ add_library(ToogashadaCommon
 	./common/geometry/Polygon.cpp
 	./common/components/EntityID.cpp
 	./common/components/Shape.cpp
-)
+        common/PlayerAction.h)
 
 target_include_directories(ToogashadaCommon
 	PUBLIC
@@ -79,7 +79,7 @@ add_library(client
 	./client/ClientGui.cpp
 	./client/SDLDeleter.h
 	./client/DrawProp.h
-)
+        )
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(client
@@ -94,7 +94,7 @@ target_link_libraries(client
 
 add_executable(client_main
 	./client/client_main.cpp
-)
+        )
 
 target_link_libraries(client_main
 	client

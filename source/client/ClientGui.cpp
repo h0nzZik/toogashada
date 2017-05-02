@@ -28,201 +28,191 @@ using namespace geometry;
 
 // TODO standalone class for game area
 
-class ClientGui::Impl {
 
-    /* const */ int SCREEN_WIDTH;
-    /* const */ int SCREEN_HEIGHT;
+ClientGui::ClientGui() {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        throw std::runtime_error("Cannot initialize SDL: " + string(SDL_GetError()));
 
-	geometry::RectangularArea const game_area{{0, 0}, {100, 100}};
+    SDL_DisplayMode dm;
+    SDL_GetCurrentDisplayMode(0, &dm);
 
-	const int border_size = 1;
-	geometry::RectangularArea drawing_area() const {
-		auto m = std::min(SCREEN_WIDTH, SCREEN_HEIGHT);
-		return {{Scalar(border_size), Scalar(border_size)}, {Scalar(m-border_size), Scalar(m-border_size)}};
-	}
+    //Screen dimension constants
+    SCREEN_WIDTH = static_cast<int>(dm.w * 0.9);
+    SCREEN_HEIGHT = static_cast<int>(dm.h * 0.9);
 
+    cout << "Width: " << SCREEN_WIDTH << " Height: " << SCREEN_HEIGHT << endl;
 
-	Scalar getFactor() {
-		return (drawing_area().bottomRight().x - drawing_area().topLeft().x)
-						/ (game_area.bottomRight().x - game_area.topLeft().x);
-	}
+    mWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
+                               SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (!mWindow)
+        throw std::runtime_error("Cannot create window: " + string(SDL_GetError()));
 
-	geometry::Point translate(geometry::Point point) {
-		return { border_size + point.x * getFactor(), border_size + point.y * getFactor() };
-	}
+    mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
+    if (!mRenderer)
+        throw std::runtime_error("Cannot create renderer: " + string(SDL_GetError()));
 
-    // GUI settings
-    DrawProp mapBoundingBoxRatio {
-            {0,0,100,90},
-            {}
-    };
+    loadMedia();
+    render();
 
-
-    enum class Color {
-        BG,
-        INFO_BG,
-    };
-    std::map<Color, SDL_Color> mColors = {
-            {Color::BG, {0, 0, 0, 255}},
-            {Color::INFO_BG, {255, 255, 255, 255}},
-    };
-
-    // Computed at init
-    DrawProp mapBoundingBox { {}, mColors[Color::BG]};
-    DrawProp infoBoundingBox { {}, mColors[Color::INFO_BG]};
-
-    void handle_event(SDL_Event const &e);
-
-
-
-    SDL_Window *mWindow;
-    SDL_Renderer *mRenderer;
-
-    void drawClearBg(const SDL_Color &color) const {
-        SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a);
-        SDL_RenderClear(mRenderer);
-    }
-
-    void drawAppBg() const {
-    	drawClearBg(mColors.at(Color::BG));
-    }
-
-    void render() const {
-    	SDL_RenderPresent(mRenderer);
-    }
-
-    void loadMedia() {
-
-    }
-
-    void initGui() {
-        {
-            auto bbr = mapBoundingBoxRatio;
-            auto &bb = mapBoundingBox;
-
-            bb.w() = (bbr.w() * SCREEN_WIDTH)/100;
-            bb.h() = (bbr.h() * SCREEN_HEIGHT)/100;
-            bb.x() = (bbr.x() * SCREEN_WIDTH)/100;
-            bb.y() = (bbr.y() * SCREEN_HEIGHT)/100;
-            bb.color = bbr.color;
-        }
-
-        {
-            auto &mb = mapBoundingBox;
-            auto &bb = infoBoundingBox;
-
-            bb.w() = mb.w();
-            bb.h() = SCREEN_HEIGHT - mb.h();
-            bb.x() = mb.y();
-            bb.y() = SCREEN_HEIGHT - mb.h();
-        }
-    }
-
-public:
-    Impl() {
-    	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-    		throw std::runtime_error("Cannot initialize SDL: " + string(SDL_GetError()));
-
-    	SDL_DisplayMode dm;
-    	SDL_GetCurrentDisplayMode(0, &dm);
-
-    	//Screen dimension constants
-    	SCREEN_WIDTH = static_cast<int>(dm.w * 0.9);
-    	SCREEN_HEIGHT = static_cast<int>(dm.h * 0.9);
-
-    	cout << "Width: " << SCREEN_WIDTH << " Height: " << SCREEN_HEIGHT << endl;
-
-    	mWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
-    	if (!mWindow)
-    		throw std::runtime_error("Cannot create window: " + string(SDL_GetError()));
-
-    	mRenderer = SDL_CreateRenderer( mWindow, -1, SDL_RENDERER_ACCELERATED );
-    	if(!mRenderer)
-    		throw std::runtime_error("Cannot create renderer: " + string(SDL_GetError()));
-
-        loadMedia();
-        render();
-
-        initGui();
-    }
-    ~Impl() {
-        SDL_DestroyRenderer(mRenderer);
-        SDL_DestroyWindow(mWindow);
-    	SDL_Quit();
-    }
-
-    void render_polygon(Point center, std::vector<Vector> const &points) {
-    	size_t const n = points.size();
-    	auto xs = make_unique<Sint16[]>(n);
-    	auto ys = make_unique<Sint16[]>(n);
-    	for (size_t i = 0; i < n; i++) {
-    		geometry::Point point = translate(center + points[i]);
-    		xs[i] = point.x;
-    		ys[i] = point.y;
-    	}
-    	polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
-    }
-
-    void renderGui(EntityComponentSystem & entities) {
-    	using namespace std::placeholders;
-
-    	drawAppBg();
-        drawRect(mapBoundingBox);
-        drawRect(infoBoundingBox);
-        auto da = drawing_area();
-        rectangleRGBA(mRenderer, da.topLeft().x-1, da.topLeft().y-1, da.bottomRight().x+1, da.bottomRight().y+1, 255, 20, 20, 255);
-    	entities.entityManager.for_each<Shape, Position>(
-    			std::bind(&Impl::render_entity,this,_1,_2,_3)
-    	);
-    	render();
-    }
-
-    void render_entity(entity_t const & entity, Shape const & shape, Position const & position) {
-        struct Renderer : public boost::static_visitor<void> {
-        	Impl & self;
-        	entity_t const & entity;
-        	Position const & position;
-        	Renderer(Impl & self, entity_t const & entity, Position const & position ) :
-        		self(self), entity(entity), position(position)
-        	{
-
-        	}
-
-        	void operator()(PolygonalShape const & shape){
-        		self.render_polygon(position.center, shape);
-        	}
-
-        	void operator()(CircleShape const & shape) {
-        		Point center = self.translate(position.center);
-        		filledCircleRGBA(self.mRenderer, center.x, center.y, shape.radius * self.getFactor() , 0, 0, 255, 255);
-        	}
-        };
-    	Renderer renderer{*this, entity, position};
-        boost::apply_visitor(renderer, shape);
-    }
-
-    //void drawRect();
-
-    void drawRect(DrawProp &dp) {
-        SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(mRenderer, dp.color.r, dp.color.g, dp.color.b, dp.color.a);
-        SDL_Rect rect = {dp.x(), dp.y(), dp.w(), dp.h()};
-        SDL_RenderFillRect(mRenderer, &rect);
-    }
-};
-
-
-ClientGui::ClientGui()
-{
-	pimpl = make_unique<Impl>();
+    initGui();
 }
 
-ClientGui::~ClientGui() = default;
-
-void ClientGui::renderGui(EntityComponentSystem & entities) {
-	pimpl->renderGui(entities);
+ClientGui::~ClientGui() {
+    SDL_DestroyRenderer(mRenderer);
+    SDL_DestroyWindow(mWindow);
+    SDL_Quit();
 }
+
+
+geometry::RectangularArea const ClientGui::game_area{{0,   0},
+                                                     {100, 100}};
+
+const int border_size = 1;
+
+geometry::RectangularArea ClientGui::drawing_area() const {
+    auto m = std::min(SCREEN_WIDTH, SCREEN_HEIGHT);
+    return {{Scalar(border_size),     Scalar(border_size)},
+            {Scalar(m - border_size), Scalar(m - border_size)}};
+}
+
+
+Scalar ClientGui::getFactor() {
+    return (drawing_area().bottomRight().x - drawing_area().topLeft().x)
+           / (game_area.bottomRight().x - game_area.topLeft().x);
+}
+
+geometry::Point ClientGui::translate(geometry::Point point) {
+    return {border_size + point.x * getFactor(), border_size + point.y * getFactor()};
+}
+
+void ClientGui::drawClearBg(const SDL_Color &color) const {
+    SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a);
+    SDL_RenderClear(mRenderer);
+}
+
+void ClientGui::drawAppBg() const {
+    drawClearBg(mColors.at(Color::BG));
+}
+
+void ClientGui::render() const {
+    SDL_RenderPresent(mRenderer);
+}
+
+void ClientGui::loadMedia() {
+
+}
+
+void ClientGui::initGui() {
+    {
+        auto bbr = mapBoundingBoxRatio;
+        auto &bb = mapBoundingBox;
+
+        bb.w() = (bbr.w() * SCREEN_WIDTH) / 100;
+        bb.h() = (bbr.h() * SCREEN_HEIGHT) / 100;
+        bb.x() = (bbr.x() * SCREEN_WIDTH) / 100;
+        bb.y() = (bbr.y() * SCREEN_HEIGHT) / 100;
+    }
+
+    {
+        auto &mb = mapBoundingBox;
+        auto &bb = infoBoundingBox;
+
+        bb.w() = mb.w();
+        bb.h() = SCREEN_HEIGHT - mb.h();
+        bb.x() = mb.y();
+        bb.y() = mb.h();
+    }
+
+    {
+        auto &mbb = mapBoundingBox;
+        auto &mr = mapRatio;
+        auto &mp = mapProp;
+
+        double mapRatio = mr.w() / static_cast<double>(mr.h());
+        double mpBoundingBoxRatio = mbb.w() / static_cast<double>(mbb.h());
+
+        if (mapRatio > mpBoundingBoxRatio) {
+
+            mp.w() = mbb.w();
+            mp.h() = static_cast<int>(mp.w() / mapRatio);
+            mp.x() = mbb.x();
+            mp.y() = mbb.y() + ((mbb.h() - mp.h())/2);
+
+        } else {
+
+            mp.h() = mbb.h();
+            mp.w() = static_cast<int>(mp.h() * mapRatio);
+            mp.x() = mbb.x() + ((mbb.w() - mp.w())/2);
+            mp.y() = mbb.y();
+
+        }
+    }
+}
+
+void ClientGui::render_polygon(Point center, std::vector<Vector> const &points) {
+    size_t const n = points.size();
+    auto xs = make_unique<Sint16[]>(n);
+    auto ys = make_unique<Sint16[]>(n);
+    for (size_t i = 0; i < n; i++) {
+        geometry::Point point = translate(center + points[i]);
+        xs[i] = point.x;
+        ys[i] = point.y;
+    }
+    polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
+}
+
+void ClientGui::renderGui(EntityComponentSystem &entities) {
+    using namespace std::placeholders;
+
+    drawAppBg();
+    drawRect(mapBoundingBox);
+    drawRect(infoBoundingBox);
+    drawRect(mapProp);
+
+    entities.entityManager.for_each<Shape, Position>(
+            std::bind(&ClientGui::render_entity, this, _1, _2, _3)
+    );
+
+    render();
+}
+
+void ClientGui::render_entity(entity_t const &entity, Shape const &shape, Position const &position) {
+    struct Renderer : public boost::static_visitor<void> {
+        ClientGui &self;
+        entity_t const &entity;
+        Position const &position;
+
+        Renderer(ClientGui &self, entity_t const &entity, Position const &position) :
+                self(self), entity(entity), position(position) {
+
+        }
+
+        void operator()(PolygonalShape const &shape) {
+            self.render_polygon(position.center, shape);
+        }
+
+        void operator()(CircleShape const &shape) {
+            Point center = self.translate(position.center);
+            filledCircleRGBA(self.mRenderer, center.x, center.y, shape.radius * self.getFactor(), 0, 0, 255, 255);
+        }
+    };
+    Renderer renderer{*this, entity, position};
+    boost::apply_visitor(renderer, shape);
+}
+
+//void drawRect();
 
 void ClientGui::drawRect(DrawProp &dp) {
-	pimpl->drawRect(dp);
+    SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(mRenderer, dp.color.r, dp.color.g, dp.color.b, dp.color.a);
+    SDL_Rect rect = {dp.x(), dp.y(), dp.w(), dp.h()};
+    SDL_RenderFillRect(mRenderer, &rect);
+}
+
+void ClientGui::setMapSize(int w, int h) {
+
+    mapRatio.w() = w;
+    mapRatio.h() = h;
+
+    initGui();
 }

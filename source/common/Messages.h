@@ -8,6 +8,8 @@
 
 #include "common/components/EntityID.h"
 
+#include "PlayerAction.h"
+
 // Server to client
 // =====================================
 
@@ -87,3 +89,24 @@ struct MsgPlayerMovesBackward{};
 struct MsgPlayerMovesForward{};
 struct MsgPlayerStops{};
 struct MsgPlayerShoots{};
+
+struct MsgPlayerActionChange{
+
+    PlayerAction movement;
+    int state;
+
+    template < typename Archive >
+    void serialize(Archive & archive) {
+        archive(movement, state);
+    }
+};
+
+struct MsgPlayerRotation {
+
+	int absoluteRotation; // value is player's heading (north is on top)
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(absoluteRotation);
+	}
+};

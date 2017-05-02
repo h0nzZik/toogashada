@@ -25,7 +25,7 @@ Message ClientMessage::to_message() const {
 
 ClientMessage ClientMessage::from(Message const &msg) {
 	if (msg.tag != tag)
-		throw std::domain_error("Message tag does not fit MsgNewPolygonalObject");
+		throw std::domain_error("Message tag does not fit.");
 
 	std::string s;
 	for (char c : msg.data)
