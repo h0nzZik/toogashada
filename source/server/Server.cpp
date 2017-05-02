@@ -112,6 +112,16 @@ private:
 			self.gameModel.newBullet();
 		}
 
+		void operator()(MsgPlayerRotation const & /*msg*/) {
+
+			//TODO replace multiple messages with this one for key handling
+		}
+
+		void operator()(MsgPlayerActionChange const & /*msg*/) {
+
+			// TODO player angle
+		}
+
 	private:
 		Impl & self;
 		ConnectionToClient & connection;

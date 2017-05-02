@@ -4,6 +4,7 @@
 #include <mutex>
 #include <map>
 #include <thread>
+#include <math.h>
 
 // SDL
 #include <SDL.h>
@@ -23,6 +24,7 @@
 #include "ClientPlayer.h"
 #include "ClientGui.h"
 #include "RemoteServerWrapper.h"
+
 
 // self
 #include "ClientController.h"
@@ -160,8 +162,35 @@ void ClientController::dispatchKeyStates() {
         if (prevState != curState) {
             msg = {MsgPlayerActionChange{keyMapping.second.first, curState}};
             keyMapping.second.second = curState;
+            send(msg);
             //std::cout << static_cast<std::underlying_type<Movement>::type>(keyMapping.second.first) << " " << prevState << " -> " << curState << std::endl;
         }
     }
+
+    int mouseX;
+    int mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    //std::cout << mouseX << ", " << mouseY << std::endl;
+
+    int posX = 500,
+        posY = 500;
+
+    int x1 = 0;
+    int y1 = -1;
+
+    int x2 = mouseX - posX;
+    int y2 = mouseY - posY;
+
+    double dot = x1*x2 + y1*y2;     
+    double det = x1*y2 - y1*x2;
+    double angle = atan2(det, dot) * 180 / M_PI;
+
+    if (angle < 0.0) {
+        angle += 360.0;
+    }
+
+    ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
+    send(mouseMsg);
 }
 

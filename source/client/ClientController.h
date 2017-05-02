@@ -43,22 +43,12 @@ public:
 
 private:
 
-	struct Config {
-		Config();
-
-		SDL_Scancode key_up;
-		SDL_Scancode key_down;
-		SDL_Scancode key_left;
-		SDL_Scancode key_right;
-		SDL_Scancode key_fire;
-	};
-
 	std::map<SDL_Scancode, std::pair<PlayerAction,bool>> keyMap {
-			{SDL_SCANCODE_W, {PlayerAction::Up, 0}},
-			{SDL_SCANCODE_S, {PlayerAction::Down, 0}},
-			{SDL_SCANCODE_A, {PlayerAction::Left, 0}},
-			{SDL_SCANCODE_D, {PlayerAction::Right, 0}},
-			{SDL_SCANCODE_SPACE, {PlayerAction::Fire, 0}}
+			{SDL_SCANCODE_W,     {PlayerAction::Up,    0}},
+			{SDL_SCANCODE_S,     {PlayerAction::Down,  0}},
+			{SDL_SCANCODE_A,     {PlayerAction::Left,  0}},
+			{SDL_SCANCODE_D,     {PlayerAction::Right, 0}},
+			{SDL_SCANCODE_SPACE, {PlayerAction::Fire,  0}}
 	};
 
 	class Receiver;
@@ -66,9 +56,6 @@ private:
 	void redraw();
 	void received(ServerMessage msg);
 	void dispatchKeyStates();
-	void handle_event(SDL_Event const & e);
-	void handleKeyPress(SDL_Scancode code);
-	void handleKeyRelease(SDL_Scancode code);
 	void send(ClientMessage const & msg);
 
 	ClientGui & clientGui;

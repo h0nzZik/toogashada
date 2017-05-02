@@ -43,13 +43,13 @@ class ClientGui {
             {}
     };
 
-
     enum class Color {
         BG,
         INFO_BG,
         MAP_BG,
         TEST
     };
+
     std::map<Color, SDL_Color> mColors = {
             {Color::BG,      {0,   0,   0,   255}},
             {Color::MAP_BG,  {14,  50,  25,  255}},
@@ -57,7 +57,7 @@ class ClientGui {
             {Color::TEST,    {255, 0,   0,   255}}
     };
 
-    // Computed at init
+    // Dimensions computed at init
     DrawProp mapBoundingBox { {}, mColors[Color::BG]};
     DrawProp infoBoundingBox { {}, mColors[Color::INFO_BG]};
 
@@ -77,7 +77,7 @@ public:
 
     //void drawRect();
 
-    void drawRect(DrawProp &dp);
+    void drawRect(const DrawProp &dp);
 
 
     void initGui();
@@ -91,15 +91,15 @@ public:
 
     void drawClearBg(const SDL_Color &color) const;
 
-    geometry::Point translate(geometry::Point point);
+    geometry::Point projectToMapCoords(geometry::Point point);
 
-    Scalar getFactor();
+    Scalar scaleToMapCoords(Scalar coord);
 
     geometry::RectangularArea drawing_area() const;
 
     static const geometry::RectangularArea game_area;
 
-    void render_polygon(geometry::Point center, const std::vector<geometry::Vector> &points);
+    void drawPolygon(geometry::Point center, const std::vector<geometry::Vector> &points);
 
-    void render_entity(const entity_t &entity, const Shape &shape, const Position &position);
+    void drawEntity(const entity_t &entity, const Shape &shape, const Position &position);
 };

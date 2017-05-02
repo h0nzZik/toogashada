@@ -103,7 +103,7 @@ struct MsgPlayerActionChange{
 
 struct MsgPlayerRotation {
 
-	int absoluteRotation; // value is player's heading (north is on top)
+	double absoluteRotation; // value is player's heading (north is on top)
 
 	template < typename Archive >
 	void serialize(Archive & archive) {

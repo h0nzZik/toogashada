@@ -63,29 +63,19 @@ ClientGui::~ClientGui() {
     SDL_Quit();
 }
 
+Scalar ClientGui::scaleToMapCoords(Scalar coord) {
 
-geometry::RectangularArea const ClientGui::game_area{{0,   0},
-                                                     {100, 100}};
-
-const int border_size = 1;
-
-geometry::RectangularArea ClientGui::drawing_area() const {
-    auto m = std::min(SCREEN_WIDTH, SCREEN_HEIGHT);
-    return {{Scalar(border_size),     Scalar(border_size)},
-            {Scalar(m - border_size), Scalar(m - border_size)}};
+    return coord * (mapProp.w() / mapRatio.w());
 }
 
+geometry::Point ClientGui::projectToMapCoords(geometry::Point point) {
 
-Scalar ClientGui::getFactor() {
-    return (drawing_area().bottomRight().x - drawing_area().topLeft().x)
-           / (game_area.bottomRight().x - game_area.topLeft().x);
-}
-
-geometry::Point ClientGui::translate(geometry::Point point) {
-    return {border_size + point.x * getFactor(), border_size + point.y * getFactor()};
+    return {mapProp.x() + scaleToMapCoords(point.x),
+            mapProp.y() + scaleToMapCoords(point.y)};
 }
 
 void ClientGui::drawClearBg(const SDL_Color &color) const {
+
     SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a);
     SDL_RenderClear(mRenderer);
 }
@@ -149,16 +139,20 @@ void ClientGui::initGui() {
     }
 }
 
-void ClientGui::render_polygon(Point center, std::vector<Vector> const &points) {
+void ClientGui::drawPolygon(Point center, std::vector<Vector> const &points) {
+
     size_t const n = points.size();
     auto xs = make_unique<Sint16[]>(n);
     auto ys = make_unique<Sint16[]>(n);
+
     for (size_t i = 0; i < n; i++) {
-        geometry::Point point = translate(center + points[i]);
+        geometry::Point point = projectToMapCoords(center + points[i]);
         xs[i] = point.x;
         ys[i] = point.y;
     }
+
     polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
+
 }
 
 void ClientGui::renderGui(EntityComponentSystem &entities) {
@@ -169,40 +163,41 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     drawRect(infoBoundingBox);
     drawRect(mapProp);
 
+    // reference point for mouse testing - hardcoded
+    drawRect({{499,499,2,2},mColors[Color::TEST]});
+
     entities.entityManager.for_each<Shape, Position>(
-            std::bind(&ClientGui::render_entity, this, _1, _2, _3)
+            std::bind(&ClientGui::drawEntity, this, _1, _2, _3)
     );
 
     render();
 }
 
-void ClientGui::render_entity(entity_t const &entity, Shape const &shape, Position const &position) {
-    struct Renderer : public boost::static_visitor<void> {
+void ClientGui::drawEntity(entity_t const &entity, Shape const &shape, Position const &position) {
+    struct Drawer : public boost::static_visitor<void> {
         ClientGui &self;
         entity_t const &entity;
         Position const &position;
 
-        Renderer(ClientGui &self, entity_t const &entity, Position const &position) :
-                self(self), entity(entity), position(position) {
-
-        }
+        Drawer(ClientGui &self, entity_t const &entity, Position const &position) :
+                self(self), entity(entity), position(position) {}
 
         void operator()(PolygonalShape const &shape) {
-            self.render_polygon(position.center, shape);
+            self.drawPolygon(position.center, shape);
         }
 
         void operator()(CircleShape const &shape) {
-            Point center = self.translate(position.center);
-            filledCircleRGBA(self.mRenderer, center.x, center.y, shape.radius * self.getFactor(), 0, 0, 255, 255);
+            Point center = self.projectToMapCoords(position.center);
+            filledCircleRGBA(self.mRenderer, center.x, center.y, self.scaleToMapCoords(shape.radius), 0, 0, 255, 255);
         }
     };
-    Renderer renderer{*this, entity, position};
-    boost::apply_visitor(renderer, shape);
+    Drawer drawer{*this, entity, position};
+    boost::apply_visitor(drawer, shape);
 }
 
 //void drawRect();
 
-void ClientGui::drawRect(DrawProp &dp) {
+void ClientGui::drawRect(const DrawProp &dp) {
     SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(mRenderer, dp.color.r, dp.color.g, dp.color.b, dp.color.a);
     SDL_Rect rect = {dp.x(), dp.y(), dp.w(), dp.h()};
