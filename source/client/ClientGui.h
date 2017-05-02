@@ -21,16 +21,21 @@
 #include <common/EntityComponentSystem.h>
 #include <common/Geometry.h>
 #include <common/geometry/RectangularArea.h>
+#include "common/geometry/Point.h"
 
 #include "DrawProp.h"
 #include "TextProperties.h"
 
 #include "ClientGui.h"
+#include "ClientController.h"
 
 struct EntityComponentSystem;
 struct Drawer;
 
 class ClientGui {
+
+    ClientController& mController;
+
     /* const */ int SCREEN_WIDTH;
     /* const */ int SCREEN_HEIGHT;
 
@@ -56,7 +61,8 @@ class ClientGui {
         TEXT,
         MY_PLAYER,
         OTHER_PLAYER,
-        DEFAULT_MAP_OBJECT
+        DEFAULT_MAP_OBJECT,
+        PLAYER_GUN
     };
 
     std::map<Color, SDL_Color> mColors = {
@@ -67,7 +73,8 @@ class ClientGui {
             {Color::TEXT,               {0,   0,   0,   255}},
             {Color::OTHER_PLAYER,       {255, 255, 255, 255}},
             {Color::MY_PLAYER,          {255, 0,   0,   255}},
-            {Color::DEFAULT_MAP_OBJECT, {127, 127, 127, 255}}
+            {Color::DEFAULT_MAP_OBJECT, {127, 127, 127, 255}},
+            {Color::PLAYER_GUN,         {255,   255,   0,   255}}
     };
 
     // Dimensions computed at init
@@ -81,7 +88,7 @@ class ClientGui {
     TextProperties healthProp = {{}, "", -1};
 
     std::string mPlayerName, mPlayerTeam;
-    EntityID playerId;
+
 
     int mFontLoadSize = 200;
     int mFontHeightOffset = 10;
@@ -90,11 +97,12 @@ class ClientGui {
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
 
+    geometry::Angle tempRotation;
 
     friend Drawer;
 
 public:
-    ClientGui(const std::string& playerName, const std::string& playerTeam);
+    ClientGui(ClientController& controller, const std::string& playerName, const std::string& playerTeam);
     ~ClientGui();
 
     void renderGui(EntityComponentSystem & entities);
@@ -107,8 +115,8 @@ public:
     void loadMedia();
     void setMapSize(int w, int h);
     void setPlayerHealth(int health);
-    void setPlayerId(EntityID id);
-    const EntityID getPlayerId() const;
+    geometry::Point getEntityMapRefPoint(const geometry::Point& point) const;
+    void setRotation(double angle);
 
     void render() const;
 
@@ -116,9 +124,9 @@ public:
 
     void drawClearBg(const SDL_Color &color) const;
 
-    geometry::Point placeToMapCoords(geometry::Point point);
+    geometry::Point placeToMapCoords(const geometry::Point& point) const;
 
-    Scalar scaleToMapCoords(Scalar coord);
+    Scalar scaleToMapCoords(Scalar coord) const;
 
     static const geometry::RectangularArea game_area;
 
@@ -128,10 +136,14 @@ public:
 
     void drawCircle(geometry::Point center, const geometry::CircleShape &shape, const SDL_Color &color);
 
+    void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation, const SDL_Color &color);
+
     void drawText(TextProperties property) const;
 
     template <typename T>
-    T scaleToMapCoords(T coord);
+    T scaleToMapCoords(T coord) const;
 
-    geometry::Point projectToMapCoords(geometry::Point point);
+    geometry::Point projectToMapCoords(const geometry::Point& point) const;
+
+
 };

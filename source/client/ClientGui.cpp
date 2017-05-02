@@ -30,7 +30,12 @@ using namespace geometry;
 // TODO standalone class for game area
 
 
-ClientGui::ClientGui(const std::string& playerName, const std::string& playerTeam) : mPlayerName{playerName}, mPlayerTeam{playerTeam} {
+ClientGui::ClientGui(ClientController& controller,
+                     const std::string& playerName,
+                     const std::string& playerTeam) :
+        mController{controller},
+        mPlayerName{playerName},
+        mPlayerTeam{playerTeam} {
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0 || TTF_Init() < 0)
         throw std::runtime_error("Cannot initialize SDL: " + string(SDL_GetError()));
@@ -73,13 +78,13 @@ ClientGui::~ClientGui() {
     SDL_Quit();
 }
 
-Scalar ClientGui::scaleToMapCoords(Scalar coord) {
+Scalar ClientGui::scaleToMapCoords(Scalar coord) const {
 
     return coord * (mapProp.w() / mapRatio.w());
 }
 
 template <typename T>
-T ClientGui::scaleToMapCoords(T coord) {
+T ClientGui::scaleToMapCoords(T coord) const {
 
     static_assert(std::is_same<T, Vector>::value || std::is_same<T, Point>::value, "Cannot scale given type.");
 
@@ -87,13 +92,13 @@ T ClientGui::scaleToMapCoords(T coord) {
               coord.y * (mapProp.h() / mapRatio.h())};
 }
 
-geometry::Point ClientGui::placeToMapCoords(geometry::Point point) {
+geometry::Point ClientGui::placeToMapCoords(const geometry::Point& point) const {
 
     return {mapProp.x() + point.x,
             mapProp.y() + point.y};
 }
 
-geometry::Point ClientGui::projectToMapCoords(geometry::Point point) {
+geometry::Point ClientGui::projectToMapCoords(const geometry::Point& point) const {
 
     return placeToMapCoords(scaleToMapCoords(point));
 }
@@ -299,9 +304,6 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     drawText(nameTeamProp);
     drawText(healthProp);
 
-    // reference point for mouse testing - hardcoded
-    drawRect({{499,499,2,2},mColors[Color::TEST]});
-
     entities.entityManager.for_each<Shape, Position>(
             std::bind(&ClientGui::drawEntity, this, _1, _2, _3)
     );
@@ -314,6 +316,7 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
     entity_t const &entity;
     Position const &position;
     SDL_Color color;
+    bool myPlayer = false;
 
 
 
@@ -324,12 +327,12 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
 
         const EntityID &curId = entity.get_component<EntityID>();
 
-        if (curId == gui.getPlayerId()) {
+        if (gui.mController.isMyPlayer(curId)) {
             color = gui.mColors[Color::MY_PLAYER];
+            myPlayer = true;
         } else {
             color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
         }
-
     }
 
     void operator()(PolygonalShape const &shape) {
@@ -339,6 +342,10 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
 
     void operator()(CircleShape const &shape) {
         gui.drawCircle(position.center, shape, color);
+        if (myPlayer) {
+            //position.rotation,
+            gui.drawLine(position.center, shape.radius, gui.tempRotation, gui.mColors[Color::PLAYER_GUN]);
+        }
     }
 };
 
@@ -370,14 +377,43 @@ void ClientGui::setPlayerHealth(int health) {
     healthProp.mText = "HP: " + to_string(health);
 }
 
-void ClientGui::setPlayerId(EntityID id) {
+geometry::Point ClientGui::getEntityMapRefPoint(const geometry::Point &point) const {
 
-    playerId = id;
+    return projectToMapCoords(point);
 }
 
-const EntityID ClientGui::getPlayerId() const {
+void ClientGui::drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation, const SDL_Color &color) {
 
-    return playerId;
+    int thickness = 2;
+    center = projectToMapCoords(center);
+    int radiusInt = static_cast<int>(scaleToMapCoords(radius));
+
+
+    SDL_Rect target = {static_cast<int>(center.x) - thickness/2,
+                       static_cast<int>(center.y) - radiusInt,
+                       thickness,
+                       radiusInt};
+
+
+    SDL_Texture *texture = SDL_CreateTexture(mRenderer, SDL_GetWindowPixelFormat(mWindow), SDL_TEXTUREACCESS_TARGET, thickness, radius);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderTarget(mRenderer, texture);
+    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 0);
+    SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
+    SDL_RenderClear(mRenderer);
+    SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a);
+    SDL_RenderFillRect(mRenderer, nullptr);
+    SDL_SetRenderTarget(mRenderer, nullptr);
+
+    SDL_Point ref = {target.w/2, radiusInt};
+    SDL_RenderCopyEx(mRenderer, texture, NULL, &target, rotation, &ref, SDL_RendererFlip::SDL_FLIP_NONE);
+
+}
+
+void ClientGui::setRotation(double angle) {
+
+    tempRotation = angle;
+
 }
 
 

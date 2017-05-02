@@ -22,6 +22,7 @@
 #include <common/AnyComponent.h>
 #include <common/ServerMessage.h>
 #include <common/ClientMessage.h>
+#include "common/components/EntityID.h"
 
 #include "ClientPlayer.h"
 #include "ClientGui.h"
@@ -40,6 +41,7 @@ public:
 	void main_loop();
 	void loopWork();
 	void stop();
+	bool isMyPlayer(const EntityID& id);
 
 private:
 
@@ -58,9 +60,11 @@ private:
 	void dispatchKeyStates();
 	void send(ClientMessage const & msg);
 
+
 	ClientGui & clientGui;
 	RemoteServerWrapper & remoteServer;
 	ClientPlayer &player;
+	EntityID playerId;
 
 	bool continueLoop;
 

@@ -111,7 +111,7 @@ public:
 
     void operator() (MsgPlayerAssignedEntityId const &msg) {
 
-        controller.clientGui.setPlayerId(msg.entityId);
+        controller.playerId = msg.entityId;
     }
 
 private:
@@ -183,26 +183,44 @@ void ClientController::dispatchKeyStates() {
     int mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
 
-    //std::cout << mouseX << ", " << mouseY << std::endl;
+    //TODO this might be very slow, maybe I should cach a reference
+    //TODO improve semantic
 
-    int posX = 500,
-        posY = 500;
+    {
+        std::unique_lock<std::mutex> guard{mutexGameObjects};
 
-    int x1 = 0;
-    int y1 = -1;
+        if (entites.find(playerId) != entites.end()) {
 
-    int x2 = mouseX - posX;
-    int y2 = mouseY - posY;
+            geometry::Point point = entites.at(playerId).get_component<Position>().center;
+            guard.unlock();
 
-    double dot = x1*x2 + y1*y2;     
-    double det = x1*y2 - y1*x2;
-    double angle = atan2(det, dot) * 180 / M_PI;
+            point = clientGui.getEntityMapRefPoint(point);
 
-    if (angle < 0.0) {
-        angle += 360.0;
+            int x1 = 0;
+            int y1 = -1;
+
+            int x2 = mouseX - point.x;
+            int y2 = mouseY - point.y;
+
+            double dot = x1*x2 + y1*y2;
+            double det = x1*y2 - y1*x2;
+            geometry::Angle angle = atan2(det, dot) * 180 / M_PI;
+
+            if (angle < 0) {
+                angle += 360;
+            }
+
+            std::cout << "angle: " << angle << std::endl;
+
+            ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
+            clientGui.setRotation(angle);
+            send(mouseMsg);
+        }
     }
+}
 
-    ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
-    send(mouseMsg);
+bool ClientController::isMyPlayer(const EntityID &id) {
+
+    return id == playerId;
 }
 

@@ -3,7 +3,7 @@
 namespace geometry {
 
 
-using Angle = int; // -180 to +179
+using Angle = int; // heading, North is at the top
 using AngularSpeed = int; // degrees / second
 
 } // namespace geometry
