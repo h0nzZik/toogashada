@@ -36,12 +36,7 @@ public:
 		runner.join();
 	}
 
-	geometry::PolygonalShape const playerShape = {
-			{-10, 0},
-			{-20, -10},
-			{+20, -10},
-			{+10, 0}
-	};
+	geometry::CircleShape const playerShape = {10};
 
 	struct CollisionInfo {
 		bool happened = false;

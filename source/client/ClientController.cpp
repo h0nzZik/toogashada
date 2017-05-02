@@ -72,7 +72,7 @@ void ClientController::loopWork() {
 }
 
 
-class ClientController::    Receiver : public boost::static_visitor<void> {
+class ClientController::Receiver : public boost::static_visitor<void> {
 public:
     Receiver(ClientController &controller) : controller(controller) {}
 
@@ -101,6 +101,17 @@ public:
 
         controller.clientGui.setMapSize(msg.area_size_x, msg.area_size_y);
         std::cout << "map size set to: " << msg.area_size_x << "x" << msg.area_size_y << endl;
+    }
+
+    void operator() (MsgPlayerHealth const &msg) {
+
+        controller.clientGui.setPlayerHealth(msg.health);
+        std::cout << "health set to: " << msg.health << endl;
+    }
+
+    void operator() (MsgPlayerAssignedEntityId const &msg) {
+
+        controller.clientGui.setPlayerId(msg.entityId);
     }
 
 private:

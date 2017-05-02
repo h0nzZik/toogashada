@@ -36,9 +36,9 @@ public:
 	acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
 	gameModel(ecs, *this)
 	{
-		// A circle
+		// A polygon
 		entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
-		entity.add_component<Shape>(geometry::CircleShape{10});
+		entity.add_component<Shape>(geometry::PolygonalShape{{-10, 0},{-20, -10},{+20, -10},{+10, 0}});
 		Position pos;
 		pos.speed = {0,0};
 		pos.center = geometry::Point{30, 30};
@@ -207,18 +207,24 @@ private:
 		//client.send(Message{Tag::Hello, {1,2,3}});
 
 		sendAllEntities(client);
-		SEntity sentity = gameModel.newPlayer();
 
+		SEntity sentity = gameModel.newPlayer();
 		connection2entity[&client] = sentity.entity;
 
+
+		// misc info for player
 		auto gameArea = gameModel.getMapSize().bottomRight();
 		MsgGameInfo msgGameInfo = {gameArea.x, gameArea.y};
 		send(client, {msgGameInfo});
+		MsgPlayerHealth msgPlayerHealth = {100};
+		send(client, {msgPlayerHealth});
 
 		MsgNewEntity msg;
 		msg.components = EntityComponentSystem::all_components(sentity.entity);
 		msg.entity_id = sentity.entity.get_component<EntityID>();
 
+		MsgPlayerAssignedEntityId msgAssignedEntityId = {msg.entity_id};
+		send(client, {msgAssignedEntityId});
 		send(client, {msg});
 		broadcast({msg});
 

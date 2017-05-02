@@ -147,7 +147,7 @@ void ClientGui::drawText(TextProperties property) const {
             if (fontSize < 0) {
 
                 double ratioSource = static_cast<double>( textSurface->w) / textSurface->h;
-                double ratioTarget = static_cast<double> ( dp.w() )  / dp.w();
+                double ratioTarget = static_cast<double> ( dp.w() )  / dp.h();
 
                 if (ratioSource > ratioTarget) {
 
@@ -162,7 +162,7 @@ void ClientGui::drawText(TextProperties property) const {
                 }
             } else {
 
-                double multiplier = static_cast<double>( fontSize) / mFontLoadSize;
+                double multiplier = static_cast<double>( fontSize ) / mFontLoadSize;
                 textBoxW = textSurface->w * multiplier;
                 textBoxH = textSurface->h * multiplier;
 
@@ -170,8 +170,9 @@ void ClientGui::drawText(TextProperties property) const {
 
             SDL_FreeSurface(textSurface);
 
+            int correction = static_cast<int> (textBoxH * (static_cast<double> (mFontHeightOffset) / 100));
             int centeredX = dp.x() + (dp.w() / 2 - textBoxW / 2);
-            int centeredY = (dp.y() + (dp.h() / 2 - textBoxH / 2));
+            int centeredY = (dp.y() + (dp.h() / 2 - textBoxH / 2)) + correction;
 
             SDL_Rect boundingBox = {centeredX, centeredY, textBoxW, textBoxH};
             SDL_SetTextureAlphaMod(texture, dp.color.a);
@@ -230,7 +231,7 @@ void ClientGui::initGui() {
 
     {
 
-        int padding = 20;
+        int padding = 10;
 
         auto &np = nameTeamProp.mDrawProp;
         auto &ib = infoBoundingBox;
@@ -245,9 +246,29 @@ void ClientGui::initGui() {
         nameTeamProp.mText = "[" + mPlayerTeam + "] " + mPlayerName;
         nameTeamProp.mSize = -1;
     }
+
+    {
+        int padding = 10;
+
+        auto &hp = healthProp.mDrawProp;
+        auto &np = nameTeamProp.mDrawProp;
+        auto &ib = infoBoundingBox;
+
+
+        hp.x() = np.x() + np.w() + padding;
+        hp.y() = ib.y() + padding;
+        hp.h() = ib.h() - 2*padding;
+        hp.w() = (ib.w() / 3) - 2*padding;
+
+        hp.color = mColors[Color::TEXT];
+
+        healthProp.mText = "HP: -";
+        nameTeamProp.mSize = -1;
+    }
 }
 
-void ClientGui::drawPolygon(Point center, std::vector<Vector> const &points) {
+
+void ClientGui::drawPolygon(Point center, std::vector<Vector> const &points, const SDL_Color& color) {
 
     size_t const n = points.size();
     auto xs = make_unique<Sint16[]>(n);
@@ -259,13 +280,13 @@ void ClientGui::drawPolygon(Point center, std::vector<Vector> const &points) {
         ys[i] = point.y;
     }
 
-    polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
+    polygonRGBA(mRenderer, xs.get(), ys.get(), n, color.r, color.g, color.b, color.a);
 }
 
-void ClientGui::drawCircle(Point center , const CircleShape& shape) {
+void ClientGui::drawCircle(Point center , const CircleShape& shape,  const SDL_Color& color) {
 
     center = projectToMapCoords(center);
-    filledCircleRGBA(mRenderer, center.x, center.y, scaleToMapCoords(shape.radius), 0, 0, 255, 255);
+    filledCircleRGBA(mRenderer, center.x, center.y, scaleToMapCoords(shape.radius), color.r, color.g, color.b, color.a);
 }
 
 void ClientGui::renderGui(EntityComponentSystem &entities) {
@@ -276,6 +297,7 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     drawRect(infoBoundingBox);
     drawRect(mapProp);
     drawText(nameTeamProp);
+    drawText(healthProp);
 
     // reference point for mouse testing - hardcoded
     drawRect({{499,499,2,2},mColors[Color::TEST]});
@@ -287,23 +309,42 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     render();
 }
 
+struct ClientGui::Drawer : public boost::static_visitor<void> {
+    ClientGui &gui;
+    entity_t const &entity;
+    Position const &position;
+    SDL_Color color;
+
+
+
+    Drawer(ClientGui &gui, entity_t const &entity, Position const &position) :
+            gui(gui), entity(entity), position(position)
+    {
+        // ASK: case gui.getPlayerId(): ??
+
+        const EntityID &curId = entity.get_component<EntityID>();
+
+        if (curId == gui.getPlayerId()) {
+            color = gui.mColors[Color::MY_PLAYER];
+        } else {
+            color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
+        }
+
+    }
+
+    void operator()(PolygonalShape const &shape) {
+
+        gui.drawPolygon(position.center, shape, color);
+    }
+
+    void operator()(CircleShape const &shape) {
+        gui.drawCircle(position.center, shape, color);
+    }
+};
+
 void ClientGui::drawEntity(entity_t const &entity, Shape const &shape, Position const &position) {
-    struct Drawer : public boost::static_visitor<void> {
-        ClientGui &gui;
-        entity_t const &entity;
-        Position const &position;
 
-        Drawer(ClientGui &gui, entity_t const &entity, Position const &position) :
-                gui(gui), entity(entity), position(position) {}
 
-        void operator()(PolygonalShape const &shape) {
-            gui.drawPolygon(position.center, shape);
-        }
-
-        void operator()(CircleShape const &shape) {
-            gui.drawCircle(position.center, shape);
-        }
-    };
     Drawer drawer{*this, entity, position};
     boost::apply_visitor(drawer, shape);
 }
@@ -322,6 +363,21 @@ void ClientGui::setMapSize(int w, int h) {
     mapRatio.h() = h;
 
     initGui();
+}
+
+void ClientGui::setPlayerHealth(int health) {
+
+    healthProp.mText = "HP: " + to_string(health);
+}
+
+void ClientGui::setPlayerId(EntityID id) {
+
+    playerId = id;
+}
+
+const EntityID ClientGui::getPlayerId() const {
+
+    return playerId;
 }
 
 

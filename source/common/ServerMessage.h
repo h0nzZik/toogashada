@@ -12,7 +12,9 @@ struct ServerMessage {
 			MsgNewPlayer,
 			MsgNewEntity,
 			MsgUpdateEntity,
-			MsgDeleteEntity
+			MsgDeleteEntity,
+			MsgPlayerHealth,
+			MsgPlayerAssignedEntityId
 			>;
 
 	Data data;

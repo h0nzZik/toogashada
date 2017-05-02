@@ -28,6 +28,7 @@
 #include "ClientGui.h"
 
 struct EntityComponentSystem;
+struct Drawer;
 
 class ClientGui {
     /* const */ int SCREEN_WIDTH;
@@ -45,20 +46,28 @@ class ClientGui {
             {}
     };
 
+    struct Drawer;
+
     enum class Color {
         BG,
         INFO_BG,
         MAP_BG,
         TEST,
-        TEXT
+        TEXT,
+        MY_PLAYER,
+        OTHER_PLAYER,
+        DEFAULT_MAP_OBJECT
     };
 
     std::map<Color, SDL_Color> mColors = {
-            {Color::BG,      {0,   0,   0,   255}},
-            {Color::MAP_BG,  {14,  50,  25,  255}},
-            {Color::INFO_BG, {255, 255, 255, 255}},
-            {Color::TEST,    {255, 0,   0,   255}},
-            {Color::TEXT,    {0, 0,   0,   255}}
+            {Color::BG,                 {0,   0,   0,   255}},
+            {Color::MAP_BG,             {14,  50,  25,  255}},
+            {Color::INFO_BG,            {255, 255, 255, 255}},
+            {Color::TEST,               {255, 0,   0,   255}},
+            {Color::TEXT,               {0,   0,   0,   255}},
+            {Color::OTHER_PLAYER,       {255, 255, 255, 255}},
+            {Color::MY_PLAYER,          {255, 0,   0,   255}},
+            {Color::DEFAULT_MAP_OBJECT, {127, 127, 127, 255}}
     };
 
     // Dimensions computed at init
@@ -67,26 +76,28 @@ class ClientGui {
 
     DrawProp mapProp { {}, mColors[Color::MAP_BG] };
 
-    TextProperties nameTeamProp = {{},"",-1};
+
+    TextProperties nameTeamProp = {{}, "", -1};
+    TextProperties healthProp = {{}, "", -1};
 
     std::string mPlayerName, mPlayerTeam;
+    EntityID playerId;
 
     int mFontLoadSize = 200;
-    int mFontHeightOffset = 15;
+    int mFontHeightOffset = 10;
 
     SDL_Window *mWindow;
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
 
 
+    friend Drawer;
 
 public:
     ClientGui(const std::string& playerName, const std::string& playerTeam);
     ~ClientGui();
 
     void renderGui(EntityComponentSystem & entities);
-
-    //void drawRect();
 
     void drawRect(const DrawProp &dp);
 
@@ -95,6 +106,9 @@ public:
 
     void loadMedia();
     void setMapSize(int w, int h);
+    void setPlayerHealth(int health);
+    void setPlayerId(EntityID id);
+    const EntityID getPlayerId() const;
 
     void render() const;
 
@@ -106,15 +120,13 @@ public:
 
     Scalar scaleToMapCoords(Scalar coord);
 
-    geometry::RectangularArea drawing_area() const;
-
     static const geometry::RectangularArea game_area;
 
-    void drawPolygon(geometry::Point center, const std::vector<geometry::Vector> &points);
+    void drawPolygon(geometry::Point center, const std::vector<geometry::Vector> &points,  const SDL_Color& color);
 
     void drawEntity(const entity_t &entity, const Shape &shape, const Position &position);
 
-    void drawCircle(geometry::Point center, const geometry::CircleShape &shape);
+    void drawCircle(geometry::Point center, const geometry::CircleShape &shape, const SDL_Color &color);
 
     void drawText(TextProperties property) const;
 

@@ -37,6 +37,17 @@ struct MsgGameInfo {
 	}
 };
 
+struct MsgPlayerAssignedEntityId {
+
+	EntityID entityId;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(entityId);
+	}
+
+};
+
 struct MsgNewEntity {
 	EntityID entity_id;
 	std::vector<AnyComponent> components;
@@ -105,5 +116,15 @@ struct MsgPlayerRotation {
 	template < typename Archive >
 	void serialize(Archive & archive) {
 		archive(absoluteRotation);
+	}
+};
+
+struct MsgPlayerHealth {
+
+	int health;
+
+	template < typename Archive >
+	void serialize(Archive & archive) {
+		archive(health);
 	}
 };
