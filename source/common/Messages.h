@@ -27,12 +27,9 @@ struct MsgNewPlayer {
 	}
 };
 
-/*
- * But for now, we will make it fixed.
- */
 struct MsgGameInfo {
-	uint32_t area_size_x;
-	uint32_t area_size_y;
+	Scalar area_size_x;
+	Scalar area_size_y;
 
 	template < typename Archive >
 	void serialize(Archive & archive) {

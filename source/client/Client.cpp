@@ -49,7 +49,7 @@ void Client::run() {
 }
 
 Client::Impl::Impl(string ip, string port, std::string playerName, std::string playerTeam) :
-	clientGui{},
+	clientGui{playerName, playerTeam},
 	serverConnection{ip, port},
 	remoteServerWrapper{serverConnection},
 	clientController{clientPlayer, clientGui, remoteServerWrapper},

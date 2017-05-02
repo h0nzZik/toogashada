@@ -33,8 +33,7 @@ add_library(ToogashadaCommon
 	./common/geometry/collision.cpp
 	./common/geometry/Polygon.cpp
 	./common/components/EntityID.cpp
-	./common/components/Shape.cpp
-        common/PlayerAction.h)
+	./common/components/Shape.cpp)
 
 target_include_directories(ToogashadaCommon
 	PUBLIC
@@ -77,11 +76,10 @@ add_library(client
 	./client/ConnectionToServer.cpp
 	./client/RemoteServerWrapper.cpp
 	./client/ClientGui.cpp
-	./client/SDLDeleter.h
-	./client/DrawProp.h
         )
 
-target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS})
+
+target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS}	)
 target_link_libraries(client
 	ToogashadaCommon
 	${Boost_LIBRARIES}
@@ -89,8 +87,10 @@ target_link_libraries(client
 	${CMAKE_THREAD_LIBS_INIT}
 	SDL2_gfx
 	${Boost_LIBRARIES}
-	#	SDL2_ttf
+	SDL2_ttf
 )
+
+
 
 add_executable(client_main
 	./client/client_main.cpp

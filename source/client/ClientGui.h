@@ -11,6 +11,7 @@
 #include <SDL.h>
 #include <SDL_video.h>
 #include <SDL2_gfxPrimitives.h>
+#include <SDL_ttf.h>
 
 #include <boost/variant/static_visitor.hpp>
 
@@ -22,6 +23,7 @@
 #include <common/geometry/RectangularArea.h>
 
 #include "DrawProp.h"
+#include "TextProperties.h"
 
 #include "ClientGui.h"
 
@@ -47,14 +49,16 @@ class ClientGui {
         BG,
         INFO_BG,
         MAP_BG,
-        TEST
+        TEST,
+        TEXT
     };
 
     std::map<Color, SDL_Color> mColors = {
             {Color::BG,      {0,   0,   0,   255}},
             {Color::MAP_BG,  {14,  50,  25,  255}},
             {Color::INFO_BG, {255, 255, 255, 255}},
-            {Color::TEST,    {255, 0,   0,   255}}
+            {Color::TEST,    {255, 0,   0,   255}},
+            {Color::TEXT,    {0, 0,   0,   255}}
     };
 
     // Dimensions computed at init
@@ -63,14 +67,21 @@ class ClientGui {
 
     DrawProp mapProp { {}, mColors[Color::MAP_BG] };
 
+    TextProperties nameTeamProp = {{},"",-1};
+
+    std::string mPlayerName, mPlayerTeam;
+
+    int mFontLoadSize = 200;
+    int mFontHeightOffset = 15;
 
     SDL_Window *mWindow;
     SDL_Renderer *mRenderer;
+    TTF_Font *mFont;
 
 
 
 public:
-    ClientGui();
+    ClientGui(const std::string& playerName, const std::string& playerTeam);
     ~ClientGui();
 
     void renderGui(EntityComponentSystem & entities);
@@ -91,7 +102,7 @@ public:
 
     void drawClearBg(const SDL_Color &color) const;
 
-    geometry::Point projectToMapCoords(geometry::Point point);
+    geometry::Point placeToMapCoords(geometry::Point point);
 
     Scalar scaleToMapCoords(Scalar coord);
 
@@ -102,4 +113,13 @@ public:
     void drawPolygon(geometry::Point center, const std::vector<geometry::Vector> &points);
 
     void drawEntity(const entity_t &entity, const Shape &shape, const Position &position);
+
+    void drawCircle(geometry::Point center, const geometry::CircleShape &shape);
+
+    void drawText(TextProperties property) const;
+
+    template <typename T>
+    T scaleToMapCoords(T coord);
+
+    geometry::Point projectToMapCoords(geometry::Point point);
 };

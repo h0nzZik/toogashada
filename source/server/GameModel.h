@@ -15,6 +15,7 @@ public:
 	SEntity newPlayer();
 	void newBullet();
 	void removeEntity(SEntity const &entity);
+	const geometry::RectangularArea &getMapSize();
 private:
 	class Impl;
 	std::unique_ptr<Impl> pImpl;

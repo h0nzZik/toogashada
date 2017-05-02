@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <type_traits>
 
 // SDL2
 #include <SDL.h>
@@ -29,8 +30,9 @@ using namespace geometry;
 // TODO standalone class for game area
 
 
-ClientGui::ClientGui() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+ClientGui::ClientGui(const std::string& playerName, const std::string& playerTeam) : mPlayerName{playerName}, mPlayerTeam{playerTeam} {
+
+    if (SDL_Init(SDL_INIT_VIDEO) < 0 || TTF_Init() < 0)
         throw std::runtime_error("Cannot initialize SDL: " + string(SDL_GetError()));
 
     SDL_DisplayMode dm;
@@ -58,8 +60,16 @@ ClientGui::ClientGui() {
 }
 
 ClientGui::~ClientGui() {
+
+    TTF_CloseFont(mFont);
+    mFont = nullptr;
+
     SDL_DestroyRenderer(mRenderer);
     SDL_DestroyWindow(mWindow);
+    mRenderer = nullptr;
+    mWindow = nullptr;
+
+    TTF_Quit();
     SDL_Quit();
 }
 
@@ -68,10 +78,24 @@ Scalar ClientGui::scaleToMapCoords(Scalar coord) {
     return coord * (mapProp.w() / mapRatio.w());
 }
 
+template <typename T>
+T ClientGui::scaleToMapCoords(T coord) {
+
+    static_assert(std::is_same<T, Vector>::value || std::is_same<T, Point>::value, "Cannot scale given type.");
+
+    return T {coord.x * (mapProp.w() / mapRatio.w()),
+              coord.y * (mapProp.h() / mapRatio.h())};
+}
+
+geometry::Point ClientGui::placeToMapCoords(geometry::Point point) {
+
+    return {mapProp.x() + point.x,
+            mapProp.y() + point.y};
+}
+
 geometry::Point ClientGui::projectToMapCoords(geometry::Point point) {
 
-    return {mapProp.x() + scaleToMapCoords(point.x),
-            mapProp.y() + scaleToMapCoords(point.y)};
+    return placeToMapCoords(scaleToMapCoords(point));
 }
 
 void ClientGui::drawClearBg(const SDL_Color &color) const {
@@ -90,6 +114,73 @@ void ClientGui::render() const {
 
 void ClientGui::loadMedia() {
 
+    mFont = TTF_OpenFont("Biotypc.ttf", mFontLoadSize);
+
+    if (mFont == nullptr) {
+
+        std::cerr << "Font cannot load.";
+    }
+}
+
+void ClientGui::drawText(TextProperties property) const {
+
+    int fontSize = property.mSize;
+    std::string &text = property.mText;
+    DrawProp &dp = property.mDrawProp;
+
+
+    SDL_Surface *textSurface = TTF_RenderText_Blended(mFont, text.c_str(), dp.color);
+
+    if (textSurface == nullptr) {
+
+        cerr << "Error creating text. Err: " << TTF_GetError();
+    } else {
+
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, textSurface);
+        if (texture == nullptr) {
+
+            cerr << "Error creating texture text. Err: " << SDL_GetError();
+        } else {
+
+            int textBoxW, textBoxH;
+
+            if (fontSize < 0) {
+
+                double ratioSource = static_cast<double>( textSurface->w) / textSurface->h;
+                double ratioTarget = static_cast<double> ( dp.w() )  / dp.w();
+
+                if (ratioSource > ratioTarget) {
+
+                    textBoxW = dp.w();
+                    textBoxH = textBoxW / ratioSource;
+
+                } else {
+
+                    textBoxH = dp.h();
+                    textBoxW = textBoxH * ratioSource;
+
+                }
+            } else {
+
+                double multiplier = static_cast<double>( fontSize) / mFontLoadSize;
+                textBoxW = textSurface->w * multiplier;
+                textBoxH = textSurface->h * multiplier;
+
+            }
+
+            SDL_FreeSurface(textSurface);
+
+            int centeredX = dp.x() + (dp.w() / 2 - textBoxW / 2);
+            int centeredY = (dp.y() + (dp.h() / 2 - textBoxH / 2));
+
+            SDL_Rect boundingBox = {centeredX, centeredY, textBoxW, textBoxH};
+            SDL_SetTextureAlphaMod(texture, dp.color.a);
+
+            SDL_RenderCopy(mRenderer, texture, nullptr, &boundingBox);
+
+            SDL_DestroyTexture(texture);
+        }
+    }
 }
 
 void ClientGui::initGui() {
@@ -134,8 +225,25 @@ void ClientGui::initGui() {
             mp.w() = static_cast<int>(mp.h() * mapRatio);
             mp.x() = mbb.x() + ((mbb.w() - mp.w())/2);
             mp.y() = mbb.y();
-
         }
+    }
+
+    {
+
+        int padding = 20;
+
+        auto &np = nameTeamProp.mDrawProp;
+        auto &ib = infoBoundingBox;
+
+        np.x() = ib.x() + padding;
+        np.y() = ib.y() + padding;
+        np.h() = ib.h() - 2*padding;
+        np.w() = (ib.w() / 3) - 2*padding;
+
+        np.color = mColors[Color::TEXT];
+
+        nameTeamProp.mText = "[" + mPlayerTeam + "] " + mPlayerName;
+        nameTeamProp.mSize = -1;
     }
 }
 
@@ -152,7 +260,12 @@ void ClientGui::drawPolygon(Point center, std::vector<Vector> const &points) {
     }
 
     polygonRGBA(mRenderer, xs.get(), ys.get(), n, 255, 200, 150, 128);
+}
 
+void ClientGui::drawCircle(Point center , const CircleShape& shape) {
+
+    center = projectToMapCoords(center);
+    filledCircleRGBA(mRenderer, center.x, center.y, scaleToMapCoords(shape.radius), 0, 0, 255, 255);
 }
 
 void ClientGui::renderGui(EntityComponentSystem &entities) {
@@ -162,6 +275,7 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     drawRect(mapBoundingBox);
     drawRect(infoBoundingBox);
     drawRect(mapProp);
+    drawText(nameTeamProp);
 
     // reference point for mouse testing - hardcoded
     drawRect({{499,499,2,2},mColors[Color::TEST]});
@@ -175,29 +289,27 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
 
 void ClientGui::drawEntity(entity_t const &entity, Shape const &shape, Position const &position) {
     struct Drawer : public boost::static_visitor<void> {
-        ClientGui &self;
+        ClientGui &gui;
         entity_t const &entity;
         Position const &position;
 
-        Drawer(ClientGui &self, entity_t const &entity, Position const &position) :
-                self(self), entity(entity), position(position) {}
+        Drawer(ClientGui &gui, entity_t const &entity, Position const &position) :
+                gui(gui), entity(entity), position(position) {}
 
         void operator()(PolygonalShape const &shape) {
-            self.drawPolygon(position.center, shape);
+            gui.drawPolygon(position.center, shape);
         }
 
         void operator()(CircleShape const &shape) {
-            Point center = self.projectToMapCoords(position.center);
-            filledCircleRGBA(self.mRenderer, center.x, center.y, self.scaleToMapCoords(shape.radius), 0, 0, 255, 255);
+            gui.drawCircle(position.center, shape);
         }
     };
     Drawer drawer{*this, entity, position};
     boost::apply_visitor(drawer, shape);
 }
 
-//void drawRect();
-
 void ClientGui::drawRect(const DrawProp &dp) {
+
     SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(mRenderer, dp.color.r, dp.color.g, dp.color.b, dp.color.a);
     SDL_Rect rect = {dp.x(), dp.y(), dp.w(), dp.h()};
@@ -211,3 +323,5 @@ void ClientGui::setMapSize(int w, int h) {
 
     initGui();
 }
+
+

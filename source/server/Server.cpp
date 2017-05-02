@@ -211,9 +211,14 @@ private:
 
 		connection2entity[&client] = sentity.entity;
 
+		auto gameArea = gameModel.getMapSize().bottomRight();
+		MsgGameInfo msgGameInfo = {gameArea.x, gameArea.y};
+		send(client, {msgGameInfo});
+
 		MsgNewEntity msg;
 		msg.components = EntityComponentSystem::all_components(sentity.entity);
 		msg.entity_id = sentity.entity.get_component<EntityID>();
+
 		send(client, {msg});
 		broadcast({msg});
 

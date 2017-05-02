@@ -88,6 +88,11 @@ public:
 		};
 	}
 
+	const geometry::RectangularArea &getMapSize() {
+
+		return game_area;
+	}
+
 	entity_t newEntity() {
 		return ecs.entityManager.create_entity(EntityID::newID());
 	}
@@ -281,4 +286,8 @@ void GameModel::newBullet() {
 
 void GameModel::removeEntity(SEntity const &entity) {
 	return pImpl->removeEntity(entity.entity);
+}
+
+const geometry::RectangularArea &GameModel::getMapSize() {
+	return pImpl->getMapSize();
 }

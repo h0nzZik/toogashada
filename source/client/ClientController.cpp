@@ -72,7 +72,7 @@ void ClientController::loopWork() {
 }
 
 
-class ClientController::Receiver : public boost::static_visitor<void> {
+class ClientController::    Receiver : public boost::static_visitor<void> {
 public:
     Receiver(ClientController &controller) : controller(controller) {}
 
@@ -100,6 +100,7 @@ public:
     void operator()(MsgGameInfo const &msg) {
 
         controller.clientGui.setMapSize(msg.area_size_x, msg.area_size_y);
+        std::cout << "map size set to: " << msg.area_size_x << "x" << msg.area_size_y << endl;
     }
 
 private:
