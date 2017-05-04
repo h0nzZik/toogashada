@@ -9,10 +9,9 @@
 
 struct TextProperties {
 
-    DrawProp mDrawProp;
-    std::string mText;
-    int mSize;
+  DrawProp mDrawProp;
+  std::string mText;
+  int mSize;
 };
 
-
-#endif //TOOGASHADA_TEXTPROPERTIES_H
+#endif // TOOGASHADA_TEXTPROPERTIES_H

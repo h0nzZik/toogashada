@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "EntityComponentSystem.h"
 
@@ -16,65 +16,58 @@
 // TODO: this will not be needed.
 // We will send it as a new entity
 struct MsgNewPlayer {
-	uint32_t player_id;
-	uint32_t object_id;
-	std::string playerName;
-    std::string playerTeam;
+  uint32_t player_id;
+  uint32_t object_id;
+  std::string playerName;
+  std::string playerTeam;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(player_id, object_id, playerName, playerTeam);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(player_id, object_id, playerName, playerTeam);
+  }
 };
 
 struct MsgGameInfo {
-	Scalar area_size_x;
-	Scalar area_size_y;
+  Scalar area_size_x;
+  Scalar area_size_y;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(area_size_x, area_size_y);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(area_size_x, area_size_y);
+  }
 };
 
 struct MsgPlayerAssignedEntityId {
 
-	EntityID entityId;
+  EntityID entityId;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(entityId);
-	}
-
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(entityId);
+  }
 };
 
 struct MsgNewEntity {
-	EntityID entity_id;
-	std::vector<AnyComponent> components;
+  EntityID entity_id;
+  std::vector<AnyComponent> components;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(entity_id, components);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(entity_id, components);
+  }
 };
 
 struct MsgUpdateEntity {
-	EntityID entity_id;
-	std::vector<AnyComponent> components;
+  EntityID entity_id;
+  std::vector<AnyComponent> components;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(entity_id, components);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(entity_id, components);
+  }
 };
 
 struct MsgDeleteEntity {
-	EntityID entity_id;
+  EntityID entity_id;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(entity_id);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(entity_id);
+  }
 };
 
 // Client to server
@@ -82,42 +75,38 @@ struct MsgDeleteEntity {
 
 struct MsgIntroduceMyPlayer {
 
-	std::string playerName;
-	std::string playerTeam;
+  std::string playerName;
+  std::string playerTeam;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(playerName, playerTeam);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(playerName, playerTeam);
+  }
 };
 
-struct MsgPlayerActionChange{
+struct MsgPlayerActionChange {
 
-    PlayerAction movement;
-    int state;
+  PlayerAction movement;
+  int state;
 
-    template < typename Archive >
-    void serialize(Archive & archive) {
-        archive(movement, state);
-    }
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(movement, state);
+  }
 };
 
 struct MsgPlayerRotation {
 
-	geometry::Angle rotation;
+  geometry::Angle rotation;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(rotation);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(rotation);
+  }
 };
 
 struct MsgPlayerHealth {
 
-	int health;
+  int health;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(health);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(health);
+  }
 };

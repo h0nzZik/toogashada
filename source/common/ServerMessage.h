@@ -2,31 +2,24 @@
 
 #include <boost/variant/variant.hpp>
 
-#include <common/Tag.h>
 #include <common/Message.h>
 #include <common/Messages.h>
+#include <common/Tag.h>
 
 struct ServerMessage {
-	using Data = boost::variant<
-			MsgGameInfo,
-			MsgNewPlayer,
-			MsgNewEntity,
-			MsgUpdateEntity,
-			MsgDeleteEntity,
-			MsgPlayerHealth,
-			MsgPlayerAssignedEntityId
-			>;
+  using Data = boost::variant<MsgGameInfo, MsgNewPlayer, MsgNewEntity,
+                              MsgUpdateEntity, MsgDeleteEntity, MsgPlayerHealth,
+                              MsgPlayerAssignedEntityId>;
 
-	Data data;
+  Data data;
 
-	static constexpr Tag tag = Tag::UniversalServerMessage;
+  static constexpr Tag tag = Tag::UniversalServerMessage;
 
-	template < typename Archive >
-	void serialize(Archive & archive) {
-		archive(data);
-	}
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(data);
+  }
 
-	Message to_message() const;
+  Message to_message() const;
 
-	static ServerMessage from(Message const &msg);
+  static ServerMessage from(Message const &msg);
 };

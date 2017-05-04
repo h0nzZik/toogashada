@@ -1,7 +1,4 @@
 #include "RemoteServerWrapper.h"
 
-RemoteServerWrapper::RemoteServerWrapper(IConnection & server) :
-	server{server}
-{
-
-}
+RemoteServerWrapper::RemoteServerWrapper(IConnection &server)
+    : server{server} {}

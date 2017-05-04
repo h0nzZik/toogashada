@@ -6,14 +6,15 @@
 
 class Client {
 public:
+  Client(std::string ip, std::string port, std::string playerName,
+         std::string playerTeam);
+  ~Client();
 
-	Client(std::string ip, std::string port, std::string playerName, std::string playerTeam);
-	~Client();
+  void run();
 
-	void run();
 private:
-	class Impl;
-	std::unique_ptr<Impl> impl;
+  class Impl;
+  std::unique_ptr<Impl> impl;
 };
 
 #endif /* SRC_CLIENT_H_ */

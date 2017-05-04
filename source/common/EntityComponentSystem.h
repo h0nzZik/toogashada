@@ -1,14 +1,15 @@
 #pragma once
 
+#include "BaseEntityComponentSystem.h"
 #include <common/components/EntityID.h>
-#include <common/components/Shape.h>
-#include <common/components/Position.h>
 #include <common/components/Explosive.h>
 #include <common/components/Player.h>
+#include <common/components/Position.h>
+#include <common/components/Shape.h>
 #include <common/geometry/Object2D.h>
-#include "BaseEntityComponentSystem.h"
 
-// TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene entity managery...
+// TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene
+// entity managery...
 // (mozna).
 
 /**
@@ -16,13 +17,9 @@
  * We use inheritance here to create a new type,
  * so that we could forward declare it when needed.
  */
-struct EntityComponentSystem : public BaseEntityComponentSystem<
-		Shape,
-		Position,
-		Explosive,
-		geometry::Object2D,
-		PlayerInfo
->{};
+struct EntityComponentSystem
+    : public BaseEntityComponentSystem<Shape, Position, Explosive,
+                                       geometry::Object2D, PlayerInfo> {};
 
 using AnyComponent = typename EntityComponentSystem::AnyComponent;
 

@@ -5,16 +5,16 @@
 #include <common/Connection.h>
 
 class ConnectionToServer : public Connection {
-	public:
-		ConnectionToServer(std::string host, std::string port);
-		~ConnectionToServer() = default;
+public:
+  ConnectionToServer(std::string host, std::string port);
+  ~ConnectionToServer() = default;
 
-		void run();
-		void stop();
+  void run();
+  void stop();
 
-		boost::asio::ip::tcp::socket & socket() { return _socket; }
+  boost::asio::ip::tcp::socket &socket() { return _socket; }
 
-	private:
-		boost::asio::io_service io_service;
-		boost::asio::ip::tcp::socket _socket;
+private:
+  boost::asio::io_service io_service;
+  boost::asio::ip::tcp::socket _socket;
 };

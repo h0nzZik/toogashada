@@ -6,5 +6,5 @@
  * Wrapper for entity_t, because that is an alias.
  */
 struct SEntity {
-	entity_t entity;
+  entity_t entity;
 };

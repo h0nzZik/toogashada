@@ -1,8 +1,7 @@
 #pragma once
 
-#include <memory> // std::unique_ptr
 #include <common/geometry/Angle.h>
-
+#include <memory> // std::unique_ptr
 
 struct EntityComponentSystem;
 class IBroadcaster;
@@ -11,17 +10,17 @@ enum class PlayerAction;
 
 class GameModel {
 public:
-	GameModel(EntityComponentSystem & ecs, IBroadcaster & broadcaster);
-	~GameModel();
+  GameModel(EntityComponentSystem &ecs, IBroadcaster &broadcaster);
+  ~GameModel();
 
-	EntityComponentSystem & ecs;
-	SEntity newPlayer();
-	void removeEntity(SEntity const &entity);
-	void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
-	void playerRotatesTo(SEntity const &entity, geometry::Angle angle);
-	const geometry::RectangularArea &getMapSize();
+  EntityComponentSystem &ecs;
+  SEntity newPlayer();
+  void removeEntity(SEntity const &entity);
+  void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
+  void playerRotatesTo(SEntity const &entity, geometry::Angle angle);
+  const geometry::RectangularArea &getMapSize();
+
 private:
-	class Impl;
-	std::unique_ptr<Impl> pImpl;
+  class Impl;
+  std::unique_ptr<Impl> pImpl;
 };
-
