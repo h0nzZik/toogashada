@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory> // std::unique_ptr
+#include <common/geometry/Angle.h>
+
 
 struct EntityComponentSystem;
 class IBroadcaster;
@@ -14,9 +16,9 @@ public:
 
 	EntityComponentSystem & ecs;
 	SEntity newPlayer();
-	void newBullet();
 	void removeEntity(SEntity const &entity);
 	void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
+	void playerRotatesTo(SEntity const &entity, geometry::Angle angle);
 	const geometry::RectangularArea &getMapSize();
 private:
 	class Impl;

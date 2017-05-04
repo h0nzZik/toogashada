@@ -130,7 +130,7 @@ public:
 
     static const geometry::RectangularArea game_area;
 
-    void drawPolygon(geometry::Point center, const std::vector<geometry::Vector> &points,  const SDL_Color& color);
+    void draw(geometry::Polygon const & polygon, const SDL_Color& color);
 
     void drawEntity(const entity_t &entity, const Shape &shape, const Position &position);
 

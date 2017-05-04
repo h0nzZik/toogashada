@@ -85,13 +85,13 @@ private:
 
 		}
 
-		void operator()(MsgPlayerRotation const & /*msg*/) {
-			//TODO replace multiple messages with this one for key handling
+		void operator()(MsgPlayerRotation const & msg) {
+			entity_t entity = self.connection2entity.at(&connection);
+			self.gameModel.playerRotatesTo({entity}, msg.rotation);
 		}
 
 		void operator()(MsgPlayerActionChange const & msg) {
 			entity_t entity = self.connection2entity.at(&connection);
-			// TODO player angle
 			self.gameModel.playerKeyPress({entity}, msg.movement, bool(msg.state));
 		}
 
@@ -181,6 +181,7 @@ private:
 		SEntity sentity = gameModel.newPlayer();
 		connection2entity[&client] = sentity.entity;
 
+		// TODO delay this until players sends his info, name, team etc.
 		// misc info for player
 		auto gameArea = gameModel.getMapSize().bottomRight();
 		MsgGameInfo msgGameInfo = {gameArea.x, gameArea.y};

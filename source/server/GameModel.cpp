@@ -95,13 +95,20 @@ public:
 		return ecs.entityManager.create_entity(EntityID::newID());
 	}
 
-	void newBullet() {
+	// TODO use player's rotation for bullet direction
+	void playerShoots(Position const &playerPosition) {
 		entity_t entity = newEntity();
 		Position pos;
-		pos.speed = {20, 20};
-		pos.center = randomPoint();
+		Scalar bullet_r = 3;
+		log() << "Shooting at angle " << playerPosition.rotation;
+		//pos.center = randomPoint();
+		pos.center = playerPosition.center + 20*geometry::rotate({1, 0}, playerPosition.rotation);
+		auto speedVector = geometry::rotate(pos.center - playerPosition.center, playerPosition.rotation);
+		pos.speed = 20 * unit(pos.center - playerPosition.center);
+		cout << "Speed: " << pos.speed;
+		//pos.speed = geometry::rotate({20, 0}, playerPosition.rotation);
 		entity.add_component<Position>(pos);
-		entity.add_component<Shape>(geometry::CircleShape{3});
+		entity.add_component<Shape>(geometry::CircleShape{bullet_r});
 		entity.add_component<Explosive>();
 		computeObjectIfNeeded(entity);
 		entity.sync();
@@ -163,6 +170,16 @@ public:
 
 	EntityComponentSystem & ecs;
 
+	void playerRotatesTo(entity_t entity, geometry::Angle angle) {
+		entity.sync();
+		if (!entity.has_component<Position>()) {
+			throw std::logic_error("Player is missing some components");
+		}
+
+		Position & pos = entity.get_component<Position>();
+		pos.rotation = angle;
+	}
+
 	void playerKeyPress(entity_t entity, PlayerAction key, bool press) {
 		entity.sync();
 		if (!entity.has_component<Position>() || !entity.has_component<PlayerInfo>()) {
@@ -190,7 +207,7 @@ public:
 
 		case PlayerAction::Fire:
 			if (press)
-				newBullet();
+				playerShoots(position);
 			break;
 
 		default:
@@ -264,7 +281,7 @@ private:
 			return;
 
 		geometry::Point const new_center = pos.center + pos.speed * Scalar(dt.count() / 1000.0);
-		auto currentObject2d = createObject2D(new_center, 0, shape);
+		auto currentObject2d = createObject2D(new_center, pos.rotation, shape);
 
 		CollisionInfo colInfoNow = collidesWithSomething(currentObject2d, &entity);
 
@@ -330,10 +347,6 @@ SEntity GameModel::newPlayer() {
 	return pImpl->newPlayer();
 }
 
-void GameModel::newBullet() {
-	return pImpl->newBullet();
-}
-
 void GameModel::removeEntity(SEntity const &entity) {
 	return pImpl->removeEntity(entity.entity);
 }
@@ -344,4 +357,8 @@ const geometry::RectangularArea &GameModel::getMapSize() {
 
 void GameModel::playerKeyPress(SEntity const &entity, PlayerAction key, bool press) {
 	return pImpl->playerKeyPress(entity.entity, key, press);
+}
+
+void GameModel::playerRotatesTo(SEntity const &entity, geometry::Angle angle) {
+	pImpl->playerRotatesTo(entity.entity, angle);
 }

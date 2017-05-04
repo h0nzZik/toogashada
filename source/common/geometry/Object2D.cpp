@@ -4,6 +4,15 @@
 
 namespace geometry {
 
+Polygon createPolygon(Point const &center, Angle const &angle, PolygonalShape const &shape) {
+	Polygon polygon;
+	// TODO do some rotation on shape
+	for(Vector const & vec : shape)
+		polygon.push_back(center + rotate(vec, angle));
+
+	return polygon;
+}
+
 Object2D createObject2D(Point const &point, Angle const & angle, Shape const & shape) {
 
 	class CreateObject2D : public boost::static_visitor<Object2D>{
@@ -20,13 +29,7 @@ Object2D createObject2D(Point const &point, Angle const & angle, Shape const & s
 		}
 
 		Object2D operator()(PolygonalShape const &shape) {
-			(void)angle;
-			Polygon polygon;
-			// TODO do some rotation on shape
-			for(Vector const & vec : shape)
-				polygon.push_back(point + vec);
-
-			return {polygon};
+			return createPolygon(point, angle, shape);
 		}
 	};
 

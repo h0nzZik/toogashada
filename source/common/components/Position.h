@@ -8,7 +8,7 @@ struct Position {
 	geometry::Point center;
 	geometry::Vector speed;
 	geometry::Angle rotation;
-	geometry::AngularSpeed angularSpeed;
+	geometry::AngularSpeed angularSpeed; // We will probably not use this
 
 	template < typename Archive >
 	void serialize(Archive & archive) {

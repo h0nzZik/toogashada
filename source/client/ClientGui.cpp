@@ -273,14 +273,13 @@ void ClientGui::initGui() {
 }
 
 
-void ClientGui::drawPolygon(Point center, std::vector<Vector> const &points, const SDL_Color& color) {
-
-    size_t const n = points.size();
+void ClientGui::draw(geometry::Polygon const & polygon, const SDL_Color& color) {
+    size_t const n = polygon.size();
     auto xs = make_unique<Sint16[]>(n);
     auto ys = make_unique<Sint16[]>(n);
 
     for (size_t i = 0; i < n; i++) {
-        geometry::Point point = projectToMapCoords(center + points[i]);
+    	geometry::Point point = projectToMapCoords(polygon[i]);
         xs[i] = point.x;
         ys[i] = point.y;
     }
@@ -336,8 +335,7 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
     }
 
     void operator()(PolygonalShape const &shape) {
-
-        gui.drawPolygon(position.center, shape, color);
+    	gui.draw(geometry::createPolygon(position.center, position.rotation, shape), color);
     }
 
     void operator()(CircleShape const &shape) {
@@ -350,8 +348,6 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
 };
 
 void ClientGui::drawEntity(entity_t const &entity, Shape const &shape, Position const &position) {
-
-
     Drawer drawer{*this, entity, position};
     boost::apply_visitor(drawer, shape);
 }

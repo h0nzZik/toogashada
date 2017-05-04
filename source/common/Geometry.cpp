@@ -134,4 +134,20 @@ bool in(Point const & point, PolygonalShape const & shape, RectangularArea const
 	return true;
 }
 
+Scalar deg2rad (Scalar degrees) {
+    return degrees * 3.141592653589793 / 180.0;
+}
+
+Vector rotate(Vector const & vec, Angle angle) {
+	auto const dangle = deg2rad(angle);
+	auto const cs = Scalar(std::cos(dangle));
+	auto const sn = Scalar(std::sin(dangle));
+
+	return vec.x * Vector{cs, sn} + vec.y * Vector{Scalar(-sn), cs};
+}
+
+Point rotate_around(Point const &center, Point const &point, Angle angle) {
+	return center + rotate(point - center, angle);
+}
+
 } // namespace geometry

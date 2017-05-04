@@ -12,6 +12,7 @@ namespace geometry {
 
 using Object2D = boost::variant<Polygon, Circle>;
 
+Polygon createPolygon(Point const &center, Angle const &angle, PolygonalShape const &shape);
 Object2D createObject2D(Point const &point, Angle const & angle, Shape const & shape);
 
 } // namespace geometry

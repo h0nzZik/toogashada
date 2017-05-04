@@ -7,6 +7,7 @@
 #include <common/geometry/Circle.h>
 #include <common/geometry/Polygon.h>
 #include <common/geometry/RectangularArea.h>
+#include <common/geometry/Angle.h>
 
 // For streaming operators
 namespace std
@@ -138,5 +139,8 @@ bool in(Point const & point, RectangularArea const &area);
 bool in(Circle const & circle, RectangularArea const &area);
 bool in(Point const & point, CircleShape const & shape, RectangularArea const &area);
 bool in(Point const & point, PolygonalShape const & shape, RectangularArea const &area);
+
+Vector rotate(Vector const & vec, Angle angle);
+Point rotate_around(Point const &center, Point const &point, Angle angle);
 
 } // namespace geometry
