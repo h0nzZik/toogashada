@@ -4,6 +4,7 @@
 #include <common/components/Shape.h>
 #include <common/components/Position.h>
 #include <common/components/Explosive.h>
+#include <common/components/Player.h>
 #include <common/geometry/Object2D.h>
 #include "BaseEntityComponentSystem.h"
 
@@ -19,7 +20,8 @@ struct EntityComponentSystem : public BaseEntityComponentSystem<
 		Shape,
 		Position,
 		Explosive,
-		geometry::Object2D
+		geometry::Object2D,
+		PlayerInfo
 >{};
 
 using AnyComponent = typename EntityComponentSystem::AnyComponent;

@@ -66,7 +66,7 @@ void ClientController::loopWork() {
         }
     }
 
-    dispatchKeyStates();
+    dispatchKeyAndMouseStates();
 
     redraw();
 }
@@ -159,11 +159,8 @@ void ClientController::send(ClientMessage const &msg) {
 }
 
 void ClientController::dispatchKeyStates() {
-
-
-    ClientMessage msg;
-
-    const Uint8* keyboard = SDL_GetKeyboardState(NULL);
+	ClientMessage msg;
+	const Uint8* keyboard = SDL_GetKeyboardState(NULL);
 
 
     for (auto &keyMapping : keyMap) {
@@ -178,6 +175,12 @@ void ClientController::dispatchKeyStates() {
             //std::cout << static_cast<std::underlying_type<Movement>::type>(keyMapping.second.first) << " " << prevState << " -> " << curState << std::endl;
         }
     }
+
+}
+
+void ClientController::dispatchKeyAndMouseStates() {
+	dispatchKeyStates();
+    ClientMessage msg;
 
     int mouseX;
     int mouseY;
@@ -209,8 +212,6 @@ void ClientController::dispatchKeyStates() {
             if (angle < 0) {
                 angle += 360;
             }
-
-            std::cout << "angle: " << angle << std::endl;
 
             ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
             clientGui.setRotation(angle);

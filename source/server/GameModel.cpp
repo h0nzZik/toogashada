@@ -7,6 +7,7 @@
 #include <thread>
 #include <atomic>
 
+#include <common/PlayerAction.h>
 #include <common/Geometry.h>
 #include <common/ServerMessage.h>
 #include <common/EntityComponentSystem.h>
@@ -22,6 +23,8 @@
 
 using namespace std;
 using namespace std::chrono_literals;
+using namespace geometry;
+
 
 class GameModel::Impl {
 public:
@@ -135,6 +138,7 @@ public:
 		int counter = 0;
 		geometry::Object2D object2d;
 
+		// TODO refacto this to separate function
 		CollisionInfo colInfo;
 		do{
 			pos.center = randomPoint();
@@ -152,13 +156,64 @@ public:
 		//entity.add_component<Shape>(CircleShape{5.1});
 		entity.add_component<Shape>(playerShape);
 		entity.add_component<geometry::Object2D>(std::move(object2d));
+		entity.add_component<PlayerInfo>();
 
 		return SEntity{entity};
 	}
 
 	EntityComponentSystem & ecs;
 
+	void playerKeyPress(entity_t entity, PlayerAction key, bool press) {
+		entity.sync();
+		if (!entity.has_component<Position>() || !entity.has_component<PlayerInfo>()) {
+			throw std::logic_error("Player is missing some components");
+		}
+
+		Position & position = entity.get_component<Position>();
+		PlayerInfo & playerInfo = entity.get_component<PlayerInfo>();
+		switch(key) {
+		case PlayerAction::Down:
+			playerInfo.down = press;
+			break;
+
+		case PlayerAction::Up:
+			playerInfo.up = press;
+			break;
+
+		case PlayerAction::Left:
+			playerInfo.left = press;
+			break;
+
+		case PlayerAction::Right:
+			playerInfo.right = press;
+			break;
+
+		case PlayerAction::Fire:
+			if (press)
+				newBullet();
+			break;
+
+		default:
+			throw std::runtime_error("Unknown player action");
+		}
+		position.speed = toSpeedVector(playerInfo);
+	}
+
 private:
+	static geometry::Vector toSpeedVector(PlayerInfo const & info) {
+		Vector v{0,0};
+		if (info.down)
+			v += Vector{0, +1};
+		if (info.left)
+			v += Vector{-1, 0};
+		if (info.right)
+			v += Vector{+1, 0};
+		if (info.up)
+			v += Vector{0, -1};
+		return v*Scalar(15);
+	}
+
+
 	geometry::RectangularArea const game_area{{0, 0}, {100, 100}};
 	// TODO we should measure the diffeence between client's and server's time.
 
@@ -285,4 +340,8 @@ void GameModel::removeEntity(SEntity const &entity) {
 
 const geometry::RectangularArea &GameModel::getMapSize() {
 	return pImpl->getMapSize();
+}
+
+void GameModel::playerKeyPress(SEntity const &entity, PlayerAction key, bool press) {
+	return pImpl->playerKeyPress(entity.entity, key, press);
 }

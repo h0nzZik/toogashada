@@ -91,13 +91,6 @@ struct MsgIntroduceMyPlayer {
 	}
 };
 
-struct MsgPlayerMovesLeft{};
-struct MsgPlayerMovesRight{};
-struct MsgPlayerMovesBackward{};
-struct MsgPlayerMovesForward{};
-struct MsgPlayerStops{};
-struct MsgPlayerShoots{};
-
 struct MsgPlayerActionChange{
 
     PlayerAction movement;

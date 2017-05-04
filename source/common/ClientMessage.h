@@ -9,12 +9,6 @@
 struct ClientMessage {
 	using Data = boost::variant<
 			MsgIntroduceMyPlayer,
-			MsgPlayerMovesLeft,
-			MsgPlayerMovesRight,
-			MsgPlayerMovesForward,
-			MsgPlayerMovesBackward,
-			MsgPlayerStops,
-			MsgPlayerShoots,
             MsgPlayerActionChange,
 			MsgPlayerRotation
 			>;

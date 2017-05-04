@@ -5,6 +5,7 @@
 struct EntityComponentSystem;
 class IBroadcaster;
 struct SEntity;
+enum class PlayerAction;
 
 class GameModel {
 public:
@@ -15,6 +16,7 @@ public:
 	SEntity newPlayer();
 	void newBullet();
 	void removeEntity(SEntity const &entity);
+	void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
 	const geometry::RectangularArea &getMapSize();
 private:
 	class Impl;

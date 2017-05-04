@@ -57,6 +57,7 @@ private:
 
 	void redraw();
 	void received(ServerMessage msg);
+	void dispatchKeyAndMouseStates();
 	void dispatchKeyStates();
 	void send(ClientMessage const & msg);
 

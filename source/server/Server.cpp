@@ -21,7 +21,6 @@
 #include <server/IBroadcaster.h>
 #include "ConnectionToClient.hpp"
 #include "GameModel.h"
-#include "Player.h"
 #include "SEntity.h"
 
 #include "Server.h"
@@ -86,40 +85,14 @@ private:
 
 		}
 
-		void operator()(MsgPlayerMovesLeft const & /*msg*/) {
-			self.playerMoves(connection, Player::Movement::Left);
-		}
-
-		void operator()(MsgPlayerMovesRight const & /*msg*/) {
-			self.playerMoves(connection, Player::Movement::Right);
-		}
-
-		void operator()(MsgPlayerMovesForward const & /*msg*/) {
-			self.playerMoves(connection, Player::Movement::Forward);
-		}
-
-		void operator()(MsgPlayerMovesBackward const & /*msg*/) {
-			self.playerMoves(connection, Player::Movement::Backward);
-		}
-
-		void operator()(MsgPlayerStops const & /*msg*/) {
-			self.playerMoves(connection, Player::Movement::None);
-		}
-
-		void operator()(MsgPlayerShoots const & /*msg*/) {
-			/* generate new random moving object */
-			// TODO refactor to game model
-			self.gameModel.newBullet();
-		}
-
 		void operator()(MsgPlayerRotation const & /*msg*/) {
-
 			//TODO replace multiple messages with this one for key handling
 		}
 
-		void operator()(MsgPlayerActionChange const & /*msg*/) {
-
+		void operator()(MsgPlayerActionChange const & msg) {
+			entity_t entity = self.connection2entity.at(&connection);
 			// TODO player angle
+			self.gameModel.playerKeyPress({entity}, msg.movement, bool(msg.state));
 		}
 
 	private:
@@ -168,7 +141,6 @@ private:
 		for (ConnectionToClient * cl : connections) {
 			cl->send(msg);
 		}
-
 	}
 
 	void updateEntity(entity_t const & entity, AnyComponent const &component) override {
@@ -204,13 +176,10 @@ private:
 	}
 
 	void newClientConnected(ConnectionToClient & client) {
-		//client.send(Message{Tag::Hello, {1,2,3}});
-
 		sendAllEntities(client);
 
 		SEntity sentity = gameModel.newPlayer();
 		connection2entity[&client] = sentity.entity;
-
 
 		// misc info for player
 		auto gameArea = gameModel.getMapSize().bottomRight();
@@ -238,46 +207,6 @@ private:
 			msg.components = EntityComponentSystem::all_components(entity);
 			send(client, {msg});
 		});
-	}
-
-	static geometry::Vector toVector(Player::Movement movement) {
-		switch(movement) {
-		case Player::Movement::Left:
-			return {-15, 0};
-		case Player::Movement::Right:
-			return {+15, 0};
-		case Player::Movement::Backward:
-			return {0, +15};
-		case Player::Movement::Forward:
-			return {0, -45};
-
-		case Player::Movement::None:
-			return {0, 0};
-		default:
-			return {0, 0}; // exception might be nicer
-		}
-	}
-
-	void playerMoves(ConnectionToClient & client, Player::Movement movement) {
-		auto it = connection2entity.find(&client);
-		if (it == connection2entity.end()) {
-			cerr << "[warn] player does not exist, but moves" << endl;
-			return;
-		}
-
-		entity_t player = it->second;
-		//Player & player = *connection2player[&client];
-		//entity_t player = *connection2entity[&client];
-		player.sync();
-		if (player.has_component<Position>()) {
-			auto newSpeed = toVector(movement);
-			//cout << "New speed: " << newSpeed << endl;
-			player.get_component<Position>().speed = newSpeed;
-		}
-
-
-		//player.gameObject().center += toVector(movement);
-		//broadcast(createMessage_NewObjectPosition(player.gameObject()));
 	}
 
 	boost::asio::io_service io_service;
