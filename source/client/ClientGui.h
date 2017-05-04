@@ -15,22 +15,20 @@
 
 #include <boost/variant/static_visitor.hpp>
 
-#include "common/geometry/Point.h"
 #include <common/EntityComponentSystem.h>
 #include <common/Geometry.h>
 #include <common/Message.h>
 #include <common/Messages.h>
 #include <common/Tag.h>
+#include <common/geometry/Point.h>
 #include <common/geometry/RectangularArea.h>
 
 #include "DrawProp.h"
 #include "TextProperties.h"
 
-#include "ClientController.h"
-#include "ClientGui.h"
-
 struct EntityComponentSystem;
 struct Drawer;
+class ClientController;
 
 class ClientGui {
 

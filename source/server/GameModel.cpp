@@ -44,27 +44,20 @@ public:
     operator bool() const { return happened; }
   };
 
-  // TODO rather return a vector of colliding entites
-  CollisionInfo collidesWithSomething(geometry::Object2D const &object,
-                                      entity_t const *entity = nullptr) {
-    ;
-    CollisionInfo info;
-    info.happened = false;
+  vector<entity_t>
+  collidesWithSomething(geometry::Object2D const &object,
+                        entity_t const *ignore_this = nullptr) {
+    vector<entity_t> colliding;
     ecs.entityManager.for_each<geometry::Object2D>(
-        [&](auto oldEntity, geometry::Object2D const &oldObject) {
-          if (info.happened)
+        [&](entity_t oldEntity, geometry::Object2D const &oldObject) {
+          if (ignore_this && (oldEntity == *ignore_this))
             return;
 
-          if (entity && (oldEntity == *entity))
-            return;
-
-          if (geometry::collision(object, oldObject)) {
-            info.happened = true;
-            info.with = oldEntity;
-          }
+          if (geometry::collision(object, oldObject))
+            colliding.push_back(oldEntity);
         });
 
-    return info;
+    return colliding;
   }
 
   void removeEntity(entity_t entity) {
@@ -130,20 +123,19 @@ public:
     Position pos;
 
     // Hope it will eventually find a good place.
-    // TODO collision with other players
-    // TODO counter. We might reject the player.
     int counter = 0;
     geometry::Object2D object2d;
 
     // TODO refacto this to separate function
-    CollisionInfo colInfo;
+    vector<entity_t> collisions;
     do {
       pos.center = randomPoint();
       object2d = createObject2D(pos.center, 0, playerShape);
-      colInfo = collidesWithSomething(object2d);
+      collisions = collidesWithSomething(object2d);
 
     } while (++counter < 50 &&
-             (colInfo || !geometry::in(pos.center, playerShape, game_area)));
+             (!collisions.empty() ||
+              !geometry::in(pos.center, playerShape, game_area)));
 
     if (counter >= 50)
       throw std::runtime_error("Cannot fit player to area");
@@ -277,19 +269,24 @@ private:
         pos.center + pos.speed * Scalar(dt.count() / 1000.0);
     auto currentObject2d = createObject2D(new_center, pos.rotation, shape);
 
-    CollisionInfo colInfoNow = collidesWithSomething(currentObject2d, &entity);
+    std::vector<entity_t> collisions =
+        collidesWithSomething(currentObject2d, &entity);
 
-    if (colInfoNow) {
+    if (!collisions.empty()) {
       log() << "Entity " << entity.get_component<EntityID>().id()
             << " have collision now";
-      log() << "  with: " << colInfoNow.with.get_component<EntityID>().id();
+      for (entity_t e : collisions)
+        log() << "  with: " << e.get_component<EntityID>().id();
     }
 
     if (!in(new_center, shape, game_area))
       return collisionHappenedWithArea(entity, pos);
 
-    if (colInfoNow)
-      return collisionHappened(entity, pos, colInfoNow.with);
+    if (!collisions.empty()) {
+      for (entity_t e : collisions)
+        collisionHappened(entity, pos, e);
+      return;
+    }
 
     pos.center = new_center;
     oldObject = currentObject2d;

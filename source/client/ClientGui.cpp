@@ -20,6 +20,7 @@
 #include <common/Tag.h>
 #include <common/geometry/RectangularArea.h>
 
+#include "ClientController.h"
 #include "DrawProp.h"
 
 #include "ClientGui.h"
