@@ -95,18 +95,15 @@ public:
 		return ecs.entityManager.create_entity(EntityID::newID());
 	}
 
-	// TODO use player's rotation for bullet direction
 	void playerShoots(Position const &playerPosition) {
 		entity_t entity = newEntity();
 		Position pos;
-		Scalar bullet_r = 3;
 		log() << "Shooting at angle " << playerPosition.rotation;
-		//pos.center = randomPoint();
-		pos.center = playerPosition.center + 20*geometry::rotate({1, 0}, playerPosition.rotation);
+		pos.center = playerPosition.center + (1+bullet_r+playerShape.radius)*
+				geometry::rotate({0, -1}, playerPosition.rotation);
 		auto speedVector = geometry::rotate(pos.center - playerPosition.center, playerPosition.rotation);
 		pos.speed = 20 * unit(pos.center - playerPosition.center);
 		cout << "Speed: " << pos.speed;
-		//pos.speed = geometry::rotate({20, 0}, playerPosition.rotation);
 		entity.add_component<Position>(pos);
 		entity.add_component<Shape>(geometry::CircleShape{bullet_r});
 		entity.add_component<Explosive>();
@@ -217,6 +214,8 @@ public:
 	}
 
 private:
+	static constexpr Scalar bullet_r = 1.5;
+	static constexpr Scalar player_r = 10;
 	static geometry::Vector toSpeedVector(PlayerInfo const & info) {
 		Vector v{0,0};
 		if (info.down)
