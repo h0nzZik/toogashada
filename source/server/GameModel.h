@@ -19,6 +19,8 @@ public:
   void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
   void playerRotatesTo(SEntity const &entity, geometry::Angle angle);
   const geometry::RectangularArea &getMapSize();
+  void stop();
+  void main();
 
 private:
   class Impl;

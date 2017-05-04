@@ -28,11 +28,10 @@ using namespace geometry;
 class GameModel::Impl {
 public:
   Impl(EntityComponentSystem &ecs, IBroadcaster &broadcaster)
-      : ecs{ecs}, broadcaster{broadcaster}, runner{&Impl::main, this} {}
+      : ecs{ecs}, broadcaster{broadcaster} {}
 
   ~Impl() {
-    stop = true;
-    runner.join();
+    m_stop = true;
   }
 
   geometry::CircleShape const playerShape = {10};
@@ -200,6 +199,14 @@ public:
     position.speed = toSpeedVector(playerInfo);
   }
 
+  void stop() {
+	  m_stop = true;
+  }
+
+  void main() {
+	  do_main();
+  }
+
 private:
   static constexpr Scalar bullet_r = 1.5;
   static constexpr Scalar player_r = 10;
@@ -220,13 +227,14 @@ private:
   // TODO we should measure the diffeence between client's and server's time.
 
   static auto constexpr dt = 16ms;
-  void main() {
-    stop = false;
+  void do_main() {
+    m_stop = false;
     startPoint = realTime = gameTime = chrono::steady_clock::now();
 
-    while (!stop) {
+    while (!m_stop) {
       realTime = chrono::steady_clock::now();
 
+      broadcaster.iter();
       do_physics();
 
       gameTime = gameTime + dt;
@@ -314,8 +322,7 @@ private:
 
   IBroadcaster &broadcaster;
 
-  std::thread runner;
-  std::atomic<bool> stop;
+  std::atomic<bool> m_stop;
   std::chrono::steady_clock::time_point startPoint;
   std::chrono::steady_clock::time_point realTime;
   std::chrono::steady_clock::time_point gameTime;
@@ -347,4 +354,12 @@ void GameModel::playerKeyPress(SEntity const &entity, PlayerAction key,
 
 void GameModel::playerRotatesTo(SEntity const &entity, geometry::Angle angle) {
   pImpl->playerRotatesTo(entity.entity, angle);
+}
+
+void GameModel::stop() {
+	pImpl->stop();
+}
+
+void GameModel::main() {
+	pImpl->main();
 }

@@ -54,10 +54,13 @@ public:
       delete conn;
   }
 
-  void run() { io_service.run(); }
+  void run() {
+	  gameModel.main();
+  }
 
   void shutdown() {
-    io_service.stop();
+    //io_service.stop();
+    gameModel.stop();
     // TODO implement this
   }
 
@@ -130,6 +133,10 @@ private:
     for (ConnectionToClient *cl : connections) {
       cl->send(msg);
     }
+  }
+
+  void iter() override {
+	  io_service.poll();
   }
 
   void updateEntity(entity_t const &entity,
