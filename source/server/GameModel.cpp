@@ -28,7 +28,9 @@ using namespace geometry;
 class GameModel::Impl {
 public:
   Impl(EntityComponentSystem &ecs, IBroadcaster &broadcaster)
-      : ecs{ecs}, broadcaster{broadcaster} {}
+      : ecs{ecs}, broadcaster{broadcaster} {
+    	  generateMap();
+      }
 
   ~Impl() {
     m_stop = true;
@@ -299,6 +301,22 @@ private:
     pos.center = new_center;
     oldObject = currentObject2d;
     broadcaster.updateEntity(entity, {pos});
+  }
+
+  void generateMap() {
+	    // A polygon
+	    entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
+	    entity.add_component<Shape>(
+	        geometry::PolygonalShape{{-10, 0}, {-20, -10}, {+20, -10}, {+10, 0}});
+	    Position pos;
+	    pos.speed = {0, 0};
+	    pos.center = geometry::Point{30, 30};
+	    pos.angularSpeed = 0;
+	    pos.rotation = 0;
+	    entity.add_component<Position>(pos);
+	    entity.add_component<geometry::Object2D>(
+        geometry::createObject2D(pos.center, 0, entity.get_component<Shape>()));
+
   }
 
   class Log {

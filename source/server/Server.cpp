@@ -33,19 +33,6 @@ public:
   explicit Impl(int port)
       : acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
         gameModel(ecs, *this) {
-    // A polygon
-    entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
-    entity.add_component<Shape>(
-        geometry::PolygonalShape{{-10, 0}, {-20, -10}, {+20, -10}, {+10, 0}});
-    Position pos;
-    pos.speed = {0, 0};
-    pos.center = geometry::Point{30, 30};
-    pos.angularSpeed = 0;
-    pos.rotation = 0;
-    entity.add_component<Position>(pos);
-    entity.add_component<geometry::Object2D>(
-        geometry::createObject2D(pos.center, 0, entity.get_component<Shape>()));
-
     start_accept();
   }
 
@@ -59,9 +46,7 @@ public:
   }
 
   void shutdown() {
-    //io_service.stop();
     gameModel.stop();
-    // TODO implement this
   }
 
 private:
