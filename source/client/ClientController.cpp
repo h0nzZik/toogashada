@@ -71,7 +71,7 @@ class ClientController::Receiver : public boost::static_visitor<void> {
 public:
     Receiver(ClientController &controller) : controller(controller) {}
 
-    void operator()(MsgNewPlayer const &msg) { ; }
+    void operator()(MsgNewPlayer const /*&msg*/) { ; }
 
     void operator()(MsgNewEntity const &msg) {
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
@@ -94,15 +94,11 @@ public:
 
     void operator()(MsgGameInfo const &msg) {
 
-        controller.clientGui.setMapSize(msg.area_size_x, msg.area_size_y);
-        std::cout << "map size set to: " << msg.area_size_x << "x"
-                  << msg.area_size_y << endl;
-    }
-
-    void operator()(MsgPlayerHealth const &msg) {
-
-        controller.clientGui.setPlayerHealth(msg.health);
-        std::cout << "health set to: " << msg.health << endl;
+        controller.gameInfo = msg.gameInfo;
+        controller.clientGui.setTeamInfo(msg.gameInfo.teams);
+        controller.clientGui.setMapSize(msg.gameInfo.width(), msg.gameInfo.height());
+        std::cout << "map size set to: " << msg.gameInfo.width() << "x"
+                  << msg.gameInfo.height() << endl;
     }
 
     void operator()(MsgPlayerAssignedEntityId const &msg) {

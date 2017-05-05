@@ -28,109 +28,118 @@
 
 struct EntityComponentSystem;
 struct Drawer;
+
 class ClientController;
 
 class ClientGui {
 
-  ClientController &mController;
+    ClientController &mController;
 
-  /* const */ int SCREEN_WIDTH;
-  /* const */ int SCREEN_HEIGHT;
+    /* const */ int SCREEN_WIDTH;
+    /* const */ int SCREEN_HEIGHT;
 
-  // GUI settings
-  DrawProp mapBoundingBoxRatio{{0, 0, 100, 90}, {}};
+    // GUI settings
+    DrawProp mapBoundingBoxRatio{{0, 0, 100, 90},
+                                 {}};
 
-  DrawProp mapRatio{{0, 0, 100, 100}, {}};
+    DrawProp mapRatio{{0, 0, 100, 100},
+                      {}};
 
-  struct Drawer;
+    struct EntityProcessor;
 
-  enum class Color {
-    BG,
-    INFO_BG,
-    MAP_BG,
-    TEST,
-    TEXT,
-    MY_PLAYER,
-    OTHER_PLAYER,
-    DEFAULT_MAP_OBJECT,
-    PLAYER_GUN
-  };
+    enum class Color {
+        BG,
+        INFO_BG,
+        MAP_BG,
+        TEST,
+        TEXT,
+        MY_PLAYER,
+        OTHER_PLAYER,
+        DEFAULT_MAP_OBJECT,
+        PLAYER_GUN
+    };
 
-  std::map<Color, SDL_Color> mColors = {
-      {Color::BG, {0, 0, 0, 255}},
-      {Color::MAP_BG, {14, 50, 25, 255}},
-      {Color::INFO_BG, {255, 255, 255, 255}},
-      {Color::TEST, {255, 0, 0, 255}},
-      {Color::TEXT, {0, 0, 0, 255}},
-      {Color::OTHER_PLAYER, {255, 255, 255, 255}},
-      {Color::MY_PLAYER, {255, 0, 0, 255}},
-      {Color::DEFAULT_MAP_OBJECT, {127, 127, 127, 255}},
-      {Color::PLAYER_GUN, {255, 255, 0, 255}}};
+    std::map<Color, SDL_Color> mColors = {
+            {Color::BG,                 {0,   0,   0,   255}},
+            {Color::MAP_BG,             {14,  50,  25,  255}},
+            {Color::INFO_BG,            {255, 255, 255, 255}},
+            {Color::TEST,               {255, 0,   0,   255}},
+            {Color::TEXT,               {0,   0,   0,   255}},
+            {Color::OTHER_PLAYER,       {255, 255, 255, 255}},
+            {Color::MY_PLAYER,          {255, 255, 255,   255}},
+            {Color::DEFAULT_MAP_OBJECT, {127, 127, 127, 255}},
+            {Color::PLAYER_GUN,         {255, 255, 0,   255}}};
 
-  // Dimensions computed at init
-  DrawProp mapBoundingBox{{}, mColors[Color::BG]};
-  DrawProp infoBoundingBox{{}, mColors[Color::INFO_BG]};
+    // Dimensions computed at init
+    DrawProp mapBoundingBox{{}, mColors[Color::BG]};
+    DrawProp infoBoundingBox{{}, mColors[Color::INFO_BG]};
 
-  DrawProp mapProp{{}, mColors[Color::MAP_BG]};
+    DrawProp mapProp{{}, mColors[Color::MAP_BG]};
 
-  TextProperties nameTeamProp = {{}, "", -1};
-  TextProperties healthProp = {{}, "", -1};
+    TextProperties nameTeamProp = {{}, "", -1};
+    TextProperties healthProp = {{}, "", -1};
 
-  std::string mPlayerName, mPlayerTeam;
+    std::string mPlayerName, mPlayerTeam;
+    std::map<std::string, SDL_Color> teamColors;
 
-  int mFontLoadSize = 200;
-  int mFontHeightOffset = 10;
+    int mFontLoadSize = 200;
+    int mFontHeightOffset = 10;
 
-  SDL_Window *mWindow;
-  SDL_Renderer *mRenderer;
-  TTF_Font *mFont;
+    SDL_Window *mWindow;
+    SDL_Renderer *mRenderer;
+    TTF_Font *mFont;
 
-  friend Drawer;
+    friend Drawer;
 
 public:
-  ClientGui(ClientController &controller, const std::string &playerName,
-            const std::string &playerTeam);
-  ~ClientGui();
+    ClientGui(ClientController &controller, const std::string &playerName,
+              const std::string &playerTeam);
 
-  void renderGui(EntityComponentSystem &entities);
+    ~ClientGui();
 
-  void drawRect(const DrawProp &dp);
+    void renderGui(EntityComponentSystem &entities);
 
-  void initGui();
+    void drawRect(const DrawProp &dp);
 
-  void loadMedia();
-  void setMapSize(int w, int h);
-  void setPlayerHealth(int health);
-  geometry::Point getEntityMapRefPoint(const geometry::Point &point) const;
+    void initGui();
 
-  void render() const;
+    void loadMedia();
 
-  void drawAppBg() const;
+    void setMapSize(int w, int h);
 
-  void drawClearBg(const SDL_Color &color) const;
+    void setPlayerHealth(int health);
+    void setTeamInfo(const std::vector<TeamInfo>& teamInfo);
 
-  geometry::Point placeToMapCoords(const geometry::Point &point) const;
+    geometry::Point getEntityMapRefPoint(const geometry::Point &point) const;
 
-  Scalar scaleToMapCoords(Scalar coord) const;
+    void render() const;
 
-  static const geometry::RectangularArea game_area;
+    void drawAppBg() const;
 
-  void draw(geometry::Polygon const &polygon, const SDL_Color &color);
+    void drawClearBg(const SDL_Color &color) const;
 
-  void drawEntity(const entity_t &entity, const Shape &shape,
-                  const Position &position);
+    geometry::Point placeToMapCoords(const geometry::Point &point) const;
 
-  void drawCircle(geometry::Point center, const geometry::CircleShape &shape, const SDL_Color &color, const std::string &text = "");
+    Scalar scaleToMapCoords(Scalar coord) const;
 
-  void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation,
-                const SDL_Color &color);
+    static const geometry::RectangularArea game_area;
 
-  void drawText(TextProperties property) const;
+    void draw(geometry::Polygon const &polygon, const SDL_Color &color);
 
-  template <typename T> T scaleToMapCoords(T coord) const;
+    void drawEntity(const entity_t &entity, const Shape &shape,
+                    const Position &position);
 
-  geometry::Point projectToMapCoords(const geometry::Point &point) const;
+    void drawCircle(geometry::Point center, Scalar radius, const SDL_Color &color);
 
-    void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const SDL_Color &color,
-                        PlayerInfo playerInfo);
+    void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation,
+                  const SDL_Color &color);
+
+    void drawText(TextProperties property) const;
+
+    template<typename T>
+    T scaleToMapCoords(T coord) const;
+
+    geometry::Point projectToMapCoords(const geometry::Point &point) const;
+
+    void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const PlayerInfo& playerInfo, bool ownPlayer);
 };

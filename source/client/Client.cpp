@@ -57,7 +57,7 @@ Client::Impl::Impl(string ip, string port, std::string playerName,
   ;
 }
 
-void Client::Impl::received(IConnection &connection, Message msg) {
+void Client::Impl::received(IConnection & /*connection*/, Message msg) {
   // auto & conn = dynamic_cast<ConnectionToServer &>(connection);
   // cout << "Client received message from " << conn.socket().remote_endpoint()
   // << endl;

@@ -24,6 +24,7 @@
 #include "DrawProp.h"
 
 #include "ClientGui.h"
+#include "ColorConverter.h"
 
 using namespace std;
 using namespace geometry;
@@ -286,28 +287,11 @@ void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
                 color.a);
 }
 
-void ClientGui::drawCircle(geometry::Point center, const geometry::CircleShape &shape, const SDL_Color &color, const std::string &text) {
+void ClientGui::drawCircle(geometry::Point center, Scalar radius, const SDL_Color &color) {
 
-    center = projectToMapCoords(center);
-    int radius = scaleToMapCoords(shape.radius);
     filledCircleRGBA(mRenderer, center.x, center.y,
                      radius, color.r, color.g, color.b,
                      color.a);
-
-    if (text.length() != 0) {
-
-
-        float padding = 0.8;
-        int x = center.x;
-        int y = center.y;
-        int radiusPadded = radius * padding;
-        drawText({
-                         {{x - radiusPadded, y - radiusPadded, radiusPadded*2, radiusPadded*2},
-                          mColors[Color::TEXT]},
-                         text,
-                         -1
-                 });
-    }
 }
 
 void ClientGui::renderGui(EntityComponentSystem &entities) {
@@ -326,26 +310,15 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     render();
 }
 
-struct ClientGui::Drawer : public boost::static_visitor<void> {
+struct ClientGui::EntityProcessor : public boost::static_visitor<void> {
     ClientGui &gui;
     entity_t const &entity;
     Position const &position;
-    SDL_Color color;
+    SDL_Color color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
     bool myPlayer = false;
 
-    Drawer(ClientGui &gui, entity_t const &entity, Position const &position)
-            : gui(gui), entity(entity), position(position) {
-        // ASK: case gui.getPlayerId(): ??
-
-        const EntityID &curId = entity.get_component<EntityID>();
-
-        if (gui.mController.isMyPlayer(curId)) {
-            color = gui.mColors[Color::MY_PLAYER];
-            myPlayer = true;
-        } else {
-            color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
-        }
-    }
+    EntityProcessor(ClientGui &gui, entity_t const &entity, Position const &position)
+            : gui(gui), entity(entity), position(position) {}
 
     void operator()(PolygonalShape const &shape) {
         gui.draw(geometry::createPolygon(position.center, position.rotation, shape),
@@ -356,28 +329,49 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
 
         if (entity.has_component<PlayerInfo>()) {
 
-            gui.drawPlayer(position, shape, color, entity.get_component<PlayerInfo>());
+            // TODO > I have a dilemma with where to put the health update, this will happen much more often than necessary,
+            // TODO > but having it update via separate server message is duplicity with PlayerInfo component
+            gui.setPlayerHealth(entity.get_component<PlayerInfo>().hp);
+            gui.drawPlayer(position, shape, entity.get_component<PlayerInfo>(), gui.mController.isMyPlayer(entity.get_component<EntityID>()));
+
         } else {
 
-            gui.drawCircle(position.center, shape, color);
+            gui.drawCircle(gui.projectToMapCoords(position.center),
+                           gui.scaleToMapCoords(shape.radius),
+                           color);
         }
-
     }
 };
 
-void ClientGui::drawPlayer(const Position &position, const CircleShape &shape, const SDL_Color &color,
-                           PlayerInfo playerInfo) {
+void ClientGui::drawPlayer(const Position &position, const CircleShape &shape, const PlayerInfo& playerInfo, bool ownPlayer) {
+
+    Point projectedCenter = projectToMapCoords(position.center);
+    Scalar scaledRadius = scaleToMapCoords(shape.radius);
 
 
-    drawCircle(position.center, shape, color, playerInfo.mName);
-    drawLine(position.center, shape.radius, position.rotation, mColors[Color::PLAYER_GUN]);
+    cout <<  "center : " << position.center << " rad : "<< shape.radius << endl;
+    drawCircle(projectedCenter, scaledRadius, teamColors[playerInfo.mTeam]);
+    if (ownPlayer) {
+        drawCircle(projectedCenter, scaledRadius / 2, mColors[Color::MY_PLAYER]);
+    }
+    drawLine(projectedCenter, scaledRadius, position.rotation, mColors[Color::PLAYER_GUN]);
 
+    float padding = 0.8;
+    int x = projectedCenter.x;
+    int y = projectedCenter.y;
+    int radiusPadded = scaledRadius * padding;
+    drawText({
+                     {{x - radiusPadded, y - radiusPadded, radiusPadded * 2, radiusPadded * 2},
+                      mColors[Color::TEXT]},
+                     playerInfo.mName,
+                     -1
+             });
 }
 
 void ClientGui::drawEntity(entity_t const &entity, Shape const &shape,
                            Position const &position) {
 
-    Drawer drawer{*this, entity, position};
+    EntityProcessor drawer{*this, entity, position};
 
     boost::apply_visitor(drawer, shape);
 }
@@ -399,6 +393,17 @@ void ClientGui::setMapSize(int w, int h) {
     initGui();
 }
 
+void ClientGui::setTeamInfo(const std::vector<TeamInfo>& teamInfo) {
+
+    int teamCount = teamInfo.size();
+
+    for (auto &team : teamInfo) {
+        int teamId = team.mId;
+        float factor = static_cast<float> (teamId) / teamCount;
+        teamColors[team.mName] = HSVtoRGB( static_cast<int>(360 * factor), 1, 1 );
+    }
+}
+
 void ClientGui::setPlayerHealth(int health) {
 
     healthProp.mText = "HP: " + to_string(health);
@@ -414,8 +419,7 @@ void ClientGui::drawLine(geometry::Point center, Scalar radius,
                          geometry::Angle rotation, const SDL_Color &color) {
 
     int thickness = 2;
-    center = projectToMapCoords(center);
-    int radiusInt = static_cast<int>(scaleToMapCoords(radius));
+    int radiusInt = static_cast<int>(radius);
 
     SDL_Rect target = {static_cast<int>(center.x) - thickness / 2,
                        static_cast<int>(center.y) - radiusInt, thickness,

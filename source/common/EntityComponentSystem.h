@@ -8,6 +8,7 @@
 #include <common/components/Shape.h>
 #include <common/geometry/Object2D.h>
 #include "common/components/PlayerInfo.h"
+#include "common/GameInfo.h"
 
 // TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene
 // entity managery...

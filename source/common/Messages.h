@@ -11,64 +11,72 @@
 #include "PlayerAction.h"
 #include "common/components/PlayerInfo.h"
 
+#include "common/GameInfo.h"
+
 // Server to client
 // =====================================
 
 // TODO: this will not be needed.
 // We will send it as a new entity
 struct MsgNewPlayer {
-  uint32_t player_id;
-  uint32_t object_id;
-  std::string playerName;
-  std::string playerTeam;
+    uint32_t player_id;
+    uint32_t object_id;
+    std::string playerName;
+    std::string playerTeam;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(player_id, object_id, playerName, playerTeam);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(player_id, object_id, playerName, playerTeam);
+    }
 };
 
 struct MsgGameInfo {
-  Scalar area_size_x;
-  Scalar area_size_y;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(area_size_x, area_size_y);
-  }
+    GameInfo gameInfo;
+
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(gameInfo);
+    }
 };
 
 struct MsgPlayerAssignedEntityId {
 
-  EntityID entityId;
+    EntityID entityId;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(entityId);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(entityId);
+    }
 };
 
 struct MsgNewEntity {
-  EntityID entity_id;
-  std::vector<AnyComponent> components;
+    EntityID entity_id;
+    std::vector<AnyComponent> components;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(entity_id, components);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(entity_id, components);
+    }
 };
 
 struct MsgUpdateEntity {
-  EntityID entity_id;
-  std::vector<AnyComponent> components;
+    EntityID entity_id;
+    std::vector<AnyComponent> components;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(entity_id, components);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(entity_id, components);
+    }
 };
 
 struct MsgDeleteEntity {
-  EntityID entity_id;
+    EntityID entity_id;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(entity_id);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(entity_id);
+    }
 };
 
 // Client to server
@@ -76,37 +84,42 @@ struct MsgDeleteEntity {
 
 struct MsgIntroduceMyPlayer {
 
-  PlayerInfo playerInfo;
+    PlayerInfo playerInfo;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(playerInfo);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(playerInfo);
+    }
 };
 
 struct MsgPlayerActionChange {
 
-  PlayerAction movement;
-  int state;
+    PlayerAction movement;
+    int state;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(movement, state);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(movement, state);
+    }
 };
 
 struct MsgPlayerRotation {
 
-  geometry::Angle rotation;
+    geometry::Angle rotation;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(rotation);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(rotation);
+    }
 };
 
+// TODO not used for now, we update health based on entity component PLayerInfo
 struct MsgPlayerHealth {
 
-  int health;
+    int health;
 
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(health);
-  }
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(health);
+    }
 };

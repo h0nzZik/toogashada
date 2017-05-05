@@ -18,9 +18,11 @@ public:
   void removeEntity(SEntity const &entity);
   void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
   void playerRotatesTo(SEntity const &entity, geometry::Angle angle);
-  const geometry::RectangularArea &getMapSize() const;
+  const GameInfo &getGameInfo();
   void stop();
   void main();
+
+
 
 private:
   class Impl;

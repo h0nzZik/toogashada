@@ -72,9 +72,8 @@ private:
                 self.connection2entity[&connection] = sentity.entity;
 
                 // misc info for player
-                MsgGameInfo msgGameInfo = {self.gameModel.getMapSize().getWidth(),
-                                           self.gameModel.getMapSize().getHeight()};
-                self.send(connection, {msgGameInfo});
+                MsgGameInfo msgGameInfo = {self.gameModel.getGameInfo()};
+                self.broadcast({msgGameInfo});
 
                 MsgNewEntity msgNewEntity;
                 msgNewEntity.components = EntityComponentSystem::all_components(sentity.entity);

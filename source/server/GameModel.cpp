@@ -13,6 +13,7 @@
 #include <common/ServerMessage.h>
 #include <common/geometry/Object2D.h>
 #include <common/geometry/collision.h>
+#include "common/GameInfo.h"
 
 // Server
 #include "IBroadcaster.h"
@@ -61,21 +62,37 @@ public:
         return colliding;
     }
 
+    void removePlayer(const PlayerInfo &info) {
+
+        gameInfo.removePlayer(info);
+    }
+
     void removeEntity(entity_t entity) {
+
+        bool isPlayer = entity.has_component<PlayerInfo>();
+        PlayerInfo playerInfo;
+        if (isPlayer) {
+            playerInfo = entity.get_component<PlayerInfo>();
+        }
+
         ServerMessage msg{MsgDeleteEntity{entity.get_component<EntityID>()}};
         broadcaster.broadcast(msg.to_message());
         entity.destroy();
+
+        if (isPlayer) {
+            removePlayer(playerInfo);
+        }
     }
 
     std::random_device d{};
     std::default_random_engine randomEngine{d()};
 
     geometry::Point randomPoint() {
-        return {Scalar(randomEngine() % int(game_area.bottomRight().x)),
-                Scalar(randomEngine() % int(game_area.bottomRight().y))};
+        return {Scalar(randomEngine() % int(gameInfo.width())),
+                Scalar(randomEngine() % int(gameInfo.height()))};
     }
 
-    const geometry::RectangularArea &getMapSize() { return game_area; }
+    const GameInfo &getGameInfo() { return gameInfo; };
 
     entity_t newEntity() {
         return ecs.entityManager.create_entity(EntityID::newID());
@@ -136,7 +153,7 @@ public:
 
         } while (++counter < 50 &&
                  (!collisions.empty() ||
-                  !geometry::in(pos.center, playerShape, game_area)));
+                  !geometry::in(pos.center, playerShape, gameInfo.getArea())));
 
         if (counter >= 50)
             throw std::runtime_error("Cannot fit player to area");
@@ -149,6 +166,8 @@ public:
         entity.add_component<Shape>(playerShape);
         entity.add_component<geometry::Object2D>(std::move(object2d));
         entity.add_component<EntityMotion>();
+
+        gameInfo.addPlayer(playerInfo);
 
         return SEntity{entity};
     }
@@ -227,8 +246,11 @@ private:
         return v * Scalar(15);
     }
 
-    geometry::RectangularArea const game_area{{0,   0},
-                                              {100, 100}};
+
+//    geometry::RectangularArea const game_area{{0,   0},
+//                                              {100, 100}};
+    GameInfo gameInfo {100, 100, {}};
+
     // TODO we should measure the diffeence between client's and server's time.
 
     static auto constexpr dt = 16ms;
@@ -293,7 +315,7 @@ private:
                 log() << "  with: " << e.get_component<EntityID>().id();
         }
 
-        if (!in(new_center, shape, game_area))
+        if (!in(new_center, shape, gameInfo.getArea()))
             return collisionHappenedWithArea(entity, pos);
 
         if (!collisions.empty()) {
@@ -372,10 +394,6 @@ void GameModel::removeEntity(SEntity const &entity) {
     return pImpl->removeEntity(entity.entity);
 }
 
-const geometry::RectangularArea &GameModel::getMapSize() const {
-    return pImpl->getMapSize();
-}
-
 void GameModel::playerKeyPress(SEntity const &entity, PlayerAction key,
                                bool press) {
     return pImpl->playerKeyPress(entity.entity, key, press);
@@ -391,4 +409,8 @@ void GameModel::stop() {
 
 void GameModel::main() {
     pImpl->main();
+}
+
+const GameInfo &GameModel::getGameInfo() {
+    return pImpl->getGameInfo();
 }

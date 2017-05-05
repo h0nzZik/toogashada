@@ -29,47 +29,50 @@
 #include "RemoteServerWrapper.h"
 
 struct PlayerInfo;
+
 class ClientGui;
+
 class RemoteServerWrapper;
+
 struct Message;
 
 class ClientController final {
 public:
-  explicit ClientController(PlayerInfo &player, ClientGui &clientGui,
-                            RemoteServerWrapper &server);
+    explicit ClientController(PlayerInfo &player, ClientGui &clientGui,
+                              RemoteServerWrapper &server);
 
-  void received(Message msg);
-  void main_loop();
-  void loopWork();
-  void stop();
-  bool isMyPlayer(const EntityID &id);
+    void received(Message msg);
+    void main_loop();
+    void loopWork();
+    void stop();
+    bool isMyPlayer(const EntityID &id);
 
 private:
-  std::map<SDL_Scancode, std::pair<PlayerAction, bool>> keyMap{
-      {SDL_SCANCODE_W, {PlayerAction::Up, 0}},
-      {SDL_SCANCODE_S, {PlayerAction::Down, 0}},
-      {SDL_SCANCODE_A, {PlayerAction::Left, 0}},
-      {SDL_SCANCODE_D, {PlayerAction::Right, 0}},
-      {SDL_SCANCODE_SPACE, {PlayerAction::Fire, 0}}};
+    std::map<SDL_Scancode, std::pair<PlayerAction, bool>> keyMap{
+            {SDL_SCANCODE_W,     {PlayerAction::Up,    0}},
+            {SDL_SCANCODE_S,     {PlayerAction::Down,  0}},
+            {SDL_SCANCODE_A,     {PlayerAction::Left,  0}},
+            {SDL_SCANCODE_D,     {PlayerAction::Right, 0}},
+            {SDL_SCANCODE_SPACE, {PlayerAction::Fire,  0}}};
 
-  class Receiver;
+    class Receiver;
+    void redraw();
+    void received(ServerMessage msg);
+    void dispatchKeyAndMouseStates();
+    void dispatchKeyStates();
+    void send(ClientMessage const &msg);
 
-  void redraw();
-  void received(ServerMessage msg);
-  void dispatchKeyAndMouseStates();
-  void dispatchKeyStates();
-  void send(ClientMessage const &msg);
+    ClientGui &clientGui;
+    RemoteServerWrapper &remoteServer;
+    PlayerInfo &player;
+    EntityID playerId;
+    GameInfo gameInfo;
 
-  ClientGui &clientGui;
-  RemoteServerWrapper &remoteServer;
-  PlayerInfo &player;
-  EntityID playerId;
+    bool continueLoop;
 
-  bool continueLoop;
+    // GameObjectManager gameObjects;
+    std::mutex mutexGameObjects;
 
-  // GameObjectManager gameObjects;
-  std::mutex mutexGameObjects;
-
-  EntityComponentSystem ecs;
-  std::map<EntityID, entity_t> entites;
+    EntityComponentSystem ecs;
+    std::map<EntityID, entity_t> entites;
 };
