@@ -160,6 +160,7 @@ public:
 
         log() << "Found place for player on " << counter << "th try";
 
+        playerInfo.hp = DEFAULT_HP;
         entity.add_component<PlayerInfo>(playerInfo);
         entity.add_component<Position>(pos);
         // entity.add_component<Shape>(CircleShape{5.1});
@@ -232,6 +233,7 @@ public:
 private:
     static constexpr Scalar bullet_r = 1.5;
     static constexpr Scalar player_r = 10;
+    const int DEFAULT_HP = 100;
 
     static geometry::Vector toSpeedVector(EntityMotion const &info) {
         Vector v{0, 0};
