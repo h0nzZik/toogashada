@@ -9,6 +9,7 @@
 #include "common/components/EntityID.h"
 
 #include "PlayerAction.h"
+#include "common/components/PlayerInfo.h"
 
 // Server to client
 // =====================================
@@ -75,11 +76,10 @@ struct MsgDeleteEntity {
 
 struct MsgIntroduceMyPlayer {
 
-  std::string playerName;
-  std::string playerTeam;
+  PlayerInfo playerInfo;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(playerName, playerTeam);
+    archive(playerInfo);
   }
 };
 

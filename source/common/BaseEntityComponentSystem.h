@@ -43,8 +43,11 @@ private:
     entity_t &entity;
     explicit updater(entity_t &entity) : entity(entity) {}
     template <typename T> void operator()(T x) {
-      entity.template get_component<T>() = std::move(x);
-      entity.template add_component<T>(x);
+        if (entity.template has_component<T>()) {
+            entity.template get_component<T>() = std::move(x);
+        } else {
+            entity.template add_component<T>(x);
+        }
     }
   };
 

@@ -85,8 +85,6 @@ class ClientGui {
   SDL_Renderer *mRenderer;
   TTF_Font *mFont;
 
-  geometry::Angle tempRotation;
-
   friend Drawer;
 
 public:
@@ -104,7 +102,6 @@ public:
   void setMapSize(int w, int h);
   void setPlayerHealth(int health);
   geometry::Point getEntityMapRefPoint(const geometry::Point &point) const;
-  void setRotation(double angle);
 
   void render() const;
 
@@ -134,4 +131,6 @@ public:
   template <typename T> T scaleToMapCoords(T coord) const;
 
   geometry::Point projectToMapCoords(const geometry::Point &point) const;
+
+    void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const SDL_Color &color);
 };

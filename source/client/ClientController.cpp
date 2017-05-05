@@ -22,7 +22,7 @@
 #include <common/Tag.h>
 
 #include "ClientGui.h"
-#include "ClientPlayer.h"
+#include "common/components/PlayerInfo.h"
 #include "RemoteServerWrapper.h"
 
 // self
@@ -30,118 +30,118 @@
 
 using namespace std;
 
-ClientController::ClientController(ClientPlayer &player, ClientGui &clientGui,
+ClientController::ClientController(PlayerInfo &player, ClientGui &clientGui,
                                    RemoteServerWrapper &server)
-    : clientGui(clientGui), remoteServer{server}, player(player),
-      continueLoop{true} {}
+        : clientGui(clientGui), remoteServer{server}, player(player),
+          continueLoop{true} {}
 
 void ClientController::main_loop() {
-  const auto constexpr dt = 16ms;
-  const auto clientStartPoint = chrono::steady_clock::now();
-  auto clientGameTime = clientStartPoint;
-  bool const limit_speed = true;
-  while (continueLoop) {
+    const auto constexpr dt = 16ms;
+    const auto clientStartPoint = chrono::steady_clock::now();
+    auto clientGameTime = clientStartPoint;
+    bool const limit_speed = true;
+    while (continueLoop) {
 
-    loopWork();
+        loopWork();
 
-    clientGameTime += dt;
-    if (limit_speed)
-      this_thread::sleep_until(clientGameTime);
-  }
-  cout << "Quitting gui\n";
+        clientGameTime += dt;
+        if (limit_speed)
+            this_thread::sleep_until(clientGameTime);
+    }
+    cout << "Quitting gui\n";
 }
 
 void ClientController::stop() { continueLoop = true; }
 
 void ClientController::loopWork() {
-  SDL_Event e;
-  while (SDL_PollEvent(&e) != 0) {
-    if (e.type == SDL_QUIT) {
-      continueLoop = false;
-      break;
+    SDL_Event e;
+    while (SDL_PollEvent(&e) != 0) {
+        if (e.type == SDL_QUIT) {
+            continueLoop = false;
+            break;
+        }
     }
-  }
 
-  dispatchKeyAndMouseStates();
+    dispatchKeyAndMouseStates();
 
-  redraw();
+    redraw();
 }
 
 class ClientController::Receiver : public boost::static_visitor<void> {
 public:
-  Receiver(ClientController &controller) : controller(controller) {}
+    Receiver(ClientController &controller) : controller(controller) {}
 
-  void operator()(MsgNewPlayer const &msg) { ; }
+    void operator()(MsgNewPlayer const &msg) { ; }
 
-  void operator()(MsgNewEntity const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
-    controller.entites[msg.entity_id] =
-        controller.ecs.entityManager.create_entity(msg.entity_id);
-    auto &entity = controller.entites[msg.entity_id];
-    EntityComponentSystem::add_components(entity, msg.components);
-  }
+    void operator()(MsgNewEntity const &msg) {
+        std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
+        controller.entites[msg.entity_id] =
+                controller.ecs.entityManager.create_entity(msg.entity_id);
+        auto &entity = controller.entites[msg.entity_id];
+        EntityComponentSystem::add_components(entity, msg.components);
+    }
 
-  void operator()(MsgUpdateEntity const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
-    EntityComponentSystem::update_components(controller.entites[msg.entity_id],
-                                             msg.components);
-  }
+    void operator()(MsgUpdateEntity const &msg) {
+        std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
+        EntityComponentSystem::update_components(controller.entites[msg.entity_id],
+                                                 msg.components);
+    }
 
-  void operator()(MsgDeleteEntity const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
-    controller.entites[msg.entity_id].destroy();
-  }
+    void operator()(MsgDeleteEntity const &msg) {
+        std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
+        controller.entites[msg.entity_id].destroy();
+    }
 
-  void operator()(MsgGameInfo const &msg) {
+    void operator()(MsgGameInfo const &msg) {
 
-    controller.clientGui.setMapSize(msg.area_size_x, msg.area_size_y);
-    std::cout << "map size set to: " << msg.area_size_x << "x"
-              << msg.area_size_y << endl;
-  }
+        controller.clientGui.setMapSize(msg.area_size_x, msg.area_size_y);
+        std::cout << "map size set to: " << msg.area_size_x << "x"
+                  << msg.area_size_y << endl;
+    }
 
-  void operator()(MsgPlayerHealth const &msg) {
+    void operator()(MsgPlayerHealth const &msg) {
 
-    controller.clientGui.setPlayerHealth(msg.health);
-    std::cout << "health set to: " << msg.health << endl;
-  }
+        controller.clientGui.setPlayerHealth(msg.health);
+        std::cout << "health set to: " << msg.health << endl;
+    }
 
-  void operator()(MsgPlayerAssignedEntityId const &msg) {
+    void operator()(MsgPlayerAssignedEntityId const &msg) {
 
-    controller.playerId = msg.entityId;
-  }
+        controller.playerId = msg.entityId;
+    }
 
 private:
-  ClientController &controller;
+    ClientController &controller;
 };
 
 // TODO gui nevykresluje spravne orotovane veci
 
 void ClientController::received(Message msg) {
 
-  switch (msg.tag) {
-  case Tag::Hello:
-    cout << "Server says hello." << endl;
-    break;
+    switch (msg.tag) {
+        case Tag::Hello:
+            cout << "Server says hello." << endl;
+            break;
 
-  case Tag::UniversalServerMessage:
-    return received(ServerMessage::from(msg));
+        case Tag::UniversalServerMessage:
+            return received(ServerMessage::from(msg));
 
-  default:
-    break;
-  }
+        default:
+            break;
+    }
 }
 
 void ClientController::received(ServerMessage msg) {
-  Receiver receiver{*this};
-  boost::apply_visitor(receiver, msg.data);
+    Receiver receiver{*this};
+    boost::apply_visitor(receiver, msg.data);
 }
 
 void ClientController::redraw() {
-  std::lock_guard<std::mutex> guard{mutexGameObjects};
-  // TODO(h0nzZik): I think it is not needed to lock everything.
-  // We should refine it someday in future.
+    std::lock_guard<std::mutex> guard{mutexGameObjects};
+    // TODO(h0nzZik): I think it is not needed to lock everything.
+    // We should refine it someday in future.
 
-  clientGui.renderGui(ecs);
+    clientGui.renderGui(ecs);
 }
 
 /**
@@ -152,70 +152,68 @@ void ClientController::redraw() {
  */
 
 void ClientController::send(ClientMessage const &msg) {
-  remoteServer.conn().send(msg.to_message());
+    remoteServer.conn().send(msg.to_message());
 }
 
 void ClientController::dispatchKeyStates() {
-  ClientMessage msg;
-  const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
+    ClientMessage msg;
+    const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
 
-  for (auto &keyMapping : keyMap) {
+    for (auto &keyMapping : keyMap) {
 
-    bool prevState = keyMapping.second.second;
-    bool curState = keyboard[keyMapping.first];
+        bool prevState = keyMapping.second.second;
+        bool curState = keyboard[keyMapping.first];
 
-    if (prevState != curState) {
-      msg = {MsgPlayerActionChange{keyMapping.second.first, curState}};
-      keyMapping.second.second = curState;
-      send(msg);
-      // std::cout <<
-      // static_cast<std::underlying_type<Movement>::type>(keyMapping.second.first)
-      // << " " << prevState << " -> " << curState << std::endl;
+        if (prevState != curState) {
+            msg = {MsgPlayerActionChange{keyMapping.second.first, curState}};
+            keyMapping.second.second = curState;
+            send(msg);
+            // std::cout <<
+            // static_cast<std::underlying_type<Movement>::type>(keyMapping.second.first)
+            // << " " << prevState << " -> " << curState << std::endl;
+        }
     }
-  }
 }
 
 void ClientController::dispatchKeyAndMouseStates() {
-  dispatchKeyStates();
-  ClientMessage msg;
+    dispatchKeyStates();
+    ClientMessage msg;
 
-  int mouseX;
-  int mouseY;
-  SDL_GetMouseState(&mouseX, &mouseY);
+    int mouseX;
+    int mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
 
-  // TODO this might be very slow, maybe I should cach a reference
-  // TODO improve semantic
+    // TODO this might be very slow, maybe I should cach a reference
+    // TODO improve semantic
 
-  {
-    std::unique_lock<std::mutex> guard{mutexGameObjects};
+    {
+        std::unique_lock<std::mutex> guard{mutexGameObjects};
 
-    if (entites.find(playerId) != entites.end()) {
+        if (entites.find(playerId) != entites.end()) {
 
-      geometry::Point point =
-          entites.at(playerId).get_component<Position>().center;
-      guard.unlock();
+            geometry::Point point =
+                    entites.at(playerId).get_component<Position>().center;
+            guard.unlock();
 
-      point = clientGui.getEntityMapRefPoint(point);
+            point = clientGui.getEntityMapRefPoint(point);
 
-      int x1 = 0;
-      int y1 = -1;
+            int x1 = 0;
+            int y1 = -1;
 
-      int x2 = mouseX - point.x;
-      int y2 = mouseY - point.y;
+            int x2 = mouseX - point.x;
+            int y2 = mouseY - point.y;
 
-      double dot = x1 * x2 + y1 * y2;
-      double det = x1 * y2 - y1 * x2;
-      geometry::Angle angle = atan2(det, dot) * 180 / M_PI;
+            double dot = x1 * x2 + y1 * y2;
+            double det = x1 * y2 - y1 * x2;
+            geometry::Angle angle = atan2(det, dot) * 180 / M_PI;
 
-      if (angle < 0) {
-        angle += 360;
-      }
-
-      ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
-      clientGui.setRotation(angle);
-      send(mouseMsg);
+            if (angle < 0) {
+                angle += 360;
+            }
+            ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
+            send(mouseMsg);
+        }
     }
-  }
 }
 
 bool ClientController::isMyPlayer(const EntityID &id) { return id == playerId; }

@@ -25,17 +25,17 @@
 #include <common/Tag.h>
 
 #include "ClientGui.h"
-#include "ClientPlayer.h"
+#include "common/components/PlayerInfo.h"
 #include "RemoteServerWrapper.h"
 
-struct ClientPlayer;
+struct PlayerInfo;
 class ClientGui;
 class RemoteServerWrapper;
 struct Message;
 
 class ClientController final {
 public:
-  explicit ClientController(ClientPlayer &player, ClientGui &clientGui,
+  explicit ClientController(PlayerInfo &player, ClientGui &clientGui,
                             RemoteServerWrapper &server);
 
   void received(Message msg);
@@ -62,7 +62,7 @@ private:
 
   ClientGui &clientGui;
   RemoteServerWrapper &remoteServer;
-  ClientPlayer &player;
+  PlayerInfo &player;
   EntityID playerId;
 
   bool continueLoop;

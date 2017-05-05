@@ -1,6 +1,6 @@
 #pragma once
 
-struct PlayerInfo {
+struct EntityMotion {
 	bool left = false;
 	bool right = false;
 	bool up = false;

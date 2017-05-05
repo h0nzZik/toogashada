@@ -7,6 +7,7 @@
 #include <common/components/Position.h>
 #include <common/components/Shape.h>
 #include <common/geometry/Object2D.h>
+#include "common/components/PlayerInfo.h"
 
 // TODO muzeme pouzivat i udalosti a pomoci nich si synchronizovat vzdalene
 // entity managery...
@@ -19,7 +20,7 @@
  */
 struct EntityComponentSystem
     : public BaseEntityComponentSystem<Shape, Position, Explosive,
-                                       geometry::Object2D, PlayerInfo> {};
+                                       geometry::Object2D, EntityMotion, PlayerInfo> {};
 
 using AnyComponent = typename EntityComponentSystem::AnyComponent;
 

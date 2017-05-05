@@ -61,7 +61,12 @@ private:
     explicit Receiver(Impl &self, ConnectionToClient &connection)
         : self(self), connection(connection) {}
 
-    void operator()(MsgIntroduceMyPlayer const /*& msg*/) {}
+    void operator()(MsgIntroduceMyPlayer const &msg) {
+
+        entity_t &entity = self.connection2entity.at(&connection);
+        entity.add_component<PlayerInfo>(msg.playerInfo);
+        self.updateEntity(entity, {entity.get_component<PlayerInfo>()});
+    }
 
     void operator()(MsgPlayerRotation const &msg) {
       entity_t entity = self.connection2entity.at(&connection);
@@ -181,7 +186,6 @@ private:
     send(client, {msg});
     broadcast({msg});
 
-    // Taky musime mit PlayerComponent
   }
 
   void sendAllEntities(ConnectionToClient &client) {
@@ -203,8 +207,6 @@ private:
   EntityComponentSystem ecs;
   GameModel gameModel;
 };
-
-// TODO we will need to have some area size.
 
 Server::Server(int port) { pImpl = make_unique<Impl>(port); }
 

@@ -8,7 +8,7 @@
 
 #include "ClientController.h"
 #include "ClientGui.h"
-#include "ClientPlayer.h"
+#include "common/components/PlayerInfo.h"
 #include "ConnectionToServer.h"
 #include "RemoteServerWrapper.h"
 
@@ -35,7 +35,7 @@ private:
   ConnectionToServer serverConnection;
   RemoteServerWrapper remoteServerWrapper;
   ClientController clientController;
-  ClientPlayer clientPlayer;
+  PlayerInfo playerInfo;
 };
 
 Client::~Client() = default;
@@ -52,8 +52,8 @@ Client::Impl::Impl(string ip, string port, std::string playerName,
                    std::string playerTeam)
     : clientGui{clientController, playerName, playerTeam},
       serverConnection{ip, port}, remoteServerWrapper{serverConnection},
-      clientController{clientPlayer, clientGui, remoteServerWrapper},
-      clientPlayer{playerName, playerTeam} {
+      clientController{playerInfo, clientGui, remoteServerWrapper},
+      playerInfo{playerName, playerTeam} {
   ;
 }
 
@@ -76,7 +76,7 @@ void Client::Impl::run() {
   serverConnection.listen(*this);
 
   ClientMessage msg{
-      MsgIntroduceMyPlayer{clientPlayer.mName, clientPlayer.mTeam}};
+      MsgIntroduceMyPlayer{playerInfo}};
   serverConnection.send(msg.to_message());
 
   thread network([&] { serverConnection.run(); });
