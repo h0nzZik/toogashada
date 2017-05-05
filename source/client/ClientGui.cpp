@@ -286,13 +286,28 @@ void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
                 color.a);
 }
 
-void ClientGui::drawCircle(Point center, const CircleShape &shape,
-                           const SDL_Color &color) {
+void ClientGui::drawCircle(geometry::Point center, const geometry::CircleShape &shape, const SDL_Color &color, const std::string &text) {
 
     center = projectToMapCoords(center);
+    int radius = scaleToMapCoords(shape.radius);
     filledCircleRGBA(mRenderer, center.x, center.y,
-                     scaleToMapCoords(shape.radius), color.r, color.g, color.b,
+                     radius, color.r, color.g, color.b,
                      color.a);
+
+    if (text.length() != 0) {
+
+
+        float padding = 0.8;
+        int x = center.x;
+        int y = center.y;
+        int radiusPadded = radius * padding;
+        drawText({
+                         {{x - radiusPadded, y - radiusPadded, radiusPadded*2, radiusPadded*2},
+                          mColors[Color::TEXT]},
+                         text,
+                         -1
+                 });
+    }
 }
 
 void ClientGui::renderGui(EntityComponentSystem &entities) {
@@ -340,17 +355,21 @@ struct ClientGui::Drawer : public boost::static_visitor<void> {
     void operator()(CircleShape const &shape) {
 
         if (entity.has_component<PlayerInfo>()) {
-            const PlayerInfo &pI = entity.get_component<PlayerInfo>();
-            cout << pI.mName << endl;
+
+            gui.drawPlayer(position, shape, color, entity.get_component<PlayerInfo>());
+        } else {
+
+            gui.drawCircle(position.center, shape, color);
         }
 
-        gui.drawPlayer(position, shape, color);
     }
 };
 
-void ClientGui::drawPlayer(const Position& position, const CircleShape &shape, const SDL_Color &color) {
+void ClientGui::drawPlayer(const Position &position, const CircleShape &shape, const SDL_Color &color,
+                           PlayerInfo playerInfo) {
 
-    drawCircle(position.center, shape, color);
+
+    drawCircle(position.center, shape, color, playerInfo.mName);
     drawLine(position.center, shape.radius, position.rotation, mColors[Color::PLAYER_GUN]);
 
 }

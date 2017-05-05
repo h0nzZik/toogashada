@@ -75,17 +75,14 @@ private:
                 MsgGameInfo msgGameInfo = {self.gameModel.getMapSize().getWidth(),
                                            self.gameModel.getMapSize().getHeight()};
                 self.send(connection, {msgGameInfo});
-                MsgPlayerHealth msgPlayerHealth = {100};
-                self.send(connection, {msgPlayerHealth});
 
-                MsgNewEntity msg;
-                msg.components = EntityComponentSystem::all_components(sentity.entity);
-                msg.entity_id = sentity.entity.get_component<EntityID>();
+                MsgNewEntity msgNewEntity;
+                msgNewEntity.components = EntityComponentSystem::all_components(sentity.entity);
+                msgNewEntity.entity_id = sentity.entity.get_component<EntityID>();
 
-                MsgPlayerAssignedEntityId msgAssignedEntityId = {msg.entity_id};
+                MsgPlayerAssignedEntityId msgAssignedEntityId = {msgNewEntity.entity_id};
                 self.send(connection, {msgAssignedEntityId});
-                self.send(connection, {msg});
-                self.broadcast({msg});
+                self.broadcast({msgNewEntity});
 
             } else {
 
@@ -179,11 +176,6 @@ private:
                         cout << "Client " << conn->socket().remote_endpoint()
                              << " connected." << endl;
                         conn->listen(*this);
-                        // The client is added later, so we can broadcast all changes
-                        // collectively
-                        // and send him full state individually.
-                        // Now this all happens once the player introduces himself.
-                        //newClientConnected(*conn);
                         connections.insert(conn);
                     } else {
                         delete conn;
@@ -191,11 +183,6 @@ private:
 
                     start_accept();
                 });
-    }
-
-    void newClientConnected(ConnectionToClient &client) {
-
-
     }
 
     void sendAllEntities(ConnectionToClient &client) {

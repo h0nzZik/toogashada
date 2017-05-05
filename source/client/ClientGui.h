@@ -120,8 +120,7 @@ public:
   void drawEntity(const entity_t &entity, const Shape &shape,
                   const Position &position);
 
-  void drawCircle(geometry::Point center, const geometry::CircleShape &shape,
-                  const SDL_Color &color);
+  void drawCircle(geometry::Point center, const geometry::CircleShape &shape, const SDL_Color &color, const std::string &text = "");
 
   void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation,
                 const SDL_Color &color);
@@ -132,5 +131,6 @@ public:
 
   geometry::Point projectToMapCoords(const geometry::Point &point) const;
 
-    void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const SDL_Color &color);
+    void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const SDL_Color &color,
+                        PlayerInfo playerInfo);
 };
