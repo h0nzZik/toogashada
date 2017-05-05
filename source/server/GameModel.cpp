@@ -119,7 +119,7 @@ public:
                 geometry::createObject2D(position.center, position.rotation, shape));
     }
 
-    SEntity newPlayer() {
+    SEntity newPlayer(PlayerInfo playerInfo) {
         entity_t entity = newEntity();
         Position pos;
 
@@ -143,6 +143,7 @@ public:
 
         log() << "Found place for player on " << counter << "th try";
 
+        entity.add_component<PlayerInfo>(playerInfo);
         entity.add_component<Position>(pos);
         // entity.add_component<Shape>(CircleShape{5.1});
         entity.add_component<Shape>(playerShape);
@@ -365,13 +366,13 @@ GameModel::GameModel(EntityComponentSystem &ecs, IBroadcaster &broadcaster)
 
 GameModel::~GameModel() = default;
 
-SEntity GameModel::newPlayer() { return pImpl->newPlayer(); }
+SEntity GameModel::newPlayer(PlayerInfo playerInfo) { return pImpl->newPlayer(playerInfo); }
 
 void GameModel::removeEntity(SEntity const &entity) {
     return pImpl->removeEntity(entity.entity);
 }
 
-const geometry::RectangularArea &GameModel::getMapSize() {
+const geometry::RectangularArea &GameModel::getMapSize() const {
     return pImpl->getMapSize();
 }
 

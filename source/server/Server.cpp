@@ -30,182 +30,192 @@ using boost::asio::ip::tcp;
 
 class Server::Impl : private IConnection::IHandler, private IBroadcaster {
 public:
-  explicit Impl(int port)
-      : acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
-        gameModel(ecs, *this) {
-    start_accept();
-  }
+    explicit Impl(int port)
+            : acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
+              gameModel(ecs, *this) {
+        start_accept();
+    }
 
-  ~Impl() {
-    for (ConnectionToClient *conn : connections)
-      delete conn;
-  }
+    ~Impl() {
+        for (ConnectionToClient *conn : connections)
+            delete conn;
+    }
 
-  void run() {
-	  gameModel.main();
-  }
+    void run() {
+        gameModel.main();
+    }
 
-  void shutdown() {
-    gameModel.stop();
-  }
+    void shutdown() {
+        gameModel.stop();
+    }
 
 private:
-  class Receiver;
-  void received(ConnectionToClient &connection, ClientMessage msg) {
-    Receiver receiver{*this, connection};
-    boost::apply_visitor(receiver, msg.data);
-  }
+    class Receiver;
 
-  class Receiver : public boost::static_visitor<void> {
-  public:
-    explicit Receiver(Impl &self, ConnectionToClient &connection)
-        : self(self), connection(connection) {}
-
-    void operator()(MsgIntroduceMyPlayer const &msg) {
-
-        entity_t &entity = self.connection2entity.at(&connection);
-        entity.add_component<PlayerInfo>(msg.playerInfo);
-        self.updateEntity(entity, {entity.get_component<PlayerInfo>()});
+    void received(ConnectionToClient &connection, ClientMessage msg) {
+        Receiver receiver{*this, connection};
+        boost::apply_visitor(receiver, msg.data);
     }
 
-    void operator()(MsgPlayerRotation const &msg) {
-      entity_t entity = self.connection2entity.at(&connection);
-      self.gameModel.playerRotatesTo({entity}, msg.rotation);
+    class Receiver : public boost::static_visitor<void> {
+    public:
+        explicit Receiver(Impl &self, ConnectionToClient &connection)
+                : self(self), connection(connection) {}
+
+        void operator()(MsgIntroduceMyPlayer const &msg) {
+
+            if (self.connection2entity.find(&connection) == self.connection2entity.end()) {
+                // new logic
+                self.sendAllEntities(connection);
+
+                SEntity sentity = self.gameModel.newPlayer(msg.playerInfo);
+                self.connection2entity[&connection] = sentity.entity;
+
+                // misc info for player
+                MsgGameInfo msgGameInfo = {self.gameModel.getMapSize().getWidth(),
+                                           self.gameModel.getMapSize().getHeight()};
+                self.send(connection, {msgGameInfo});
+                MsgPlayerHealth msgPlayerHealth = {100};
+                self.send(connection, {msgPlayerHealth});
+
+                MsgNewEntity msg;
+                msg.components = EntityComponentSystem::all_components(sentity.entity);
+                msg.entity_id = sentity.entity.get_component<EntityID>();
+
+                MsgPlayerAssignedEntityId msgAssignedEntityId = {msg.entity_id};
+                self.send(connection, {msgAssignedEntityId});
+                self.send(connection, {msg});
+                self.broadcast({msg});
+
+            } else {
+
+                cerr << "Client " << connection.socket().remote_endpoint() << " already introduced. Introduction ignored!" << endl;
+            }
+        }
+
+        void operator()(MsgPlayerRotation const &msg) {
+            entity_t entity = self.connection2entity.at(&connection);
+            self.gameModel.playerRotatesTo({entity}, msg.rotation);
+        }
+
+        void operator()(MsgPlayerActionChange const &msg) {
+            entity_t entity = self.connection2entity.at(&connection);
+            self.gameModel.playerKeyPress({entity}, msg.movement, bool(msg.state));
+        }
+
+    private:
+        Impl &self;
+        ConnectionToClient &connection;
+    };
+
+    /* < IConnection::IHandler > */
+    void received(IConnection &connection, Message msg) override {
+        auto &conn = dynamic_cast<ConnectionToClient &>(connection);
+        // cout << "Server received message from " <<
+        // conn.socket().remote_endpoint() << endl;
+        switch (msg.tag) {
+            case Tag::UniversalClientMessage:
+                return received(conn, ClientMessage::from(msg));
+
+            default:
+                break;
+        }
     }
 
-    void operator()(MsgPlayerActionChange const &msg) {
-      entity_t entity = self.connection2entity.at(&connection);
-      self.gameModel.playerKeyPress({entity}, msg.movement, bool(msg.state));
+    void disconnected(IConnection &connection) override {
+        auto &conn = dynamic_cast<ConnectionToClient &>(connection);
+        cout << "Client " << conn.socket().remote_endpoint() << " disconnected."
+             << endl;
+
+        entity_t entity = connection2entity.at(&conn);
+        connection2entity.erase(&conn);
+        connections.erase(&conn);
+        delete &conn;
+
+        gameModel.removeEntity({entity});
     }
 
-  private:
-    Impl &self;
-    ConnectionToClient &connection;
-  };
+    /* </IConnection::IHandler > */
 
-  /* < IConnection::IHandler > */
-  void received(IConnection &connection, Message msg) override {
-    auto &conn = dynamic_cast<ConnectionToClient &>(connection);
-    // cout << "Server received message from " <<
-    // conn.socket().remote_endpoint() << endl;
-    switch (msg.tag) {
-    case Tag::UniversalClientMessage:
-      return received(conn, ClientMessage::from(msg));
-
-    default:
-      break;
+    void send(ConnectionToClient &client, ServerMessage const &msg) {
+        auto m = msg.to_message();
+        client.send(m);
     }
-  }
 
-  void disconnected(IConnection &connection) override {
-    auto &conn = dynamic_cast<ConnectionToClient &>(connection);
-    cout << "Client " << conn.socket().remote_endpoint() << " disconnected."
-         << endl;
+    void broadcast(ServerMessage const &msg) { broadcast(msg.to_message()); }
 
-    entity_t entity = connection2entity.at(&conn);
-    connection2entity.erase(&conn);
-    connections.erase(&conn);
-    delete &conn;
-
-    gameModel.removeEntity({entity});
-  }
-  /* </IConnection::IHandler > */
-
-  void send(ConnectionToClient &client, ServerMessage const &msg) {
-    auto m = msg.to_message();
-    client.send(m);
-  }
-  void broadcast(ServerMessage const &msg) { broadcast(msg.to_message()); }
-  /* < IBroadcaster > */
-  void broadcast(Message msg) override {
-    // A copy of message is created for every connection,
-    // which is not really optimal. We may optimize that later.
-    for (ConnectionToClient *cl : connections) {
-      cl->send(msg);
+    /* < IBroadcaster > */
+    void broadcast(Message msg) override {
+        // A copy of message is created for every connection,
+        // which is not really optimal. We may optimize that later.
+        for (ConnectionToClient *cl : connections) {
+            cl->send(msg);
+        }
     }
-  }
 
-  void iter() override {
-	  io_service.poll();
-  }
+    void iter() override {
+        io_service.poll();
+    }
 
-  void updateEntity(entity_t const &entity,
-                    AnyComponent const &component) override {
-    MsgUpdateEntity mue;
-    mue.entity_id = entity.get_component<EntityID>();
-    mue.components = {component};
-    ServerMessage usm{mue};
-    broadcast(usm);
-  }
-  /* </IBroadcaster > */
+    void updateEntity(entity_t const &entity,
+                      AnyComponent const &component) override {
+        MsgUpdateEntity mue;
+        mue.entity_id = entity.get_component<EntityID>();
+        mue.components = {component};
+        ServerMessage usm{mue};
+        broadcast(usm);
+    }
 
-  void start_accept() {
-    auto conn = new ConnectionToClient(acceptor.get_io_service());
+    /* </IBroadcaster > */
 
-    // Capturing unique pointers is not easy
-    acceptor.async_accept(
-        conn->socket(), [this, conn](const boost::system::error_code &error) {
+    void start_accept() {
+        auto conn = new ConnectionToClient(acceptor.get_io_service());
 
-          if (!error) {
-            cout << "Client " << conn->socket().remote_endpoint()
-                 << " connected." << endl;
-            conn->listen(*this);
-            // The client is added later, so we can broadcast all changes
-            // collectively
-            // and send him full state individually.
-            newClientConnected(*conn);
-            connections.insert(conn);
-          } else {
-            delete conn;
-          }
+        // Capturing unique pointers is not easy
+        acceptor.async_accept(
+                conn->socket(), [this, conn](const boost::system::error_code &error) {
 
-          start_accept();
-        });
-  }
+                    if (!error) {
+                        cout << "Client " << conn->socket().remote_endpoint()
+                             << " connected." << endl;
+                        conn->listen(*this);
+                        // The client is added later, so we can broadcast all changes
+                        // collectively
+                        // and send him full state individually.
+                        // Now this all happens once the player introduces himself.
+                        //newClientConnected(*conn);
+                        connections.insert(conn);
+                    } else {
+                        delete conn;
+                    }
 
-  void newClientConnected(ConnectionToClient &client) {
-    sendAllEntities(client);
+                    start_accept();
+                });
+    }
 
-    SEntity sentity = gameModel.newPlayer();
-    connection2entity[&client] = sentity.entity;
+    void newClientConnected(ConnectionToClient &client) {
 
-    // TODO delay this until players sends his info, name, team etc.
-    // misc info for player
-    auto gameArea = gameModel.getMapSize().bottomRight();
-    MsgGameInfo msgGameInfo = {gameArea.x, gameArea.y};
-    send(client, {msgGameInfo});
-    MsgPlayerHealth msgPlayerHealth = {100};
-    send(client, {msgPlayerHealth});
 
-    MsgNewEntity msg;
-    msg.components = EntityComponentSystem::all_components(sentity.entity);
-    msg.entity_id = sentity.entity.get_component<EntityID>();
+    }
 
-    MsgPlayerAssignedEntityId msgAssignedEntityId = {msg.entity_id};
-    send(client, {msgAssignedEntityId});
-    send(client, {msg});
-    broadcast({msg});
+    void sendAllEntities(ConnectionToClient &client) {
+        ecs.entityManager.for_each<EntityID>(
+                [&](entity_t entity, EntityID const &id) {
+                    MsgNewEntity msg;
+                    msg.entity_id = id;
+                    msg.components = EntityComponentSystem::all_components(entity);
+                    send(client, {msg});
+                });
+    }
 
-  }
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::acceptor acceptor;
 
-  void sendAllEntities(ConnectionToClient &client) {
-    ecs.entityManager.for_each<EntityID>(
-        [&](entity_t entity, EntityID const &id) {
-          MsgNewEntity msg;
-          msg.entity_id = id;
-          msg.components = EntityComponentSystem::all_components(entity);
-          send(client, {msg});
-        });
-  }
-
-  boost::asio::io_service io_service;
-  boost::asio::ip::tcp::acceptor acceptor;
-
-  // We do not use smart pointers to ease removal of items from set
-  std::set<ConnectionToClient *> connections;
-  std::map<ConnectionToClient const *, entity_t> connection2entity;
-  EntityComponentSystem ecs;
-  GameModel gameModel;
+    // We do not use smart pointers to ease removal of items from set
+    std::set<ConnectionToClient *> connections;
+    std::map<ConnectionToClient const *, entity_t> connection2entity;
+    EntityComponentSystem ecs;
+    GameModel gameModel;
 };
 
 Server::Server(int port) { pImpl = make_unique<Impl>(port); }

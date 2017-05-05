@@ -14,11 +14,11 @@ public:
   ~GameModel();
 
   EntityComponentSystem &ecs;
-  SEntity newPlayer();
+  SEntity newPlayer(PlayerInfo playerInfo);
   void removeEntity(SEntity const &entity);
   void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
   void playerRotatesTo(SEntity const &entity, geometry::Angle angle);
-  const geometry::RectangularArea &getMapSize();
+  const geometry::RectangularArea &getMapSize() const;
   void stop();
   void main();
 

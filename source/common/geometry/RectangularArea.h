@@ -26,6 +26,14 @@ public:
 
 	Point const & topLeft() const { return topLeft_; }
 	Point const & bottomRight() const { return bottomRight_; }
+
+	Scalar getWidth() const {
+		return bottomRight().x - topLeft().x;
+	}
+
+	Scalar getHeight() const {
+		return bottomRight().y - topLeft().y;
+	}
 };
 
 } // namespace geometry
