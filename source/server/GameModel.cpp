@@ -94,14 +94,12 @@ public:
     void playerShoots(Position const &playerPosition) {
         entity_t entity = newEntity();
         Position pos;
-        log() << "Shooting at angle " << playerPosition.rotation;
         pos.center = playerPosition.center +
                      (1 + bullet_r + playerShape.radius) *
                      geometry::rotate({0, -1}, playerPosition.rotation);
         auto speedVector = geometry::rotate(pos.center - playerPosition.center,
                                             playerPosition.rotation);
         pos.speed = 20 * unit(pos.center - playerPosition.center);
-        cout << "Speed: " << pos.speed;
         entity.add_component<Position>(pos);
         entity.add_component<Shape>(geometry::CircleShape{bullet_r});
         entity.add_component<Explosive>();
@@ -179,41 +177,50 @@ public:
         pos.rotation = angle;
     }
 
+	void updatePlayerMotion(PlayerAction key, EntityMotion & motion, bool press) {
+        switch (key) {
+            case PlayerAction::Down:
+                motion.down = press;
+                break;
+
+            case PlayerAction::Up:
+                motion.up = press;
+                break;
+
+            case PlayerAction::Left:
+                motion.left = press;
+                break;
+
+            case PlayerAction::Right:
+                motion.right = press;
+                break;
+			default:
+				break;
+		}
+	}
+
     void playerKeyPress(entity_t entity, PlayerAction key, bool press) {
-        entity.sync();
+		if (!entity.sync()) {
+			throw std::logic_error("Player entity sync failed");
+		}
+
         if (!entity.has_component<Position>() ||
             !entity.has_component<EntityMotion>()) {
             throw std::logic_error("Player is missing some components");
         }
 
-        Position &position = entity.get_component<Position>();
-        EntityMotion &playerMotion = entity.get_component<EntityMotion>();
-        switch (key) {
-            case PlayerAction::Down:
-                playerMotion.down = press;
-                break;
+		Position &position = entity.get_component<Position>();
+		{
+   		    EntityMotion &playerMotion = entity.get_component<EntityMotion>();
+			updatePlayerMotion(key, playerMotion, press);
+	        position.speed = toSpeedVector(playerMotion);
+		}
 
-            case PlayerAction::Up:
-                playerMotion.up = press;
-                break;
-
-            case PlayerAction::Left:
-                playerMotion.left = press;
-                break;
-
-            case PlayerAction::Right:
-                playerMotion.right = press;
-                break;
-
-            case PlayerAction::Fire:
-                if (press)
-                    playerShoots(position);
-                break;
-
-            default:
-                throw std::runtime_error("Unknown player action");
-        }
-        position.speed = toSpeedVector(playerMotion);
+		// This may invalidate previous references to components,
+		// since a new bullet is created.
+		if (key == PlayerAction::Fire && press) {
+			playerShoots(position);
+		}
     }
 
     void stop() {
@@ -242,9 +249,6 @@ private:
         return v * Scalar(15);
     }
 
-
-//    geometry::RectangularArea const game_area{{0,   0},
-//                                              {100, 100}};
     GameInfo gameInfo {100, 100, {}};
 
     // TODO we should measure the diffeence between client's and server's time.
@@ -268,8 +272,12 @@ private:
 
     void do_physics() {
         using namespace std::placeholders;
+		try {
         ecs.entityManager.for_each<Position, Shape, geometry::Object2D>(
                 std::bind(&Impl::update_position, this, _1, _2, _3, _4));
+		} catch(exception & e) {
+			cerr << "An exception while updating positions" << endl;
+		}
     }
 
     void explosiveCollision(entity_t explosive_entity, entity_t victim) {
@@ -289,8 +297,8 @@ private:
         posa.speed = geometry::Vector{0, 0};
         if (a.has_component<Explosive>())
             explosiveCollision(a, b);
-        if (b.has_component<Explosive>())
-        	explosiveCollision(b, a);
+        //if (b.has_component<Explosive>())
+        //	explosiveCollision(b, a);
     }
 
     void collisionHappenedWithArea(entity_t entity, Position &pos) {

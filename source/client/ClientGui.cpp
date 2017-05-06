@@ -53,7 +53,7 @@ ClientGui::ClientGui(ClientController &controller,
     mWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED,
                                SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
                                SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-    if (!mWindow)a
+    if (!mWindow)
         throw std::runtime_error("Cannot create window: " + string(SDL_GetError()));
 
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);

@@ -5,10 +5,10 @@
 #include <common/geometry/Vector.h>
 
 struct Position {
-	geometry::Point center;
-	geometry::Vector speed;
-	geometry::Angle rotation;
-	geometry::AngularSpeed angularSpeed; // We will probably not use this
+	geometry::Point center = {0,0};
+	geometry::Vector speed = {0,0};
+	geometry::Angle rotation = 0;
+	geometry::AngularSpeed angularSpeed = 0; // We will probably not use this
 
 	template < typename Archive >
 	void serialize(Archive & archive) {
