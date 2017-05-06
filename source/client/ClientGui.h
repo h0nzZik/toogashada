@@ -45,7 +45,7 @@ class ClientGui {
     DrawProp mapRatio{{0, 0, 100, 100},
                       {}};
 
-    struct EntityProcessor;
+    struct EntityDrawer;
 
     enum class Color {
         BG,

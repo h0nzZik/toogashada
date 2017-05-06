@@ -321,14 +321,14 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     render();
 }
 
-struct ClientGui::EntityProcessor : public boost::static_visitor<void> {
+struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
     ClientGui &gui;
     entity_t const &entity;
     Position const &position;
     SDL_Color color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
     bool myPlayer = false;
 
-    EntityProcessor(ClientGui &gui, entity_t const &entity, Position const &position)
+    EntityDrawer(ClientGui &gui, entity_t const &entity, Position const &position)
             : gui(gui), entity(entity), position(position) {}
 
     void operator()(PolygonalShape const &shape) {
@@ -387,7 +387,7 @@ void ClientGui::drawPlayer(const Position &position, const CircleShape &shape, c
 void ClientGui::drawEntity(entity_t const &entity, Shape const &shape,
                            Position const &position) {
 
-    EntityProcessor processor{*this, entity, position};
+    EntityDrawer processor{*this, entity, position};
 
     boost::apply_visitor(processor, shape);
 }

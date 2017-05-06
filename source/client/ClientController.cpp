@@ -113,8 +113,6 @@ private:
     ClientController &controller;
 };
 
-// TODO gui nevykresluje spravne orotovane veci
-
 void ClientController::received(Message msg) {
 
     switch (msg.tag) {
