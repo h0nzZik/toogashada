@@ -302,35 +302,37 @@ private:
 
     void update_position(entity_t const &entity, Position &pos,
                          Shape const &shape, geometry::Object2D &oldObject) {
-        if (std::fabs(pos.speed.x) < 0.01 && std::fabs(pos.speed.y) < 0.01)
-            return;
+        if (!(std::fabs(pos.speed.x) < 0.01 && std::fabs(pos.speed.y) < 0.01)) {
 
-        geometry::Point const new_center =
-                pos.center + pos.speed * Scalar(dt.count() / 1000.0);
-        auto currentObject2d = createObject2D(new_center, pos.rotation, shape);
+            geometry::Point const new_center =
+                    pos.center + pos.speed * Scalar(dt.count() / 1000.0);
+            auto currentObject2d = createObject2D(new_center, pos.rotation, shape);
 
-        std::vector<entity_t> collisions =
-                collidesWithSomething(currentObject2d, &entity);
+            std::vector<entity_t> collisions =
+                    collidesWithSomething(currentObject2d, &entity);
 
-        if (!collisions.empty()) {
-            log() << "Entity " << entity.get_component<EntityID>().id()
-                  << " have collision now";
-            for (entity_t e : collisions)
-                log() << "  with: " << e.get_component<EntityID>().id();
+            if (!collisions.empty()) {
+                log() << "Entity " << entity.get_component<EntityID>().id()
+                      << " have collision now";
+                for (entity_t e : collisions)
+                    log() << "  with: " << e.get_component<EntityID>().id();
+            }
+
+            if (!in(new_center, shape, gameInfo.getArea()))
+                return collisionHappenedWithArea(entity, pos);
+
+            if (!collisions.empty()) {
+                for (entity_t e : collisions)
+                    collisionHappened(entity, pos, e);
+                return;
+            }
+
+            pos.center = new_center;
+            oldObject = currentObject2d;
         }
 
-        if (!in(new_center, shape, gameInfo.getArea()))
-            return collisionHappenedWithArea(entity, pos);
-
-        if (!collisions.empty()) {
-            for (entity_t e : collisions)
-                collisionHappened(entity, pos, e);
-            return;
-        }
-
-        pos.center = new_center;
-        oldObject = currentObject2d;
-        cout << pos.rotation << endl;
+        // TODO possible optimization
+        // We are send position every time because of rotation changes
         broadcaster.updateEntity(entity, {pos});
     }
 

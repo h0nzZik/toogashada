@@ -92,6 +92,7 @@ private:
         void operator()(MsgPlayerRotation const &msg) {
             entity_t entity = self.connection2entity.at(&connection);
             self.gameModel.playerRotatesTo({entity}, msg.rotation);
+
         }
 
         void operator()(MsgPlayerActionChange const &msg) {

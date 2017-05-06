@@ -83,7 +83,7 @@ ClientGui::~ClientGui() {
 
 Scalar ClientGui::scaleToMapCoords(Scalar coord) const {
 
-    return coord * (mapProp.w() / mapRatio.w());
+    return coord * (static_cast<float>(mapProp.w()) / mapRatio.w());
 }
 
 template<typename T>
@@ -92,8 +92,8 @@ T ClientGui::scaleToMapCoords(T coord) const {
     static_assert(std::is_same<T, Vector>::value || std::is_same<T, Point>::value,
                   "Cannot scale given type.");
 
-    return T{coord.x * (mapProp.w() / mapRatio.w()),
-             coord.y * (mapProp.h() / mapRatio.h())};
+    return T{coord.x * (static_cast<float>(mapProp.w()) / mapRatio.w()),
+             coord.y * (static_cast<float>(mapProp.h()) / mapRatio.h())};
 }
 
 geometry::Point
@@ -332,6 +332,8 @@ struct ClientGui::EntityProcessor : public boost::static_visitor<void> {
             : gui(gui), entity(entity), position(position) {}
 
     void operator()(PolygonalShape const &shape) {
+
+        cout << position.rotation << endl;
         gui.draw(geometry::createPolygon(position.center, position.rotation, shape),
                  color);
     }
@@ -356,11 +358,14 @@ struct ClientGui::EntityProcessor : public boost::static_visitor<void> {
 
 void ClientGui::drawPlayer(const Position &position, const CircleShape &shape, const PlayerInfo& playerInfo, bool ownPlayer) {
 
+
     Point projectedCenter = projectToMapCoords(position.center);
     Scalar scaledRadius = scaleToMapCoords(shape.radius);
 
+    int mouseX;
+    int mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
 
-    cout <<  "center : " << position.center << " rad : "<< shape.radius << endl;
     drawCircle(projectedCenter, scaledRadius, teamColors[playerInfo.mTeam]);
     if (ownPlayer) {
         drawCircle(projectedCenter, scaledRadius / 2, mColors[Color::MY_PLAYER]);
@@ -382,9 +387,9 @@ void ClientGui::drawPlayer(const Position &position, const CircleShape &shape, c
 void ClientGui::drawEntity(entity_t const &entity, Shape const &shape,
                            Position const &position) {
 
-    EntityProcessor drawer{*this, entity, position};
+    EntityProcessor processor{*this, entity, position};
 
-    boost::apply_visitor(drawer, shape);
+    boost::apply_visitor(processor, shape);
 }
 
 void ClientGui::drawRect(const DrawProp &dp) {
