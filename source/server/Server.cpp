@@ -80,8 +80,8 @@ private:
                 msgNewEntity.entity_id = sentity.entity.get_component<EntityID>();
 
                 MsgPlayerAssignedEntityId msgAssignedEntityId = {msgNewEntity.entity_id};
-                self.send(connection, {msgAssignedEntityId});
                 self.broadcast({msgNewEntity});
+                self.send(connection, {msgAssignedEntityId});
 
             } else {
 

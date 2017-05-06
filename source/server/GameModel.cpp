@@ -39,13 +39,6 @@ public:
 
     geometry::CircleShape const playerShape = {10};
 
-    struct CollisionInfo {
-        bool happened = false;
-        entity_t with;
-
-        operator bool() const { return happened; }
-    };
-
     vector<entity_t>
     collidesWithSomething(geometry::Object2D const &object,
                           entity_t const *ignore_this = nullptr) {
@@ -136,6 +129,7 @@ public:
                 geometry::createObject2D(position.center, position.rotation, shape));
     }
 
+	// What about some 'player factory'?
     SEntity newPlayer(PlayerInfo playerInfo) {
         entity_t entity = newEntity();
         Position pos;
@@ -166,6 +160,7 @@ public:
         entity.add_component<Shape>(playerShape);
         entity.add_component<geometry::Object2D>(std::move(object2d));
         entity.add_component<EntityMotion>();
+		entity.add_component<Health>(Health{80});
 
         gameInfo.addPlayer(playerInfo);
 
@@ -277,24 +272,32 @@ private:
                 std::bind(&Impl::update_position, this, _1, _2, _3, _4));
     }
 
-    void explosiveCollision(entity_t explosive_entity) {
+    void explosiveCollision(entity_t explosive_entity, entity_t victim) {
         log() << "Explosive collision";
+		if (victim.has_component<Health>()) {
+			Health & h = victim.get_component<Health>();
+			if (h.hp >= 10)
+				h.hp -= 10;
+			else
+				h.hp = 0;
+			broadcaster.updateEntity(victim, {h});
+		}
         removeEntity(explosive_entity);
     }
 
     void collisionHappened(entity_t a, Position &posa, entity_t b) {
         posa.speed = geometry::Vector{0, 0};
         if (a.has_component<Explosive>())
-            explosiveCollision(a);
+            explosiveCollision(a, b);
         if (b.has_component<Explosive>())
-        	explosiveCollision(b);
+        	explosiveCollision(b, a);
     }
 
     void collisionHappenedWithArea(entity_t entity, Position &pos) {
         pos.speed = geometry::Vector{0, 0};
 
         if (entity.has_component<Explosive>())
-            explosiveCollision(entity);
+			removeEntity(entity);
     }
 
     void update_position(entity_t const &entity, Position &pos,
@@ -382,8 +385,11 @@ private:
 
 const std::chrono::milliseconds GameModel::Impl::dt;
 
-GameModel::GameModel(EntityComponentSystem &ecs, IBroadcaster &broadcaster)
-        : ecs(ecs) {
+/*******************************************************/
+/* </GameModel::Impl> <GameModel>                      */
+/*******************************************************/
+
+GameModel::GameModel(EntityComponentSystem &ecs, IBroadcaster &broadcaster){
     pImpl = make_unique<Impl>(ecs, broadcaster);
 }
 

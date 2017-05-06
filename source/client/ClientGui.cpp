@@ -294,6 +294,17 @@ void ClientGui::drawCircle(geometry::Point center, Scalar radius, const SDL_Colo
                      color.a);
 }
 
+void ClientGui::renderHealth() {
+	entity_t my_player = mController.getMyPlayer();
+	//entity_t my_player;
+	if(my_player.get_status() != entityplus::entity_status::UNINITIALIZED && my_player.sync()) {
+		if (my_player.has_component<Health>()) {
+		    healthProp.mText = "HP: " + to_string(my_player.get_component<Health>().hp);
+		}
+	}
+    drawText(healthProp);
+}
+
 void ClientGui::renderGui(EntityComponentSystem &entities) {
     using namespace std::placeholders;
 
@@ -302,7 +313,7 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
     drawRect(infoBoundingBox);
     drawRect(mapProp);
     drawText(nameTeamProp);
-    drawText(healthProp);
+	renderHealth();
 
     entities.entityManager.for_each<Shape, Position>(
             std::bind(&ClientGui::drawEntity, this, _1, _2, _3));
@@ -331,7 +342,7 @@ struct ClientGui::EntityProcessor : public boost::static_visitor<void> {
 
             // TODO > I have a dilemma with where to put the health update, this will happen much more often than necessary,
             // TODO > but having it update via separate server message is duplicity with PlayerInfo component
-            gui.setPlayerHealth(entity.get_component<PlayerInfo>().hp);
+            gui.setPlayerHealth(entity.get_component<PlayerInfo>().hp); // TODO remove
             gui.drawPlayer(position, shape, entity.get_component<PlayerInfo>(), gui.mController.isMyPlayer(entity.get_component<EntityID>()));
 
         } else {

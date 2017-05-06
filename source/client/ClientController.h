@@ -46,6 +46,7 @@ public:
     void loopWork();
     void stop();
     bool isMyPlayer(const EntityID &id);
+	entity_t getMyPlayer();
 
 private:
     std::map<SDL_Scancode, std::pair<PlayerAction, bool>> keyMap{
@@ -66,6 +67,7 @@ private:
     RemoteServerWrapper &remoteServer;
     PlayerInfo &player;
     EntityID playerId;
+	entity_t playerEntity;
     GameInfo gameInfo;
 
     bool continueLoop;

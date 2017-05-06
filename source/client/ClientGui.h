@@ -91,6 +91,8 @@ class ClientGui {
 
     friend Drawer;
 
+	void renderHealth();
+
 public:
     ClientGui(ClientController &controller, const std::string &playerName,
               const std::string &playerTeam);

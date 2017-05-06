@@ -13,7 +13,6 @@ public:
   GameModel(EntityComponentSystem &ecs, IBroadcaster &broadcaster);
   ~GameModel();
 
-  EntityComponentSystem &ecs;
   SEntity newPlayer(PlayerInfo playerInfo);
   void removeEntity(SEntity const &entity);
   void playerKeyPress(SEntity const &entity, PlayerAction key, bool press);
@@ -21,8 +20,6 @@ public:
   const GameInfo &getGameInfo();
   void stop();
   void main();
-
-
 
 private:
   class Impl;
