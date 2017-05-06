@@ -163,7 +163,6 @@ public:
         playerInfo.hp = DEFAULT_HP;
         entity.add_component<PlayerInfo>(playerInfo);
         entity.add_component<Position>(pos);
-        // entity.add_component<Shape>(CircleShape{5.1});
         entity.add_component<Shape>(playerShape);
         entity.add_component<geometry::Object2D>(std::move(object2d));
         entity.add_component<EntityMotion>();
@@ -287,8 +286,8 @@ private:
         posa.speed = geometry::Vector{0, 0};
         if (a.has_component<Explosive>())
             explosiveCollision(a);
-        // if (b.has_component<Explosive>())
-        //	explosiveCollision(b);
+        if (b.has_component<Explosive>())
+        	explosiveCollision(b);
     }
 
     void collisionHappenedWithArea(entity_t entity, Position &pos) {
@@ -369,7 +368,7 @@ private:
     };
 
     Log log() {
-        cout << "[GameModel, " << (gameTime - startPoint).count() << "]";
+        cout << "[GameModel, " << (gameTime - startPoint).count() << "] ";
         return Log(cout);
     }
 

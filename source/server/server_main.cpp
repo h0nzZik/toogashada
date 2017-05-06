@@ -1,6 +1,5 @@
 #include <csignal>
 #include <iostream>
-#include <thread>
 
 #include <boost/program_options.hpp>
 
