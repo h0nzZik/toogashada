@@ -97,9 +97,7 @@ public:
         pos.center = playerPosition.center +
                      (1 + bullet_r + playerShape.radius) *
                      geometry::rotate({0, -1}, playerPosition.rotation);
-        auto speedVector = geometry::rotate(pos.center - playerPosition.center,
-                                            playerPosition.rotation);
-        pos.speed = 20 * unit(pos.center - playerPosition.center);
+        pos.speed = bullet_speed * unit(pos.center - playerPosition.center);
         entity.add_component<Position>(pos);
         entity.add_component<Shape>(geometry::CircleShape{bullet_r});
         entity.add_component<Explosive>();
@@ -232,7 +230,8 @@ public:
     }
 
 private:
-    static constexpr Scalar bullet_r = 1.5;
+    static constexpr Scalar bullet_r = 1.0;
+	static constexpr Scalar bullet_speed = 70;
     static constexpr Scalar player_r = 10;
     const int DEFAULT_HP = 100;
 
