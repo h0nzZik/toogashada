@@ -31,4 +31,4 @@ Example for connecting to the above mentioned server:
 ```
 ./client_main -i localhost -p 2061 -n Lukas -t Developers -w 500 -h 500
 ```
-In case of wrong parameters inputed, the client will print help.
+In case of wrong parameters are inputed, the client will print help.
