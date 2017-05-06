@@ -23,7 +23,9 @@ int main(int argc, const char **argv) {
             ("ip,i", po::value<std::string>()->default_value("localhost"),"Server address")
             ("port,p", po::value<std::string>()->default_value("2061"),"Server port")
             ("player-name,n", po::value<std::string>()->required())
-            ("player-team,t", po::value<std::string>());
+            ("player-team,t", po::value<std::string>())
+            ("window-width,w", po::value<int>())
+            ("window-height,h", po::value<int>());
 
     try {
 
@@ -32,7 +34,11 @@ int main(int argc, const char **argv) {
         Client client{vm["ip"].as<std::string>(), vm["port"].as<std::string>(),
                       vm["player-name"].as<std::string>(),
                       vm.count("player-team") ? vm["player-team"].as<std::string>()
-                                              : ""};
+                                              : "",
+                      vm.count("window-width") ? vm["window-width"].as<int>()
+                                               : -1,
+                      vm.count("window-height") ? vm["window-height"].as<int>()
+                                               : -1};
         client.run();
 
     } catch (std::exception &e) {

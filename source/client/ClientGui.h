@@ -94,8 +94,9 @@ class ClientGui {
 	void renderHealth();
 
 public:
-    ClientGui(ClientController &controller, const std::string &playerName,
-              const std::string &playerTeam);
+    ClientGui(ClientController &controller,
+              const std::string &playerName, const std::string &playerTeam,
+              int windowWidth = -1, int windowHeight = -1);
 
     ~ClientGui();
 

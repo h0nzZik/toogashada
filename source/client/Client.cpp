@@ -18,8 +18,9 @@ using namespace std;
 
 class Client::Impl : private IConnection::IHandler {
 public:
-  Impl(std::string ip, std::string port, std::string playerName,
-       std::string playerTeam);
+  Impl(std::string ip, std::string port,
+       std::string playerName, std::string playerTeam,
+       int windowWidth = -1, int windowHeight = -1);
 
   ~Impl() = default;
 
@@ -40,17 +41,20 @@ private:
 
 Client::~Client() = default;
 
-Client::Client(string ip, string port, std::string playerName,
-               std::string playerTeam) {
-  impl = make_unique<Impl>(move(ip), move(port), move(playerName),
-                           move(playerTeam));
+Client::Client(std::string ip, std::string port,
+               std::string playerName, std::string playerTeam,
+               int windowWidth, int windowHeight) {
+  impl = make_unique<Impl>(move(ip), move(port),
+                           move(playerName), move(playerTeam),
+                           windowWidth, windowHeight);
 }
 
 void Client::run() { impl->run(); }
 
-Client::Impl::Impl(string ip, string port, std::string playerName,
-                   std::string playerTeam)
-    : clientGui{clientController, playerName, playerTeam},
+Client::Impl::Impl(std::string ip, std::string port,
+                   std::string playerName, std::string playerTeam,
+                   int windowWidth, int windowHeight)
+    : clientGui{clientController, playerName, playerTeam, windowWidth, windowHeight},
       serverConnection{ip, port}, remoteServerWrapper{serverConnection},
       clientController{playerInfo, clientGui, remoteServerWrapper},
       playerInfo{playerName, playerTeam} {

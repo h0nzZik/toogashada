@@ -6,8 +6,9 @@
 
 class Client {
 public:
-  Client(std::string ip, std::string port, std::string playerName,
-         std::string playerTeam);
+  Client(std::string ip, std::string port,
+         std::string playerName, std::string playerTeam,
+         int windowWidth = -1, int windowHeight = -1 );
   ~Client();
 
   void run();

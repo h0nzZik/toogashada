@@ -32,8 +32,8 @@ using namespace geometry;
 // TODO standalone class for game area
 
 ClientGui::ClientGui(ClientController &controller,
-                     const std::string &playerName,
-                     const std::string &playerTeam)
+                     const std::string &playerName, const std::string &playerTeam,
+                     int windowWidth, int windowHeight)
         : mController{controller}, mPlayerName{playerName},
           mPlayerTeam{playerTeam} {
 
@@ -45,15 +45,15 @@ ClientGui::ClientGui(ClientController &controller,
     SDL_GetCurrentDisplayMode(0, &dm);
 
     // Screen dimension constants
-    SCREEN_WIDTH = static_cast<int>(dm.w * 0.9);
-    SCREEN_HEIGHT = static_cast<int>(dm.h * 0.9);
+    SCREEN_WIDTH =  windowWidth < 0 || windowWidth > dm.w ? static_cast<int>(dm.w * 0.9) : windowWidth;
+    SCREEN_HEIGHT = windowHeight < 0 || windowHeight > dm.h ? static_cast<int>(dm.h * 0.9) : windowHeight;
 
     cout << "Width: " << SCREEN_WIDTH << " Height: " << SCREEN_HEIGHT << endl;
 
     mWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED,
                                SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
                                SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-    if (!mWindow)
+    if (!mWindow)a
         throw std::runtime_error("Cannot create window: " + string(SDL_GetError()));
 
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
