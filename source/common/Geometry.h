@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include <common/geometry/Angle.h>
 #include <common/geometry/Circle.h>
 #include <common/geometry/CircleShape.h>
@@ -8,14 +10,6 @@
 #include <common/geometry/PolygonalShape.h>
 #include <common/geometry/RectangularArea.h>
 #include <common/geometry/Vector.h>
-
-// For streaming operators
-namespace std {
-template <class charT> struct char_traits;
-template <> struct char_traits<char>;
-template <class charT, class traits> class basic_ostream;
-typedef basic_ostream<char, char_traits<char>> ostream;
-}
 
 namespace geometry {
 
