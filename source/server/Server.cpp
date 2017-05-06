@@ -120,9 +120,12 @@ private:
     }
 
     void disconnected(IConnection &connection) override {
+		cout << "Disconnection" << endl;
         auto &conn = dynamic_cast<ConnectionToClient &>(connection);
-        cout << "Client " << conn.socket().remote_endpoint() << " disconnected."
-             << endl;
+
+        // TODO print something like this. But this does not work and it throw and exception.
+        //cout << "Client " << conn.socket().remote_endpoint() << " disconnected."
+        //     << endl;
 
         entity_t entity = connection2entity.at(&conn);
         connection2entity.erase(&conn);
