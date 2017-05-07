@@ -52,6 +52,7 @@ add_library(server
 	./server/ConnectionToClient.cpp
 	./server/Server.cpp
 	./server/GameModel.cpp
+	./server/Connections.cpp
 )
 
 target_link_libraries(server

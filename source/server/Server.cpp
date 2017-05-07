@@ -18,11 +18,12 @@
 #include <common/Messages.h>
 #include <common/ServerMessage.h>
 
-#include <server/ConnectionToClient.hpp>
-#include <server/GameModel.h>
-#include <server/SEntity.h>
-#include <server/IBroadcaster.h>
 #include <server/Connection2Entity.h>
+#include <server/ConnectionToClient.hpp>
+#include <server/Connections.h>
+#include <server/GameModel.h>
+#include <server/IBroadcaster.h>
+#include <server/SEntity.h>
 
 #include "Server.h"
 
@@ -37,11 +38,7 @@ public:
     start_accept();
   }
 
-  ~Impl() {
-    for (ConnectionToClient *conn : connections)
-      delete conn;
-  }
-
+  ~Impl() = default;
   void run() { gameModel.main(); }
 
   void shutdown() { gameModel.stop(); }
@@ -64,7 +61,7 @@ private:
 
   void disconnected(IConnection &connection) override {
     auto &conn = dynamic_cast<ConnectionToClient &>(connection);
-    connectionsToClear.insert(&conn);
+    m_connections.erase(conn);
   }
 
   /* </IConnection::IHandler > */
@@ -80,9 +77,7 @@ private:
   void broadcast(Message msg) override {
     // A copy of message is created for every connection,
     // which is not really optimal. We may optimize that later.
-    for (ConnectionToClient *cl : connections) {
-      cl->send(msg);
-    }
+    m_connections.for_each([&](ConnectionToClient &cl) { cl.send(msg); });
   }
 
   void clearConnections();
@@ -109,7 +104,7 @@ private:
             cout << "Client " << waiting_connection->socket().remote_endpoint()
                  << " connected." << endl;
             waiting_connection->listen(*this);
-            connections.insert(waiting_connection.release());
+            m_connections.insert(move(waiting_connection));
           } else {
             waiting_connection.reset();
           }
@@ -132,13 +127,11 @@ private:
   boost::asio::ip::tcp::acceptor acceptor;
 
   // We do not use smart pointers to ease removal of items from set
-  std::set<ConnectionToClient *> connections;
-  std::set<ConnectionToClient *> connectionsToClear;
+  Connections m_connections;
   Connection2Entity m_connection2entity;
   EntityComponentSystem ecs;
   GameModel gameModel;
 };
-
 
 class Server::Impl::Receiver : public boost::static_visitor<void> {
 public:
@@ -147,42 +140,43 @@ public:
 
   void operator()(MsgIntroduceMyPlayer const &msg) {
 
-	  bool const has = self.m_connection2entity.do_for(connection, [&](entity_t /*entity*/){
-		  cerr << "Client " << connection.socket().remote_endpoint()
-	        		   << " already introduced. Introduction ignored!" << endl;
-	  });
-	  if (has)
-		  return;
+    bool const has =
+        self.m_connection2entity.do_for(connection, [&](entity_t /*entity*/) {
+          cerr << "Client " << connection.socket().remote_endpoint()
+               << " already introduced. Introduction ignored!" << endl;
+        });
+    if (has)
+      return;
 
-	  // new logic
-	  self.sendAllEntities(connection);
+    // new logic
+    self.sendAllEntities(connection);
 
-	  SEntity sentity = self.gameModel.newPlayer(msg.playerInfo);
-	  self.m_connection2entity.insert(connection, sentity.entity);
+    SEntity sentity = self.gameModel.newPlayer(msg.playerInfo);
+    self.m_connection2entity.insert(connection, sentity.entity);
 
-	  // misc info for player
-	  MsgGameInfo msgGameInfo = {self.gameModel.getGameInfo()};
-	  self.broadcast({msgGameInfo});
+    // misc info for player
+    MsgGameInfo msgGameInfo = {self.gameModel.getGameInfo()};
+    self.broadcast({msgGameInfo});
 
-	  MsgNewEntity msgNewEntity;
-	  msgNewEntity.components =
-			  EntityComponentSystem::all_components(sentity.entity);
-	  msgNewEntity.entity_id = sentity.entity.get_component<EntityID>();
+    MsgNewEntity msgNewEntity;
+    msgNewEntity.components =
+        EntityComponentSystem::all_components(sentity.entity);
+    msgNewEntity.entity_id = sentity.entity.get_component<EntityID>();
 
-	  MsgPlayerAssignedEntityId msgAssignedEntityId = {
-			  msgNewEntity.entity_id};
-	  self.broadcast({msgNewEntity});
-	  self.send(connection, {msgAssignedEntityId});
+    MsgPlayerAssignedEntityId msgAssignedEntityId = {msgNewEntity.entity_id};
+    self.broadcast({msgNewEntity});
+    self.send(connection, {msgAssignedEntityId});
   }
 
   void operator()(MsgPlayerRotation const &msg) {
-    self.gameModel.playerRotatesTo({self.m_connection2entity.getEntity(connection)},
-                                   msg.rotation);
+    self.gameModel.playerRotatesTo(
+        {self.m_connection2entity.getEntity(connection)}, msg.rotation);
   }
 
   void operator()(MsgPlayerActionChange const &msg) {
-    self.gameModel.playerKeyPress({self.m_connection2entity.getEntity(connection)}, msg.movement,
-                                  bool(msg.state));
+    self.gameModel.playerKeyPress(
+        {self.m_connection2entity.getEntity(connection)}, msg.movement,
+        bool(msg.state));
   }
 
 private:
@@ -190,35 +184,19 @@ private:
   ConnectionToClient &connection;
 };
 
-
 void Server::Impl::received(ConnectionToClient &connection, ClientMessage msg) {
-    Receiver receiver{*this, connection};
-    boost::apply_visitor(receiver, msg.data);
+  Receiver receiver{*this, connection};
+  boost::apply_visitor(receiver, msg.data);
 }
 
 void Server::Impl::clearConnections() {
-  std::set<ConnectionToClient *> localConnectionsToClear;
-  using std::swap;
-  swap(localConnectionsToClear, connectionsToClear);
-
-  // Clear them
-  for (ConnectionToClient *toClear : localConnectionsToClear) {
-    connections.erase(toClear);
-  }
-
-  // Clear associated entities
-  for (ConnectionToClient *toClear : localConnectionsToClear) {
-  	m_connection2entity.do_for(*toClear, [&](entity_t entity){
-  		m_connection2entity.erase(*toClear);
-  		gameModel.removeEntity({entity});
-  	});
-  }
-
-  for (ConnectionToClient *toClear : localConnectionsToClear) {
-    delete toClear;
-  }
+  m_connections.handle_erase([&](ConnectionToClient &toClear) {
+    m_connection2entity.do_for(toClear, [&](entity_t entity) {
+      m_connection2entity.erase(toClear);
+      gameModel.removeEntity({entity});
+    });
+  });
 }
-
 
 /***********************************/
 /* Outer                           */
