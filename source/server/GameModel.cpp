@@ -36,8 +36,6 @@ public:
 
   ~Impl() { m_stop = true; }
 
-  geometry::CircleShape const playerShape = {10};
-
   vector<entity_t>
   collidesWithSomething(geometry::Object2D const &object,
                         entity_t const *ignore_this = nullptr) {
@@ -91,11 +89,11 @@ public:
     entity_t entity = newEntity();
     Position pos;
     pos.center = playerPosition.center +
-                 (1 + bullet_r + playerShape.radius) *
+                 (1 + BULLET_RADIUS + playerShape.radius) *
                      geometry::rotate({0, -1}, playerPosition.rotation);
-    pos.speed = bullet_speed * unit(pos.center - playerPosition.center);
+    pos.speed = BULLER_SPEED * unit(pos.center - playerPosition.center);
     entity.add_component<Position>(pos);
-    entity.add_component<Shape>(geometry::CircleShape{bullet_r});
+    entity.add_component<Shape>(geometry::CircleShape{BULLET_RADIUS});
     entity.add_component<Explosive>();
     computeObjectIfNeeded(entity);
     entity.sync();
@@ -215,7 +213,7 @@ public:
     {
       EntityMotion &playerMotion = entity.get_component<EntityMotion>();
       updatePlayerMotion(key, playerMotion, press);
-      position.speed = toSpeedVector(playerMotion);
+      position.speed = toSpeedVector(playerMotion) * PLAYER_SPEED;
     }
 
     // This may invalidate previous references to components,
@@ -230,9 +228,12 @@ public:
   void main() { do_main(); }
 
 private:
-  static constexpr Scalar bullet_r = 1.0;
-  static constexpr Scalar bullet_speed = 70;
-  static constexpr Scalar player_r = 10;
+  static constexpr Scalar BULLET_RADIUS = 1.0;
+  static constexpr Scalar BULLER_SPEED = 500;
+  static constexpr Scalar PLAYER_SPEED = 150;
+  static constexpr Scalar PLAYER_RADIUS = 20;
+  geometry::CircleShape const playerShape = {PLAYER_RADIUS};
+
   const int DEFAULT_HP = 100;
 
   static geometry::Vector toSpeedVector(EntityMotion const &info) {
@@ -245,10 +246,10 @@ private:
       v += Vector{+1, 0};
     if (info.up)
       v += Vector{0, -1};
-    return v * Scalar(15);
+    return v;
   }
 
-  GameInfo gameInfo{500, 500, {}};
+  GameInfo gameInfo{1600, 900, {}};
 
   // TODO we should measure the diffeence between client's and server's time.
 
@@ -361,13 +362,14 @@ private:
     updateComponent(entity, {pos});
   }
 
-  void generateRandomObstacle() {
+  void placeRandomObstacle() {
+
     static std::vector<PolygonalShape> shapes = {
-        PolygonalShape{{-1, 0}, {-2, -1}, {+2, -1}, {+1, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+            PolygonalShape{{-1, 0}, {-2, -1}, {+2, -1}, {+1, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
     };
 
     int const which = randomEngine() % shapes.size();
@@ -386,11 +388,31 @@ private:
     entity.add_component<geometry::Object2D>(obj);
   }
 
-  // TODO make it more random
+
+
   void generateMap() {
+
+    static std::vector<std::pair<PolygonalShape, Position>> obstacles = {
+            {PolygonalShape{{0, 0}, {1400, 0}, {1400, 40}, {0, 40}}, Position::create({100,100})},
+            /*PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
+            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},*/
+    };
+
     // A polygon
-    for (int i = 0; i < 5; i++) {
-      generateRandomObstacle();
+    for (size_t i = 0; i < obstacles.size(); i++) {
+
+      PolygonalShape shape = obstacles[i].first;
+      Position pos = obstacles[i].second;
+
+      Object2D obj = createObject2D(pos.center, pos.rotation, shape);
+
+      entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
+      entity.add_component<Shape>(shape);
+
+      entity.add_component<Position>(pos);
+      entity.add_component<geometry::Object2D>(obj);
     }
   }
 
