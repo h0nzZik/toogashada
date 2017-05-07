@@ -81,53 +81,29 @@ class ClientGui {
 
 
 
-  void drawHealth();
-
-	void renderGui(EntityComponentSystem &entities);
-
-	void drawRect(const DrawProp &dp);
-
 	void initGui();
-
 	void loadMedia();
 
-	void setMapSize(int w, int h);
+	void drawAppBg() const;
+	void drawClearBg(const SDL_Color &color) const;
 
-	void setTeamInfo(const std::vector<TeamInfo> &teamInfo);
+	void drawRect(const DrawProp &dp);
+	void drawCircle(geometry::Point center, Scalar radius, const SDL_Color &color);
+	void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation, const SDL_Color &color);
+	void drawText(TextProperties property) const;
 
-	geometry::Point getScreenCoords(const geometry::Point &point) const;
+	void draw(geometry::Polygon const &polygon, const SDL_Color &color);
+	void drawEntity(const entity_t &entity, const Shape &shape, const Position &position);
+	void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const PlayerInfo &playerInfo, bool ownPlayer);
+	void drawHealth();
 
 	void render() const;
 
-	void drawAppBg() const;
-
-	void drawClearBg(const SDL_Color &color) const;
 
 	geometry::Point placeToMapCoords(const geometry::Point &point) const;
-
 	Scalar scaleToMapCoords(Scalar coord) const;
-
-	static const geometry::RectangularArea game_area;
-
-	void draw(geometry::Polygon const &polygon, const SDL_Color &color);
-
-	void drawEntity(const entity_t &entity, const Shape &shape,
-	                const Position &position);
-
-	void drawCircle(geometry::Point center, Scalar radius,
-	                const SDL_Color &color);
-
-	void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation,
-	              const SDL_Color &color);
-
-	void drawText(TextProperties property) const;
-
 	template <typename T> T scaleToMapCoords(T coord) const;
-
 	geometry::Point projectToMapCoords(const geometry::Point &point) const;
-
-	void drawPlayer(const Position &pos, const geometry::CircleShape &shape,
-	                const PlayerInfo &playerInfo, bool ownPlayer);
 
 public:
   ClientGui(ClientController &controller, const std::string &playerName,
@@ -135,4 +111,10 @@ public:
             int windowHeight = -1);
 
   ~ClientGui();
+
+	void setMapSize(int w, int h);
+	void setTeamInfo(const std::vector<TeamInfo> &teamInfo);
+	void renderGui(EntityComponentSystem &entities);
+	geometry::Point getScreenCoords(const geometry::Point &point) const;
+
 };

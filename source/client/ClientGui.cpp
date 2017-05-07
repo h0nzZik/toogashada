@@ -1,40 +1,52 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
 #include <vector>
 
 // SDL2
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h>
-#include <SDL_video.h>
 
 #include <boost/variant/static_visitor.hpp>
 
 #include <common/EntityComponentSystem.h>
-#include <common/Geometry.h>
-#include <common/Message.h>
-#include <common/Messages.h>
-#include <common/Tag.h>
-#include <common/geometry/RectangularArea.h>
-
 #include "ClientController.h"
-#include "DrawProp.h"
-
-#include "ClientGui.h"
 #include "ColorConverter.h"
 
 using namespace std;
 using namespace geometry;
 
-// TODO standalone class for game area
+
+struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
+	ClientGui &gui;
+	entity_t const &entity;
+	Position const &position;
+	SDL_Color color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
+
+	EntityDrawer(ClientGui &gui, entity_t const &entity, Position const &position)
+					: gui(gui), entity(entity), position(position) {}
+
+	void operator()(PolygonalShape const &shape) {
+		gui.draw(geometry::createPolygon(position.center, position.rotation, shape),
+		         color);
+	}
+
+	void operator()(CircleShape const &shape) {
+		if (entity.has_component<PlayerInfo>()) {
+			gui.drawPlayer(
+							position, shape, entity.get_component<PlayerInfo>(),
+							gui.mController.isMyPlayer(entity.get_component<EntityID>()));
+		} else {
+			gui.drawCircle(gui.projectToMapCoords(position.center),
+			               gui.scaleToMapCoords(shape.radius), color);
+		}
+	}
+};
+
 
 ClientGui::ClientGui(ClientController &controller,
-                     const std::string &playerName,
-                     const std::string &playerTeam, int windowWidth,
-                     int windowHeight)
+                     const std::string &playerName, const std::string &playerTeam,
+                     int windowWidth, int windowHeight)
     : mController{controller}, mPlayerName{playerName},
       mPlayerTeam{playerTeam} {
 
@@ -86,6 +98,99 @@ ClientGui::~ClientGui() {
   SDL_Quit();
 }
 
+
+void ClientGui::initGui() {
+	{
+		auto bbr = mapBoundingBoxRatio;
+		auto &bb = mapBoundingBox;
+
+		bb.w() = (bbr.w() * SCREEN_WIDTH) / 100;
+		bb.h() = (bbr.h() * SCREEN_HEIGHT) / 100;
+		bb.x() = (bbr.x() * SCREEN_WIDTH) / 100;
+		bb.y() = (bbr.y() * SCREEN_HEIGHT) / 100;
+	}
+
+	{
+		auto &mb = mapBoundingBox;
+		auto &bb = infoBoundingBox;
+
+		bb.w() = mb.w();
+		bb.h() = SCREEN_HEIGHT - mb.h();
+		bb.x() = mb.y();
+		bb.y() = mb.h();
+	}
+
+	{
+		auto &mbb = mapBoundingBox;
+		auto &mr = mapRatio;
+		auto &mp = mapProp;
+
+		double mapRatio = mr.w() / static_cast<double>(mr.h());
+		double mpBoundingBoxRatio = mbb.w() / static_cast<double>(mbb.h());
+
+		if (mapRatio > mpBoundingBoxRatio) {
+
+			mp.w() = mbb.w();
+			mp.h() = static_cast<int>(mp.w() / mapRatio);
+			mp.x() = mbb.x();
+			mp.y() = mbb.y() + ((mbb.h() - mp.h()) / 2);
+
+		} else {
+
+			mp.h() = mbb.h();
+			mp.w() = static_cast<int>(mp.h() * mapRatio);
+			mp.x() = mbb.x() + ((mbb.w() - mp.w()) / 2);
+			mp.y() = mbb.y();
+		}
+	}
+
+	{
+
+		int padding = 10;
+
+		auto &np = nameTeamProp.mDrawProp;
+		auto &ib = infoBoundingBox;
+
+		np.x() = ib.x() + padding;
+		np.y() = ib.y() + padding;
+		np.h() = ib.h() - 2 * padding;
+		np.w() = (ib.w() / 3) - 2 * padding;
+
+		np.color = mColors[Color::TEXT];
+
+		nameTeamProp.mText = "[" + mPlayerTeam + "] " + mPlayerName;
+		nameTeamProp.mSize = -1;
+	}
+
+	{
+		int padding = 10;
+
+		auto &hp = healthProp.mDrawProp;
+		auto &np = nameTeamProp.mDrawProp;
+		auto &ib = infoBoundingBox;
+
+		hp.x() = np.x() + np.w() + padding;
+		hp.y() = ib.y() + padding;
+		hp.h() = ib.h() - 2 * padding;
+		hp.w() = (ib.w() / 3) - 2 * padding;
+
+		hp.color = mColors[Color::TEXT];
+
+		healthProp.mText = "HP: -";
+		nameTeamProp.mSize = -1;
+	}
+}
+
+void ClientGui::loadMedia() {
+
+	mFont = TTF_OpenFont("Biotypc.ttf", mFontLoadSize);
+
+	if (mFont == nullptr) {
+
+		std::cerr << "Font cannot load.";
+	}
+}
+
 Scalar ClientGui::scaleToMapCoords(Scalar coord) const {
 
   return coord * (static_cast<float>(mapProp.w()) / mapRatio.w());
@@ -100,16 +205,20 @@ template <typename T> T ClientGui::scaleToMapCoords(T coord) const {
            coord.y * (static_cast<float>(mapProp.h()) / mapRatio.h())};
 }
 
-geometry::Point
-ClientGui::placeToMapCoords(const geometry::Point &point) const {
+geometry::Point ClientGui::placeToMapCoords(const geometry::Point &point) const {
 
   return {mapProp.x() + point.x, mapProp.y() + point.y};
 }
 
-geometry::Point
-ClientGui::projectToMapCoords(const geometry::Point &point) const {
+geometry::Point ClientGui::projectToMapCoords(const geometry::Point &point) const {
 
   return placeToMapCoords(scaleToMapCoords(point));
+}
+
+geometry::Point
+ClientGui::getScreenCoords(const geometry::Point &point) const {
+
+	return projectToMapCoords(point);
 }
 
 void ClientGui::drawClearBg(const SDL_Color &color) const {
@@ -121,16 +230,6 @@ void ClientGui::drawClearBg(const SDL_Color &color) const {
 void ClientGui::drawAppBg() const { drawClearBg(mColors.at(Color::BG)); }
 
 void ClientGui::render() const { SDL_RenderPresent(mRenderer); }
-
-void ClientGui::loadMedia() {
-
-  mFont = TTF_OpenFont("Biotypc.ttf", mFontLoadSize);
-
-  if (mFont == nullptr) {
-
-    std::cerr << "Font cannot load.";
-  }
-}
 
 void ClientGui::drawText(TextProperties property) const {
 
@@ -194,88 +293,6 @@ void ClientGui::drawText(TextProperties property) const {
   }
 }
 
-void ClientGui::initGui() {
-  {
-    auto bbr = mapBoundingBoxRatio;
-    auto &bb = mapBoundingBox;
-
-    bb.w() = (bbr.w() * SCREEN_WIDTH) / 100;
-    bb.h() = (bbr.h() * SCREEN_HEIGHT) / 100;
-    bb.x() = (bbr.x() * SCREEN_WIDTH) / 100;
-    bb.y() = (bbr.y() * SCREEN_HEIGHT) / 100;
-  }
-
-  {
-    auto &mb = mapBoundingBox;
-    auto &bb = infoBoundingBox;
-
-    bb.w() = mb.w();
-    bb.h() = SCREEN_HEIGHT - mb.h();
-    bb.x() = mb.y();
-    bb.y() = mb.h();
-  }
-
-  {
-    auto &mbb = mapBoundingBox;
-    auto &mr = mapRatio;
-    auto &mp = mapProp;
-
-    double mapRatio = mr.w() / static_cast<double>(mr.h());
-    double mpBoundingBoxRatio = mbb.w() / static_cast<double>(mbb.h());
-
-    if (mapRatio > mpBoundingBoxRatio) {
-
-      mp.w() = mbb.w();
-      mp.h() = static_cast<int>(mp.w() / mapRatio);
-      mp.x() = mbb.x();
-      mp.y() = mbb.y() + ((mbb.h() - mp.h()) / 2);
-
-    } else {
-
-      mp.h() = mbb.h();
-      mp.w() = static_cast<int>(mp.h() * mapRatio);
-      mp.x() = mbb.x() + ((mbb.w() - mp.w()) / 2);
-      mp.y() = mbb.y();
-    }
-  }
-
-  {
-
-    int padding = 10;
-
-    auto &np = nameTeamProp.mDrawProp;
-    auto &ib = infoBoundingBox;
-
-    np.x() = ib.x() + padding;
-    np.y() = ib.y() + padding;
-    np.h() = ib.h() - 2 * padding;
-    np.w() = (ib.w() / 3) - 2 * padding;
-
-    np.color = mColors[Color::TEXT];
-
-    nameTeamProp.mText = "[" + mPlayerTeam + "] " + mPlayerName;
-    nameTeamProp.mSize = -1;
-  }
-
-  {
-    int padding = 10;
-
-    auto &hp = healthProp.mDrawProp;
-    auto &np = nameTeamProp.mDrawProp;
-    auto &ib = infoBoundingBox;
-
-    hp.x() = np.x() + np.w() + padding;
-    hp.y() = ib.y() + padding;
-    hp.h() = ib.h() - 2 * padding;
-    hp.w() = (ib.w() / 3) - 2 * padding;
-
-    hp.color = mColors[Color::TEXT];
-
-    healthProp.mText = "HP: -";
-    nameTeamProp.mSize = -1;
-  }
-}
-
 void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
   size_t const n = polygon.size();
   auto xs = make_unique<Sint16[]>(n);
@@ -328,32 +345,7 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
   render();
 }
 
-struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
-  ClientGui &gui;
-  entity_t const &entity;
-  Position const &position;
-  SDL_Color color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
-  bool myPlayer = false;
 
-  EntityDrawer(ClientGui &gui, entity_t const &entity, Position const &position)
-      : gui(gui), entity(entity), position(position) {}
-
-  void operator()(PolygonalShape const &shape) {
-    gui.draw(geometry::createPolygon(position.center, position.rotation, shape),
-             color);
-  }
-
-  void operator()(CircleShape const &shape) {
-    if (entity.has_component<PlayerInfo>()) {
-      gui.drawPlayer(
-          position, shape, entity.get_component<PlayerInfo>(),
-          gui.mController.isMyPlayer(entity.get_component<EntityID>()));
-    } else {
-      gui.drawCircle(gui.projectToMapCoords(position.center),
-                     gui.scaleToMapCoords(shape.radius), color);
-    }
-  }
-};
 
 void ClientGui::drawPlayer(const Position &position, const CircleShape &shape,
                            const PlayerInfo &playerInfo, bool ownPlayer) {
@@ -387,7 +379,6 @@ void ClientGui::drawEntity(entity_t const &entity, Shape const &shape,
                            Position const &position) {
 
   EntityDrawer processor{*this, entity, position};
-
   boost::apply_visitor(processor, shape);
 }
 
@@ -413,16 +404,11 @@ void ClientGui::setTeamInfo(const std::vector<TeamInfo> &teamInfo) {
   int teamCount = teamInfo.size();
 
   for (auto &team : teamInfo) {
+
     int teamId = team.mId;
     float factor = static_cast<float>(teamId) / teamCount;
     teamColors[team.mName] = HSVtoRGB(static_cast<int>(360 * factor), 1, 1);
   }
-}
-
-geometry::Point
-ClientGui::getScreenCoords(const geometry::Point &point) const {
-
-  return projectToMapCoords(point);
 }
 
 void ClientGui::drawLine(geometry::Point center, Scalar radius,
