@@ -365,11 +365,11 @@ private:
   void placeRandomObstacle() {
 
     static std::vector<PolygonalShape> shapes = {
-            PolygonalShape{{-1, 0}, {-2, -1}, {+2, -1}, {+1, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+        PolygonalShape{{-1, 0}, {-2, -1}, {+2, -1}, {+1, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
     };
 
     int const which = randomEngine() % shapes.size();
@@ -388,16 +388,15 @@ private:
     entity.add_component<geometry::Object2D>(obj);
   }
 
-
-
   void generateMap() {
 
     static std::vector<std::pair<PolygonalShape, Position>> obstacles = {
-            {PolygonalShape{{0, 0}, {1400, 0}, {1400, 40}, {0, 40}}, Position::create({100,100})},
-            /*PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
-            PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},*/
+        {PolygonalShape{{0, 0}, {1400, 0}, {1400, 40}, {0, 40}},
+         Position::create({100, 100})},
+        /*PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
+        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},*/
     };
 
     // A polygon

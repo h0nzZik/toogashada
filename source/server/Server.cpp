@@ -180,20 +180,24 @@ private:
 
   /* </IBroadcaster > */
 
+  unique_ptr<ConnectionToClient> waiting_connection;
+
   void start_accept() {
-    auto conn = new ConnectionToClient(acceptor.get_io_service());
+    waiting_connection =
+        make_unique<ConnectionToClient>(acceptor.get_io_service());
 
     // Capturing unique pointers is not easy
     acceptor.async_accept(
-        conn->socket(), [this, conn](const boost::system::error_code &error) {
+        waiting_connection->socket(),
+        [this](const boost::system::error_code &error) {
 
           if (!error) {
-            cout << "Client " << conn->socket().remote_endpoint()
+            cout << "Client " << waiting_connection->socket().remote_endpoint()
                  << " connected." << endl;
-            conn->listen(*this);
-            connections.insert(conn);
+            waiting_connection->listen(*this);
+            connections.insert(waiting_connection.release());
           } else {
-            delete conn;
+            waiting_connection.reset();
           }
 
           start_accept();
