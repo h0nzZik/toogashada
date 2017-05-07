@@ -26,28 +26,38 @@
 #include "ClientGui.h"
 
 struct PlayerInfo;
-
 class ClientGui;
-
 class ConnectionToServer;
-
 struct Message;
 
 class ClientController final {
 public:
-  explicit ClientController(PlayerInfo &player, ClientGui &clientGui,
+  explicit ClientController(PlayerInfo &&player, ClientGui &clientGui,
                             ConnectionToServer &server);
 
-  void received(Message msg);
-  void main_loop();
-  void loopWork();
-  void stop();
-  bool isMyPlayer(const EntityID &id);
+  void start();
+	void stop();
+	void received(Message msg);
+
+
+  bool isMyPlayer(const EntityID &id) const;
   entity_t getMyPlayer();
 
-  entity_t getEntity(const EntityID &id);
-
 private:
+
+	ClientGui &mClientGui;
+	ConnectionToServer &mRemoteServer;
+	PlayerInfo mPlayerInfo;
+	EntityID mPlayerId;
+	entity_t mPlayerEntity;
+	GameInfo mGameInfo;
+
+	bool mEndLoop = false;
+
+	EntityComponentSystem mEcs;
+	std::map<EntityID, entity_t> mEntites;
+
+
   std::map<SDL_Scancode, std::pair<PlayerAction, bool>> keyMap{
       {SDL_SCANCODE_W, {PlayerAction::Up, 0}},
       {SDL_SCANCODE_S, {PlayerAction::Down, 0}},
@@ -55,22 +65,14 @@ private:
       {SDL_SCANCODE_D, {PlayerAction::Right, 0}},
       {SDL_SCANCODE_SPACE, {PlayerAction::Fire, 0}}};
 
+
   class Receiver;
-  void redraw();
-  void received(ServerMessage msg);
-  void dispatchKeyAndMouseStates();
-  void dispatchKeyStates();
-  void send(ClientMessage const &msg);
+	void received(ServerMessage msg);
 
-  ClientGui &clientGui;
-  ConnectionToServer &remoteServer;
-  PlayerInfo &player;
-  EntityID playerId;
-  entity_t playerEntity;
-  GameInfo gameInfo;
+	void send(ClientMessage const &msg);
+  void sendUserInteractionToServer();
 
-  bool continueLoop;
+	void loopWork();
 
-  EntityComponentSystem ecs;
-  std::map<EntityID, entity_t> entites;
+	entity_t getEntity(const EntityID &id);
 };

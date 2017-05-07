@@ -299,8 +299,9 @@ void ClientGui::drawCircle(geometry::Point center, Scalar radius,
 }
 
 void ClientGui::renderHealth() {
+
   entity_t my_player = mController.getMyPlayer();
-  // entity_t my_player;
+
   if (my_player.get_status() != entityplus::entity_status::UNINITIALIZED &&
       my_player.sync()) {
     if (my_player.has_component<Health>()) {
@@ -424,7 +425,7 @@ void ClientGui::setPlayerHealth(int health) {
 }
 
 geometry::Point
-ClientGui::getEntityMapRefPoint(const geometry::Point &point) const {
+ClientGui::getScreenCoords(const geometry::Point &point) const {
 
   return projectToMapCoords(point);
 }

@@ -1,6 +1,4 @@
 #include <iostream>
-#include <stdexcept>
-#include <string> // std::string
 
 #include "ConnectionToServer.h"
 
@@ -18,7 +16,7 @@ ConnectionToServer::ConnectionToServer(string host, string port)
 
 void ConnectionToServer::run() { io_service.run(); }
 
-void ConnectionToServer::iter() { io_service.poll(); }
+void ConnectionToServer::poll() { io_service.poll(); }
 
 void ConnectionToServer::stop() {
   // TODO maybe send

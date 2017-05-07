@@ -19,7 +19,6 @@ struct GameInfo {
 
   Scalar mapW;
   Scalar mapH;
-  // name, <id, playerCount>
   std::vector<TeamInfo> teams;
 
   template <typename Archive> void serialize(Archive &archive) {
@@ -78,6 +77,5 @@ struct GameInfo {
   };
 
   Scalar width() const { return mapW; }
-
   Scalar height() const { return mapH; }
 };

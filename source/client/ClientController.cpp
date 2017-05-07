@@ -31,198 +31,193 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-ClientController::ClientController(PlayerInfo &player, ClientGui &clientGui,
-                                   ConnectionToServer &server)
-    : clientGui(clientGui), remoteServer{server}, player(player),
-      continueLoop{true} {}
 
-void ClientController::main_loop() {
+class ClientController::Receiver : public boost::static_visitor<void> {
+
+public:
+	Receiver(ClientController &controller) : controller(controller) {}
+
+	void operator()(MsgNewEntity const &msg) {
+
+		controller.mEntites[msg.entity_id] =
+						controller.mEcs.entityManager.create_entity(msg.entity_id);
+		entity_t entity = controller.getEntity(msg.entity_id);
+		EntityComponentSystem::add_components(entity, msg.components);
+	}
+
+	void operator()(MsgUpdateComponents const &msg) {
+
+		entity_t entity = controller.getEntity(msg.entity_id);
+		EntityComponentSystem::update_components(entity, msg.components);
+	}
+
+	void operator()(MsgRemoveComponents const &msg) {
+
+		entity_t entity = controller.getEntity(msg.entity_id);
+		for (uint32_t idx : msg.components) {
+			entity.sync();
+			EntityComponentSystem::removeComponent(entity, idx);
+		}
+	}
+
+	void operator()(MsgDeleteEntity const &msg) {
+
+		entity_t entity = controller.getEntity(msg.entity_id);
+		controller.mEntites.erase(msg.entity_id);
+		entity.destroy();
+	}
+
+	void operator()(MsgGameInfo const &msg) {
+
+		controller.mGameInfo = msg.gameInfo;
+		controller.mClientGui.setTeamInfo(msg.gameInfo.teams);
+		controller.mClientGui.setMapSize(msg.gameInfo.width(),
+		                                 msg.gameInfo.height());
+	}
+
+	void operator()(MsgPlayerAssignedEntityId const &msg) {
+
+		controller.mPlayerId = msg.entityId;
+		controller.mPlayerEntity = controller.getEntity(controller.mPlayerId);
+	}
+
+private:
+	ClientController &controller;
+};
+
+
+ClientController::ClientController(PlayerInfo &&player, ClientGui &clientGui,
+                                   ConnectionToServer &server)
+    : mClientGui(clientGui), mRemoteServer{server}, mPlayerInfo(player) {}
+
+void ClientController::start() {
+
   const auto constexpr dt = 16ms;
   const auto clientStartPoint = chrono::steady_clock::now();
   auto clientGameTime = clientStartPoint;
   bool const limit_speed = true;
-  while (continueLoop) {
-    remoteServer.iter();
+
+	ClientMessage msg{MsgIntroduceMyPlayer{mPlayerInfo}};
+	mRemoteServer.send(msg.to_message());
+
+  while (!mEndLoop) {
+
+	  mRemoteServer.poll();
     loopWork();
 
     clientGameTime += dt;
-    if (limit_speed)
-      this_thread::sleep_until(clientGameTime);
+    if (limit_speed) {
+	    this_thread::sleep_until(clientGameTime);
+    }
   }
-  cout << "Quitting gui\n";
+
+  cout << "Quitting.\n";
 }
 
-void ClientController::stop() { continueLoop = true; }
+void ClientController::stop() { mEndLoop = true; }
 
 void ClientController::loopWork() {
+
   SDL_Event e;
   while (SDL_PollEvent(&e) != 0) {
+
     if (e.type == SDL_QUIT) {
-      continueLoop = false;
+
+      mEndLoop = true;
       break;
     }
   }
 
-  dispatchKeyAndMouseStates();
-
-  redraw();
+	sendUserInteractionToServer();
+	mClientGui.renderGui(mEcs);
 }
-
-class ClientController::Receiver : public boost::static_visitor<void> {
-public:
-  Receiver(ClientController &controller) : controller(controller) {}
-
-  void operator()(MsgNewPlayer const /*&msg*/) { ; }
-
-  void operator()(MsgNewEntity const &msg) {
-    controller.entites[msg.entity_id] =
-        controller.ecs.entityManager.create_entity(msg.entity_id);
-    entity_t entity = controller.getEntity(msg.entity_id);
-    EntityComponentSystem::add_components(entity, msg.components);
-  }
-
-  void operator()(MsgUpdateComponents const &msg) {
-    entity_t entity = controller.getEntity(msg.entity_id);
-    EntityComponentSystem::update_components(entity, msg.components);
-  }
-
-  void operator()(MsgRemoveComponents const &msg) {
-    entity_t entity = controller.getEntity(msg.entity_id);
-    for (uint32_t idx : msg.components) {
-      entity.sync();
-      EntityComponentSystem::removeComponent(entity, idx);
-    }
-  }
-
-  void operator()(MsgDeleteEntity const &msg) {
-    // TODO separate class for managing the map
-    entity_t entity = controller.getEntity(msg.entity_id);
-    controller.entites.erase(msg.entity_id);
-    entity.destroy();
-  }
-
-  void operator()(MsgGameInfo const &msg) {
-
-    controller.gameInfo = msg.gameInfo;
-    controller.clientGui.setTeamInfo(msg.gameInfo.teams);
-    controller.clientGui.setMapSize(msg.gameInfo.width(),
-                                    msg.gameInfo.height());
-    std::cout << "map size set to: " << msg.gameInfo.width() << "x"
-              << msg.gameInfo.height() << endl;
-  }
-
-  void operator()(MsgPlayerAssignedEntityId const &msg) {
-    controller.playerId = msg.entityId;
-    controller.playerEntity = controller.getEntity(controller.playerId);
-  }
-
-private:
-  ClientController &controller;
-};
 
 void ClientController::received(Message msg) {
 
-  switch (msg.tag) {
-  case Tag::Hello:
-    cout << "Server says hello." << endl;
-    break;
-
-  case Tag::UniversalServerMessage:
-    return received(ServerMessage::from(msg));
-
-  default:
-    break;
-  }
+	if (msg.tag == Tag::UniversalServerMessage) {
+		return received(ServerMessage::from(msg));
+	}
 }
 
 void ClientController::received(ServerMessage msg) {
+
   Receiver receiver{*this};
   boost::apply_visitor(receiver, msg.data);
 }
 
-void ClientController::redraw() { clientGui.renderGui(ecs); }
-
-/**
- * A note about how we compute object positions.
- * Server periodically sends the authoritative information about object
- * positions.
- * However
- */
-
 void ClientController::send(ClientMessage const &msg) {
-  remoteServer.send(msg.to_message());
+
+  mRemoteServer.send(msg.to_message());
 }
 
-void ClientController::dispatchKeyStates() {
-  ClientMessage msg;
-  const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
+void ClientController::sendUserInteractionToServer() {
 
-  for (auto &keyMapping : keyMap) {
+	// Keyboard
+	const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
 
-    bool prevState = keyMapping.second.second;
-    bool curState = keyboard[keyMapping.first];
+	for (auto &keyMapping : keyMap) {
 
-    if (prevState != curState) {
-      msg = {MsgPlayerActionChange{keyMapping.second.first, curState}};
-      keyMapping.second.second = curState;
-      send(msg);
-      // std::cout <<
-      // static_cast<std::underlying_type<Movement>::type>(keyMapping.second.first)
-      // << " " << prevState << " -> " << curState << std::endl;
-    }
-  }
-}
+		bool prevState = keyMapping.second.second;
+		bool curState = keyboard[keyMapping.first];
 
-void ClientController::dispatchKeyAndMouseStates() {
-  dispatchKeyStates();
-  ClientMessage msg;
+		if (prevState != curState) {
 
-  int mouseX;
-  int mouseY;
-  SDL_GetMouseState(&mouseX, &mouseY);
+			keyMapping.second.second = curState;
+			send({MsgPlayerActionChange{keyMapping.second.first, curState}});
+		}
+	}
 
-  // TODO this might be very slow, maybe I should cach a reference
-  // TODO improve semantic
+	// Mouse
 
-  {
-    if (entites.find(playerId) != entites.end()) {
-      entity_t playerEntity = getEntity(playerId);
-      if (!playerEntity.has_component<Position>()) {
-        return;
-      }
-      geometry::Point point = playerEntity.get_component<Position>().center;
+	int mouseX;
+	int mouseY;
+	SDL_GetMouseState(&mouseX, &mouseY);
 
-      point = clientGui.getEntityMapRefPoint(point);
+	// TODO this might be very slow, maybe I should cach a reference
 
-      int x1 = 0;
-      int y1 = -1;
+	auto entityIt = mEntites.find(mPlayerId);
+	if (entityIt != mEntites.end()) {
 
-      int x2 = mouseX - point.x;
-      int y2 = mouseY - point.y;
+		auto entity = entityIt->second;
+		if (!entity.has_component<Position>()) {
+			return;
+		}
+		geometry::Point point = entity.get_component<Position>().center;
 
-      double dot = x1 * x2 + y1 * y2;
-      double det = x1 * y2 - y1 * x2;
-      geometry::Angle angle = atan2(det, dot) * 180 / M_PI;
+		point = mClientGui.getScreenCoords(point);
 
-      if (angle < 0) {
-        angle += 360;
-      }
-      ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
-      send(mouseMsg);
-    }
-  }
+		int x1 = 0;
+		int y1 = -1;
+		int x2 = mouseX - point.x;
+		int y2 = mouseY - point.y;
+
+		double dot = x1 * x2 + y1 * y2;
+		double det = x1 * y2 - y1 * x2;
+		geometry::Angle angle = atan2(det, dot) * 180 / M_PI;
+
+		if (angle < 0) {
+			angle += 360;
+		}
+
+		ClientMessage mouseMsg = {MsgPlayerRotation{angle}};
+		send(mouseMsg);
+	}
 }
 
 entity_t ClientController::getMyPlayer() {
-  if (playerEntity.get_status() != entityplus::entity_status::UNINITIALIZED)
-    playerEntity.sync();
-  return playerEntity;
+
+  if (mPlayerEntity.get_status() != entityplus::entity_status::UNINITIALIZED) {
+	  mPlayerEntity.sync();
+  }
+
+  return mPlayerEntity;
 }
 
 entity_t ClientController::getEntity(const EntityID &id) {
-  entity_t &entity = entites.at(id);
+
+  entity_t &entity = mEntites.at(id);
   entity.sync();
   return entity;
 }
 
-bool ClientController::isMyPlayer(const EntityID &id) { return id == playerId; }
+bool ClientController::isMyPlayer(const EntityID &id) const { return id == mPlayerId; }

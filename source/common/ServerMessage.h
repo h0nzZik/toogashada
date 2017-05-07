@@ -7,7 +7,7 @@
 #include <common/Tag.h>
 
 struct ServerMessage {
-  using Data = boost::variant<MsgGameInfo, MsgNewPlayer, MsgNewEntity,
+  using Data = boost::variant<MsgGameInfo, MsgNewEntity,
                               MsgUpdateComponents, MsgDeleteEntity,
                               MsgPlayerAssignedEntityId, MsgRemoveComponents>;
 

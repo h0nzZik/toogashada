@@ -1,87 +1,78 @@
 #include <iostream>
 #include <thread>
-#include <utility> // std::move
 
 #include <common/ClientMessage.h>
-#include <common/Messages.h>
-#include <common/Tag.h>
-
-#include <common/components/PlayerInfo.h>
 
 #include "ClientController.h"
-#include "ClientGui.h"
 #include "ConnectionToServer.h"
 
 #include "Client.h"
 
 using namespace std;
 
+
+// Client Implementation Definition
 class Client::Impl : private IConnection::IHandler {
+
 public:
-  Impl(std::string ip, std::string port, std::string playerName,
-       std::string playerTeam, int windowWidth = -1, int windowHeight = -1);
+	Impl(std::string ip, std::string port, std::string playerName,
+	     std::string playerTeam, int windowWidth = -1, int windowHeight = -1);
 
-  ~Impl() = default;
+	~Impl() = default;
 
-  void run();
+	void run();
 
 private:
-  /* < IConnection::IHandler > */
-  void received(IConnection &connection, Message msg) override;
-  void disconnected(IConnection &connection) override;
-  /* < IConnection::IHandler > */
+	/* < IConnection::IHandler > */
+	void received(IConnection &connection, Message msg) override;
+	void disconnected(IConnection &connection) override;
+	/* < IConnection::IHandler > */
 
-  ClientGui clientGui;
-  ConnectionToServer serverConnection;
-  ClientController clientController;
-  PlayerInfo playerInfo;
+	ClientGui clientGui;
+	ConnectionToServer serverConnection;
+	ClientController clientController;
 };
 
-Client::~Client() = default;
-
-Client::Client(std::string ip, std::string port, std::string playerName,
-               std::string playerTeam, int windowWidth, int windowHeight) {
-  impl = make_unique<Impl>(move(ip), move(port), move(playerName),
-                           move(playerTeam), windowWidth, windowHeight);
-}
-
-void Client::run() { impl->run(); }
 
 Client::Impl::Impl(std::string ip, std::string port, std::string playerName,
                    std::string playerTeam, int windowWidth, int windowHeight)
-    : clientGui{clientController, playerName, playerTeam, windowWidth,
-                windowHeight},
-      serverConnection{ip, port},
-      clientController{playerInfo, clientGui, serverConnection},
-      playerInfo{playerName, playerTeam} {
-  ;
-}
+				: clientGui{clientController, playerName, playerTeam, windowWidth,
+				            windowHeight},
+				  serverConnection{ip, port},
+				  clientController{{playerName, playerTeam}, clientGui, serverConnection} {}
 
 void Client::Impl::received(IConnection & /*connection*/, Message msg) {
-  // auto & conn = dynamic_cast<ConnectionToServer &>(connection);
-  // cout << "Client received message from " << conn.socket().remote_endpoint()
-  // << endl;
 
-  clientController.received(std::move(msg));
+	clientController.received(std::move(msg));
 }
 
 void Client::Impl::disconnected(IConnection &connection) {
-  auto &conn = dynamic_cast<ConnectionToServer &>(connection);
-  cout << "Server " << conn.socket().remote_endpoint() << " disconnected."
-       << endl;
-  clientController.stop();
+
+	auto &conn = dynamic_cast<ConnectionToServer &>(connection);
+	cout << "Server " << conn.socket().remote_endpoint() << " disconnected."
+	     << endl;
+	clientController.stop();
 }
 
 void Client::Impl::run() {
-  serverConnection.listen(*this);
 
-  ClientMessage msg{MsgIntroduceMyPlayer{playerInfo}};
-  serverConnection.send(msg.to_message());
+	serverConnection.listen(*this);
 
-  clientController.main_loop();
+	clientController.start();
 
-  ConnectionToServer::Statistics stats = serverConnection.getStatistics();
-  cout << "Connection closed." << endl;
-  cout << "Total bytes received: " << stats.bytes_received << endl;
-  cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
+	ConnectionToServer::Statistics stats = serverConnection.getStatistics();
+	cout << "Connection closed." << endl;
+	cout << "Total bytes received: " << stats.bytes_received << endl;
+	cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
 }
+
+
+// Client Wrapper Definition
+Client::Client(std::string ip, std::string port, std::string playerName,
+               std::string playerTeam, int windowWidth, int windowHeight) :
+				mImpl(make_unique<Impl>(move(ip), move(port),
+				                        move(playerName), move(playerTeam),
+				                        windowWidth, windowHeight)) {}
+Client::~Client() = default;
+
+void Client::run() { mImpl->run(); }

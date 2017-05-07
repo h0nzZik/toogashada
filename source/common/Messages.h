@@ -13,19 +13,6 @@
 // Server to client
 // =====================================
 
-// TODO: this will not be needed.
-// We will send it as a new entity
-struct MsgNewPlayer {
-  uint32_t player_id;
-  uint32_t object_id;
-  std::string playerName;
-  std::string playerTeam;
-
-  template <typename Archive> void serialize(Archive &archive) {
-    archive(player_id, object_id, playerName, playerTeam);
-  }
-};
-
 struct MsgGameInfo {
 
   GameInfo gameInfo;

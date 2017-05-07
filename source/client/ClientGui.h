@@ -110,7 +110,7 @@ public:
   void setPlayerHealth(int health);
   void setTeamInfo(const std::vector<TeamInfo> &teamInfo);
 
-  geometry::Point getEntityMapRefPoint(const geometry::Point &point) const;
+  geometry::Point getScreenCoords(const geometry::Point &point) const;
 
   void render() const;
 
