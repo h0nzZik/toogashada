@@ -8,8 +8,8 @@
 
 struct ServerMessage {
   using Data = boost::variant<MsgGameInfo, MsgNewPlayer, MsgNewEntity,
-                              MsgUpdateEntity, MsgDeleteEntity,
-                              MsgPlayerAssignedEntityId>;
+                              MsgUpdateComponents, MsgDeleteEntity,
+                              MsgPlayerAssignedEntityId, MsgRemoveComponents>;
 
   Data data;
 

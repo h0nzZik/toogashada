@@ -90,14 +90,11 @@ private:
         }
 
         void operator()(MsgPlayerRotation const &msg) {
-            entity_t entity = self.connection2entity.at(&connection);
-            self.gameModel.playerRotatesTo({entity}, msg.rotation);
-
+            self.gameModel.playerRotatesTo({self.getEntity(connection)}, msg.rotation);
         }
 
         void operator()(MsgPlayerActionChange const &msg) {
-            entity_t entity = self.connection2entity.at(&connection);
-            self.gameModel.playerKeyPress({entity}, msg.movement, bool(msg.state));
+            self.gameModel.playerKeyPress({self.getEntity(connection)}, msg.movement, bool(msg.state));
         }
 
     private:
@@ -105,11 +102,16 @@ private:
         ConnectionToClient &connection;
     };
 
+    // TODO make standalone class from this
+    entity_t getEntity(ConnectionToClient & connection) {
+    	entity_t & entity = connection2entity.at(&connection);
+    	entity.sync();
+    	return entity;
+    }
+
     /* < IConnection::IHandler > */
     void received(IConnection &connection, Message msg) override {
         auto &conn = dynamic_cast<ConnectionToClient &>(connection);
-        // cout << "Server received message from " <<
-        // conn.socket().remote_endpoint() << endl;
         switch (msg.tag) {
             case Tag::UniversalClientMessage:
                 return received(conn, ClientMessage::from(msg));
@@ -120,19 +122,8 @@ private:
     }
 
     void disconnected(IConnection &connection) override {
-		cout << "Disconnection" << endl;
         auto &conn = dynamic_cast<ConnectionToClient &>(connection);
-
-        // TODO print something like this. But this does not work and it throw and exception.
-        //cout << "Client " << conn.socket().remote_endpoint() << " disconnected."
-        //     << endl;
-
-        entity_t entity = connection2entity.at(&conn);
-        connection2entity.erase(&conn);
-        connections.erase(&conn);
-        delete &conn;
-
-        gameModel.removeEntity({entity});
+        connectionsToClear.insert(&conn);
     }
 
     /* </IConnection::IHandler > */
@@ -153,17 +144,36 @@ private:
         }
     }
 
-    void iter() override {
-        io_service.poll();
+    std::set<ConnectionToClient *> connectionsToClear;
+    void clearConnections() {
+    	std::set<ConnectionToClient *> localConnectionsToClear;
+    	using std::swap;
+    	swap(localConnectionsToClear, connectionsToClear);
+
+    	// Clear them
+    	for (ConnectionToClient * toClear : localConnectionsToClear) {
+    		connections.erase(toClear);
+    	}
+
+    	// Clear associated entities
+    	for (ConnectionToClient * toClear : localConnectionsToClear) {
+            auto it = connection2entity.find(toClear);
+            if (it != connection2entity.end()) {
+            	entity_t entity = it->second;
+            	entity.sync();
+            	connection2entity.erase(toClear);
+            	gameModel.removeEntity({entity});
+            }
+    	}
+
+    	for (ConnectionToClient * toClear : localConnectionsToClear) {
+    		delete toClear;
+    	}
     }
 
-    void updateEntity(entity_t const &entity,
-                      AnyComponent const &component) override {
-        MsgUpdateEntity mue;
-        mue.entity_id = entity.get_component<EntityID>();
-        mue.components = {component};
-        ServerMessage usm{mue};
-        broadcast(usm);
+    void iter() override {
+        io_service.poll();
+        clearConnections();
     }
 
     /* </IBroadcaster > */

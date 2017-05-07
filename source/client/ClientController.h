@@ -48,6 +48,8 @@ public:
     bool isMyPlayer(const EntityID &id);
 	entity_t getMyPlayer();
 
+	entity_t getEntity(const EntityID &id);
+
 private:
     std::map<SDL_Scancode, std::pair<PlayerAction, bool>> keyMap{
             {SDL_SCANCODE_W,     {PlayerAction::Up,    0}},

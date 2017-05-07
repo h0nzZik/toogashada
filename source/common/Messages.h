@@ -60,9 +60,19 @@ struct MsgNewEntity {
     }
 };
 
-struct MsgUpdateEntity {
+struct MsgUpdateComponents {
     EntityID entity_id;
     std::vector<AnyComponent> components;
+
+    template<typename Archive>
+    void serialize(Archive &archive) {
+        archive(entity_id, components);
+    }
+};
+
+struct MsgRemoveComponents {
+	EntityID entity_id;
+	std::vector<uint32_t> components;
 
     template<typename Archive>
     void serialize(Archive &archive) {

@@ -77,19 +77,33 @@ public:
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
         controller.entites[msg.entity_id] =
                 controller.ecs.entityManager.create_entity(msg.entity_id);
-        auto &entity = controller.entites[msg.entity_id];
+        entity_t entity = controller.getEntity(msg.entity_id);
         EntityComponentSystem::add_components(entity, msg.components);
     }
 
-    void operator()(MsgUpdateEntity const &msg) {
+    void operator()(MsgUpdateComponents const &msg) {
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
-        EntityComponentSystem::update_components(controller.entites[msg.entity_id],
+        entity_t entity = controller.getEntity(msg.entity_id);
+        EntityComponentSystem::update_components(entity,
                                                  msg.components);
+    }
+
+    void operator()(MsgRemoveComponents const &msg) {
+        std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
+        entity_t entity = controller.getEntity(msg.entity_id);
+        for(uint32_t idx : msg.components) {
+        	cout << "Going to remove component" << endl;
+        	entity.sync();
+        	EntityComponentSystem::removeComponent(entity, idx);
+        }
     }
 
     void operator()(MsgDeleteEntity const &msg) {
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
-        controller.entites[msg.entity_id].destroy();
+        // TODO separate class for managing the map
+        entity_t entity = controller.getEntity(msg.entity_id);
+        controller.entites.erase(msg.entity_id);
+        entity.destroy();
     }
 
     void operator()(MsgGameInfo const &msg) {
@@ -104,7 +118,7 @@ public:
     void operator()(MsgPlayerAssignedEntityId const &msg) {
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
         controller.playerId = msg.entityId;
-		controller.playerEntity = controller.entites.at(controller.playerId);
+        controller.playerEntity = controller.getEntity(controller.playerId);
     }
 
 private:
@@ -185,9 +199,9 @@ void ClientController::dispatchKeyAndMouseStates() {
         std::unique_lock<std::mutex> guard{mutexGameObjects};
 
         if (entites.find(playerId) != entites.end()) {
-
+        	entity_t playerEntity = getEntity(playerId);
             geometry::Point point =
-                    entites.at(playerId).get_component<Position>().center;
+            		playerEntity.get_component<Position>().center;
             guard.unlock();
 
             point = clientGui.getEntityMapRefPoint(point);
@@ -212,7 +226,15 @@ void ClientController::dispatchKeyAndMouseStates() {
 }
 
 entity_t ClientController::getMyPlayer() {
+	if (playerEntity.get_status() != entityplus::entity_status::UNINITIALIZED)
+		playerEntity.sync();
 	return playerEntity;
+}
+
+entity_t ClientController::getEntity(const EntityID &id) {
+	entity_t & entity = entites.at(id);
+	entity.sync();
+	return entity;
 }
 
 bool ClientController::isMyPlayer(const EntityID &id) { return id == playerId; }

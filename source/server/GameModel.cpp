@@ -173,7 +173,9 @@ public:
     void playerRotatesTo(entity_t entity, geometry::Angle angle) {
         entity.sync();
         if (!entity.has_component<Position>()) {
-            throw std::logic_error("Player is missing some components");
+            cout << "Player cannot move" << endl;
+            return;
+        	//throw std::logic_error("Player is missing some components");
         }
 
         Position &pos = entity.get_component<Position>();
@@ -209,7 +211,9 @@ public:
 
         if (!entity.has_component<Position>() ||
             !entity.has_component<EntityMotion>()) {
-            throw std::logic_error("Player is missing some components");
+        	cout << "Player cannot move" << endl;
+        	return;
+            //throw std::logic_error("Player is missing some components");
         }
 
 		Position &position = entity.get_component<Position>();
@@ -292,7 +296,19 @@ private:
 				h.hp -= 10;
 			else
 				h.hp = 0;
-			broadcaster.updateEntity(victim, {h});
+
+			updateComponent(victim, {h});
+
+			if (h.hp <= 0) {
+				// TODO remove physical components (at least position and
+				victim.remove_component<Position>();
+				victim.remove_component<Shape>();
+				MsgRemoveComponents mrc;
+				mrc.entity_id = victim.get_component<EntityID>();
+				mrc.components.push_back(EntityComponentSystem::getComponentNumber<Position>());
+				mrc.components.push_back(EntityComponentSystem::getComponentNumber<Shape>());
+				broadcaster.broadcast(ServerMessage{mrc}.to_message());
+			}
 		}
         removeEntity(explosive_entity);
     }
@@ -345,7 +361,7 @@ private:
 
         // TODO possible optimization
         // We are send position every time because of rotation changes
-        broadcaster.updateEntity(entity, {pos});
+        updateComponent(entity, {pos});
     }
 
     void generateRandomObstacle() {
@@ -379,6 +395,15 @@ private:
     	for (int i = 0; i < 5; i++) {
     		generateRandomObstacle();
     	}
+    }
+
+    void updateComponent(entity_t const &entity,
+                      AnyComponent const &component) {
+        MsgUpdateComponents mue;
+        mue.entity_id = entity.get_component<EntityID>();
+        mue.components = {component};
+        ServerMessage usm{mue};
+        broadcaster.broadcast(usm.to_message());
     }
 
     class Log {

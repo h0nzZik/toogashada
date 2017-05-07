@@ -35,7 +35,8 @@ void Connection::start_rx_header() {
 
                if (error) {
                  cout << "Reading message header failed" << endl;
-                 throw boost::system::system_error(error);
+                 handler->disconnected(*this);
+                 return;
                }
 
                m_statistics.bytes_received += bytes_transferred;
@@ -59,7 +60,8 @@ void Connection::start_rx_header() {
 
                             if (error) {
                               cout << "Connection::rx error: " << error << endl;
-                              throw boost::system::system_error(error);
+                              handler->disconnected(*this);
+                              return;
                             }
 
                             m_statistics.bytes_received += bytes_transferred;
