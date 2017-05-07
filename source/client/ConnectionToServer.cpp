@@ -17,14 +17,14 @@ ConnectionToServer::ConnectionToServer(string host, string port)
 }
 
 void ConnectionToServer::run() {
-	io_service.run();
-	Statistics stats = getStatistics();
-	cout << "Connection closed." << endl;
-	cout << "Total bytes received: " << stats.bytes_received << endl;
-	cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
+  io_service.run();
+  Statistics stats = getStatistics();
+  cout << "Connection closed." << endl;
+  cout << "Total bytes received: " << stats.bytes_received << endl;
+  cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
 }
 
 void ConnectionToServer::stop() {
-	// TODO maybe send
-	io_service.stop();
+  // TODO maybe send
+  io_service.stop();
 }

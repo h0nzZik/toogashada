@@ -8,9 +8,9 @@
 
 #include "ClientController.h"
 #include "ClientGui.h"
-#include "common/components/PlayerInfo.h"
 #include "ConnectionToServer.h"
 #include "RemoteServerWrapper.h"
+#include "common/components/PlayerInfo.h"
 
 #include "Client.h"
 
@@ -18,9 +18,8 @@ using namespace std;
 
 class Client::Impl : private IConnection::IHandler {
 public:
-  Impl(std::string ip, std::string port,
-       std::string playerName, std::string playerTeam,
-       int windowWidth = -1, int windowHeight = -1);
+  Impl(std::string ip, std::string port, std::string playerName,
+       std::string playerTeam, int windowWidth = -1, int windowHeight = -1);
 
   ~Impl() = default;
 
@@ -41,20 +40,18 @@ private:
 
 Client::~Client() = default;
 
-Client::Client(std::string ip, std::string port,
-               std::string playerName, std::string playerTeam,
-               int windowWidth, int windowHeight) {
-  impl = make_unique<Impl>(move(ip), move(port),
-                           move(playerName), move(playerTeam),
-                           windowWidth, windowHeight);
+Client::Client(std::string ip, std::string port, std::string playerName,
+               std::string playerTeam, int windowWidth, int windowHeight) {
+  impl = make_unique<Impl>(move(ip), move(port), move(playerName),
+                           move(playerTeam), windowWidth, windowHeight);
 }
 
 void Client::run() { impl->run(); }
 
-Client::Impl::Impl(std::string ip, std::string port,
-                   std::string playerName, std::string playerTeam,
-                   int windowWidth, int windowHeight)
-    : clientGui{clientController, playerName, playerTeam, windowWidth, windowHeight},
+Client::Impl::Impl(std::string ip, std::string port, std::string playerName,
+                   std::string playerTeam, int windowWidth, int windowHeight)
+    : clientGui{clientController, playerName, playerTeam, windowWidth,
+                windowHeight},
       serverConnection{ip, port}, remoteServerWrapper{serverConnection},
       clientController{playerInfo, clientGui, remoteServerWrapper},
       playerInfo{playerName, playerTeam} {
@@ -79,8 +76,7 @@ void Client::Impl::disconnected(IConnection &connection) {
 void Client::Impl::run() {
   serverConnection.listen(*this);
 
-  ClientMessage msg{
-      MsgIntroduceMyPlayer{playerInfo}};
+  ClientMessage msg{MsgIntroduceMyPlayer{playerInfo}};
   serverConnection.send(msg.to_message());
 
   thread network([&] { serverConnection.run(); });

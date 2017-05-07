@@ -66,9 +66,9 @@ PolygonalShape &operator+=(PolygonalShape &shape, Vector const &vec) {
 }
 
 PolygonalShape &operator*=(PolygonalShape &shape, Scalar scale) {
-	  for (auto &v : shape)
-	    v *= scale;
-	return shape;
+  for (auto &v : shape)
+    v *= scale;
+  return shape;
 }
 
 PolygonalShape &operator-=(PolygonalShape &shape, Vector const &vec) {
@@ -127,8 +127,7 @@ bool in(Point const &point, CircleShape const &shape,
   return true;
 }
 
-bool in(Polygon const & polygon,
-        RectangularArea const &area) {
+bool in(Polygon const &polygon, RectangularArea const &area) {
   // TODO use accumulate with ranges
   for (auto const &p : polygon) {
     if (!in(p, area))
@@ -138,25 +137,21 @@ bool in(Polygon const & polygon,
   return true;
 }
 
-bool in(Object2D const & object, RectangularArea const &area) {
-	class Visitor : public boost::static_visitor<bool> {
-	private:
-		RectangularArea const &area;
+bool in(Object2D const &object, RectangularArea const &area) {
+  class Visitor : public boost::static_visitor<bool> {
+  private:
+    RectangularArea const &area;
 
-	public:
-		Visitor(RectangularArea const &area) : area(area) {}
+  public:
+    Visitor(RectangularArea const &area) : area(area) {}
 
-		bool operator()(Polygon const & polygon) {
-			return in(polygon, area);
-		}
+    bool operator()(Polygon const &polygon) { return in(polygon, area); }
 
-		bool operator()(Circle const &circle) {
-			return in(circle, area);
-		}
-	};
+    bool operator()(Circle const &circle) { return in(circle, area); }
+  };
 
-	Visitor visitor{area};
-	return boost::apply_visitor(visitor, object);
+  Visitor visitor{area};
+  return boost::apply_visitor(visitor, object);
 }
 
 Scalar deg2rad(Scalar degrees) { return degrees * 3.141592653589793 / 180.0; }

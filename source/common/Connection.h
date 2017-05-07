@@ -15,13 +15,11 @@ public:
   // </IConnection >
 
   struct Statistics {
-	  size_t bytes_sent = 0;
-	  size_t bytes_received = 0;
+    size_t bytes_sent = 0;
+    size_t bytes_received = 0;
   };
 
-  Statistics getStatistics() const {
-	  return m_statistics;
-  }
+  Statistics getStatistics() const { return m_statistics; }
 
 private:
   void start_rx_header();

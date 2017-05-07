@@ -7,15 +7,13 @@
 
 struct TeamInfo {
 
-    std::string mName;
-    int mId;
-    int mPlayerCount;
+  std::string mName;
+  int mId;
+  int mPlayerCount;
 
-    template <typename Archive>
-    void serialize(Archive &archive) {
-        archive(mName, mId, mPlayerCount);
-    }
-
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(mName, mId, mPlayerCount);
+  }
 };
 
-#endif //TOOGASHADA_TEAMINFO_H
+#endif // TOOGASHADA_TEAMINFO_H
