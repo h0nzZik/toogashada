@@ -89,4 +89,13 @@ TEST_CASE("Basic geometry") {
 			CHECK(!testCollision(p1, p2));
 		}
 	}
+
+	SUBCASE("In") {
+
+		Polygon p1{{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+		CHECK(in(Circle{{0.5, 0.5}, 0.1}, p1)); // This is hard
+		CHECK(in(Circle{{0.5, 0.6}, 0.1}, p1));
+		CHECK(!in(Circle{{0.9, 0.8}, 0.2}, p1));
+		CHECK(!in(Circle{{1.5, 1.3}, 0.2}, p1));
+	}
 }

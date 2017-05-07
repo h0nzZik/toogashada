@@ -120,14 +120,7 @@ Vector perpendicularDistance(Point const &p, Point const &A, Point const &B) {
 }
 
 bool onLeftOf(Point const &point, Point const &A, Point const &B) {
-	Vector v = perpendicularDistance(point, A, B);
-#if 0
-	if (v.x < 0) {
-		v.x = -v.x;
-		v.y = -v.y;
-	}
-#endif
-	return (v.y < 0) != (v.x < 0);
+	return ((A.x - point.x)*(B.y - point.y) - (A.y - point.y)*(B.y - point.x)) > 0;
 }
 
 // http://stackoverflow.com/a/21096006/6209703
@@ -137,6 +130,7 @@ bool in_polygon(Point const &point, Polygon const & polygon_old) {
 	assert(polygon.size() >= 3);
 
 	while (polygon.size() > 3) {
+		// TODO detect automatically polygons rotation/order of verteces
 		Polygon newPolygon;
 		if (onLeftOf(point, polygon[0], polygon[polygon.size()/2])) {
 			for (size_t i = 0; i <= polygon.size()/2; i++)
@@ -251,28 +245,28 @@ public:
 
 
 class InVisitor2 : public boost::static_visitor<bool>{
-	Object2D const & object1;
+	Object2D const & object2;
 public:
-	explicit InVisitor2(Object2D const & object1) :
-		object1(object1) {
+	explicit InVisitor2(Object2D const & object2) :
+		object2(object2) {
 	}
 
-	bool operator()(Polygon const & object2) {
-		InVisitor1<Polygon> visitor{object2};
-		return boost::apply_visitor(visitor, object1);
+	bool operator()(Polygon const & object1) {
+		InVisitor1<Polygon> visitor{object1};
+		return boost::apply_visitor(visitor, object2);
 	}
 
-	bool operator()(Circle const & object2) {
-		InVisitor1<Circle> visitor{object2};
-		return boost::apply_visitor(visitor, object1);
+	bool operator()(Circle const & object1) {
+		InVisitor1<Circle> visitor{object1};
+		return boost::apply_visitor(visitor, object2);
 	}
 };
 
 } // anonymous namespace
 
 bool in(Object2D const &object1, Object2D const &object2) {
-	InVisitor2 visitor{object1};
-	return boost::apply_visitor(visitor, object2);
+	InVisitor2 visitor{object2};
+	return boost::apply_visitor(visitor, object1);
 }
 
 

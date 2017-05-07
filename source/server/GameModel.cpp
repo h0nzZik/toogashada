@@ -32,6 +32,10 @@ public:
   Impl(EntityComponentSystem &ecs, IBroadcaster &broadcaster)
       : ecs{ecs}, broadcaster{broadcaster} {
     generateMap();
+	auto seed = d();
+	cout << "GameModel seed: " << seed << endl;
+	// TODO it should be possible to specify the seed on command line.
+	randomEngine = std::default_random_engine(seed);
   }
 
   ~Impl() { m_stop = true; }
@@ -74,7 +78,7 @@ public:
   }
 
   std::random_device d{};
-  std::default_random_engine randomEngine{d()};
+  std::default_random_engine randomEngine;
 
   geometry::Point randomPoint() {
     return {Scalar(randomEngine() % int(gameInfo.width())),
