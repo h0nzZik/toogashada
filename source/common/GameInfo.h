@@ -4,12 +4,16 @@
 
 #pragma once
 
-#include "TeamInfo.h"
-#include "cereal/types/tuple.hpp"
-#include "iostream"
 #include <map>
 #include <string>
 #include <tuple>
+#include <iostream>
+
+#include <cereal/types/tuple.hpp>
+
+#include <common/Geometry.h>
+#include <common/TeamInfo.h>
+#include <common/components/PlayerInfo.h>
 
 struct GameInfo {
 
