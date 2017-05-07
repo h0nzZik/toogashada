@@ -26,20 +26,19 @@
 #include <common/components/PlayerInfo.h>
 
 #include "ClientGui.h"
-#include "RemoteServerWrapper.h"
 
 struct PlayerInfo;
 
 class ClientGui;
 
-class RemoteServerWrapper;
+class ConnectionToServer;
 
 struct Message;
 
 class ClientController final {
 public:
   explicit ClientController(PlayerInfo &player, ClientGui &clientGui,
-                            RemoteServerWrapper &server);
+		  ConnectionToServer &server);
 
   void received(Message msg);
   void main_loop();
@@ -66,7 +65,7 @@ private:
   void send(ClientMessage const &msg);
 
   ClientGui &clientGui;
-  RemoteServerWrapper &remoteServer;
+  ConnectionToServer &remoteServer;
   PlayerInfo &player;
   EntityID playerId;
   entity_t playerEntity;

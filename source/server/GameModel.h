@@ -1,7 +1,10 @@
 #pragma once
 
-#include <common/geometry/Angle.h>
+// standard
 #include <memory> // std::unique_ptr
+
+// common
+#include <common/geometry/Angle.h>
 
 struct EntityComponentSystem;
 class IBroadcaster;

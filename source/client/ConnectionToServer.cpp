@@ -18,10 +18,10 @@ ConnectionToServer::ConnectionToServer(string host, string port)
 
 void ConnectionToServer::run() {
   io_service.run();
-  Statistics stats = getStatistics();
-  cout << "Connection closed." << endl;
-  cout << "Total bytes received: " << stats.bytes_received << endl;
-  cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
+}
+
+void ConnectionToServer::iter() {
+	io_service.poll();
 }
 
 void ConnectionToServer::stop() {

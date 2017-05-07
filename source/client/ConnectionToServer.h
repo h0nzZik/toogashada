@@ -11,6 +11,7 @@ public:
 
   void run();
   void stop();
+  void iter();
 
   boost::asio::ip::tcp::socket &socket() { return _socket; }
 

@@ -11,7 +11,6 @@
 #include "ClientController.h"
 #include "ClientGui.h"
 #include "ConnectionToServer.h"
-#include "RemoteServerWrapper.h"
 
 #include "Client.h"
 
@@ -34,7 +33,6 @@ private:
 
   ClientGui clientGui;
   ConnectionToServer serverConnection;
-  RemoteServerWrapper remoteServerWrapper;
   ClientController clientController;
   PlayerInfo playerInfo;
 };
@@ -53,8 +51,8 @@ Client::Impl::Impl(std::string ip, std::string port, std::string playerName,
                    std::string playerTeam, int windowWidth, int windowHeight)
     : clientGui{clientController, playerName, playerTeam, windowWidth,
                 windowHeight},
-      serverConnection{ip, port}, remoteServerWrapper{serverConnection},
-      clientController{playerInfo, clientGui, remoteServerWrapper},
+      serverConnection{ip, port},
+      clientController{playerInfo, clientGui, serverConnection},
       playerInfo{playerName, playerTeam} {
   ;
 }
@@ -80,9 +78,11 @@ void Client::Impl::run() {
   ClientMessage msg{MsgIntroduceMyPlayer{playerInfo}};
   serverConnection.send(msg.to_message());
 
-  thread network([&] { serverConnection.run(); });
   clientController.main_loop();
 
-  serverConnection.stop();
-  network.join();
+  ConnectionToServer::Statistics stats = serverConnection.getStatistics();
+  cout << "Connection closed." << endl;
+  cout << "Total bytes received: " << stats.bytes_received << endl;
+  cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
+
 }

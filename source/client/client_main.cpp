@@ -29,9 +29,19 @@ int main(int argc, const char **argv) {
       "window-width,w", po::value<int>())("window-height,h", po::value<int>());
 
   try {
-
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
+  } catch (std::exception &e) {
+    std::cerr << "Error while parsing commandline:\n"
+              << e.what() << std::endl
+              << std::endl;
+
+    std::cerr << desc << std::endl;
+    return ERROR_IN_COMMAND_LINE;
+  }
+
+  try {
+
     Client client{
         vm["ip"].as<std::string>(),
         vm["port"].as<std::string>(),
@@ -40,14 +50,7 @@ int main(int argc, const char **argv) {
         vm.count("window-width") ? vm["window-width"].as<int>() : -1,
         vm.count("window-height") ? vm["window-height"].as<int>() : -1};
     client.run();
-
-  } catch (std::exception &e) {
-
-    std::cerr << "Error while parsing commandline:\n"
-              << e.what() << std::endl
-              << std::endl;
-
-    std::cerr << desc << std::endl;
-    return ERROR_IN_COMMAND_LINE;
+  } catch(std::exception & e) {
+	  std::cerr << "Exception: " << e.what() << std::endl;
   }
 }

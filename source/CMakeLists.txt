@@ -74,9 +74,8 @@ add_library(client
 	./client/Client.cpp
 	./client/ClientController.cpp
 	./client/ConnectionToServer.cpp
-	./client/RemoteServerWrapper.cpp
 	./client/ClientGui.cpp
-        )
+)
 
 
 target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS}	)

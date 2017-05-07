@@ -23,7 +23,7 @@
 #include <common/components/PlayerInfo.h>
 
 #include "ClientGui.h"
-#include "RemoteServerWrapper.h"
+#include "ConnectionToServer.h"
 
 // self
 #include "ClientController.h"
@@ -31,7 +31,7 @@
 using namespace std;
 
 ClientController::ClientController(PlayerInfo &player, ClientGui &clientGui,
-                                   RemoteServerWrapper &server)
+		ConnectionToServer &server)
     : clientGui(clientGui), remoteServer{server}, player(player),
       continueLoop{true} {}
 
@@ -41,7 +41,7 @@ void ClientController::main_loop() {
   auto clientGameTime = clientStartPoint;
   bool const limit_speed = true;
   while (continueLoop) {
-
+	remoteServer.iter();
     loopWork();
 
     clientGameTime += dt;
@@ -91,7 +91,6 @@ public:
     std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
     entity_t entity = controller.getEntity(msg.entity_id);
     for (uint32_t idx : msg.components) {
-      cout << "Going to remove component" << endl;
       entity.sync();
       EntityComponentSystem::removeComponent(entity, idx);
     }
@@ -161,7 +160,7 @@ void ClientController::redraw() {
  */
 
 void ClientController::send(ClientMessage const &msg) {
-  remoteServer.conn().send(msg.to_message());
+  remoteServer.send(msg.to_message());
 }
 
 void ClientController::dispatchKeyStates() {
@@ -200,6 +199,9 @@ void ClientController::dispatchKeyAndMouseStates() {
 
     if (entites.find(playerId) != entites.end()) {
       entity_t playerEntity = getEntity(playerId);
+      if (!playerEntity.has_component<Position>()) {
+    	  return;
+      }
       geometry::Point point = playerEntity.get_component<Position>().center;
       guard.unlock();
 
