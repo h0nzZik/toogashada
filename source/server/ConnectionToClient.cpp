@@ -9,6 +9,4 @@ ConnectionToClient::ConnectionToClient(boost::asio::io_service &io_service)
   ;
 }
 
-ConnectionToClient::~ConnectionToClient() {
-  cout << "~ConnectionToClient()" << endl;
-}
+ConnectionToClient::~ConnectionToClient() { ; }

@@ -16,13 +16,9 @@ ConnectionToServer::ConnectionToServer(string host, string port)
   boost::asio::connect(_socket, endpoint_iterator);
 }
 
-void ConnectionToServer::run() {
-  io_service.run();
-}
+void ConnectionToServer::run() { io_service.run(); }
 
-void ConnectionToServer::iter() {
-	io_service.poll();
-}
+void ConnectionToServer::iter() { io_service.poll(); }
 
 void ConnectionToServer::stop() {
   // TODO maybe send

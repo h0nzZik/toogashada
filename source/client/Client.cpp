@@ -84,5 +84,4 @@ void Client::Impl::run() {
   cout << "Connection closed." << endl;
   cout << "Total bytes received: " << stats.bytes_received << endl;
   cout << "Total bytes transmitted: " << stats.bytes_sent << endl;
-
 }

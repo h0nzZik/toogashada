@@ -294,12 +294,16 @@ private:
         // TODO remove physical components (at least position and
         victim.remove_component<Position>();
         victim.remove_component<Shape>();
+        victim.remove_component<geometry::Object2D>();
+
         MsgRemoveComponents mrc;
         mrc.entity_id = victim.get_component<EntityID>();
         mrc.components.push_back(
             EntityComponentSystem::getComponentNumber<Position>());
         mrc.components.push_back(
             EntityComponentSystem::getComponentNumber<Shape>());
+        mrc.components.push_back(
+            EntityComponentSystem::getComponentNumber<geometry::Object2D>());
         broadcaster.broadcast(ServerMessage{mrc}.to_message());
       }
     }

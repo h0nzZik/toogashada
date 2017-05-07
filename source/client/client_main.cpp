@@ -50,7 +50,7 @@ int main(int argc, const char **argv) {
         vm.count("window-width") ? vm["window-width"].as<int>() : -1,
         vm.count("window-height") ? vm["window-height"].as<int>() : -1};
     client.run();
-  } catch(std::exception & e) {
-	  std::cerr << "Exception: " << e.what() << std::endl;
+  } catch (std::exception &e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
   }
 }

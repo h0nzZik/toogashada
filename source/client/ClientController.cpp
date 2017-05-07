@@ -1,9 +1,9 @@
 // standard
+#include <chrono>
 #include <iostream>
 #include <map>
 #include <math.h>
 #include <memory> // make_unique
-#include <mutex>
 #include <thread>
 
 // SDL
@@ -29,9 +29,10 @@
 #include "ClientController.h"
 
 using namespace std;
+using namespace std::chrono_literals;
 
 ClientController::ClientController(PlayerInfo &player, ClientGui &clientGui,
-		ConnectionToServer &server)
+                                   ConnectionToServer &server)
     : clientGui(clientGui), remoteServer{server}, player(player),
       continueLoop{true} {}
 
@@ -41,7 +42,7 @@ void ClientController::main_loop() {
   auto clientGameTime = clientStartPoint;
   bool const limit_speed = true;
   while (continueLoop) {
-	remoteServer.iter();
+    remoteServer.iter();
     loopWork();
 
     clientGameTime += dt;
@@ -74,7 +75,6 @@ public:
   void operator()(MsgNewPlayer const /*&msg*/) { ; }
 
   void operator()(MsgNewEntity const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
     controller.entites[msg.entity_id] =
         controller.ecs.entityManager.create_entity(msg.entity_id);
     entity_t entity = controller.getEntity(msg.entity_id);
@@ -82,13 +82,11 @@ public:
   }
 
   void operator()(MsgUpdateComponents const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
     entity_t entity = controller.getEntity(msg.entity_id);
     EntityComponentSystem::update_components(entity, msg.components);
   }
 
   void operator()(MsgRemoveComponents const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
     entity_t entity = controller.getEntity(msg.entity_id);
     for (uint32_t idx : msg.components) {
       entity.sync();
@@ -97,7 +95,6 @@ public:
   }
 
   void operator()(MsgDeleteEntity const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
     // TODO separate class for managing the map
     entity_t entity = controller.getEntity(msg.entity_id);
     controller.entites.erase(msg.entity_id);
@@ -115,7 +112,6 @@ public:
   }
 
   void operator()(MsgPlayerAssignedEntityId const &msg) {
-    std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
     controller.playerId = msg.entityId;
     controller.playerEntity = controller.getEntity(controller.playerId);
   }
@@ -144,13 +140,7 @@ void ClientController::received(ServerMessage msg) {
   boost::apply_visitor(receiver, msg.data);
 }
 
-void ClientController::redraw() {
-  std::lock_guard<std::mutex> guard{mutexGameObjects};
-  // TODO(h0nzZik): I think it is not needed to lock everything.
-  // We should refine it someday in future.
-
-  clientGui.renderGui(ecs);
-}
+void ClientController::redraw() { clientGui.renderGui(ecs); }
 
 /**
  * A note about how we compute object positions.
@@ -195,15 +185,12 @@ void ClientController::dispatchKeyAndMouseStates() {
   // TODO improve semantic
 
   {
-    std::unique_lock<std::mutex> guard{mutexGameObjects};
-
     if (entites.find(playerId) != entites.end()) {
       entity_t playerEntity = getEntity(playerId);
       if (!playerEntity.has_component<Position>()) {
-    	  return;
+        return;
       }
       geometry::Point point = playerEntity.get_component<Position>().center;
-      guard.unlock();
 
       point = clientGui.getEntityMapRefPoint(point);
 

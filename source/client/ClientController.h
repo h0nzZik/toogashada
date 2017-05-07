@@ -5,8 +5,6 @@
 
 #include <iostream>
 #include <map>
-#include <mutex>
-#include <thread>
 
 // SDL
 #include <SDL.h>
@@ -38,7 +36,7 @@ struct Message;
 class ClientController final {
 public:
   explicit ClientController(PlayerInfo &player, ClientGui &clientGui,
-		  ConnectionToServer &server);
+                            ConnectionToServer &server);
 
   void received(Message msg);
   void main_loop();
@@ -72,9 +70,6 @@ private:
   GameInfo gameInfo;
 
   bool continueLoop;
-
-  // GameObjectManager gameObjects;
-  std::mutex mutexGameObjects;
 
   EntityComponentSystem ecs;
   std::map<EntityID, entity_t> entites;
