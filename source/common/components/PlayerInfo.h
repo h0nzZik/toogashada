@@ -11,10 +11,9 @@ struct PlayerInfo {
 
     std::string mName;
     std::string mTeam;
-    int hp;
 
     template < typename Archive >
     void serialize(Archive & archive) {
-        archive(mName, mTeam, hp);
+        archive(mName, mTeam);
     }
 };

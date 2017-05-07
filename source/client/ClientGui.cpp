@@ -283,7 +283,7 @@ void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
         ys[i] = point.y;
     }
 
-    polygonRGBA(mRenderer, xs.get(), ys.get(), n, color.r, color.g, color.b,
+    filledPolygonRGBA(mRenderer, xs.get(), ys.get(), n, color.r, color.g, color.b,
                 color.a);
 }
 
@@ -332,23 +332,14 @@ struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
             : gui(gui), entity(entity), position(position) {}
 
     void operator()(PolygonalShape const &shape) {
-
-        cout << position.rotation << endl;
         gui.draw(geometry::createPolygon(position.center, position.rotation, shape),
                  color);
     }
 
     void operator()(CircleShape const &shape) {
-
         if (entity.has_component<PlayerInfo>()) {
-
-            // TODO > I have a dilemma with where to put the health update, this will happen much more often than necessary,
-            // TODO > but having it update via separate server message is duplicity with PlayerInfo component
-            gui.setPlayerHealth(entity.get_component<PlayerInfo>().hp); // TODO remove
             gui.drawPlayer(position, shape, entity.get_component<PlayerInfo>(), gui.mController.isMyPlayer(entity.get_component<EntityID>()));
-
         } else {
-
             gui.drawCircle(gui.projectToMapCoords(position.center),
                            gui.scaleToMapCoords(shape.radius),
                            color);

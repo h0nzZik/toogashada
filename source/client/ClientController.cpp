@@ -77,7 +77,6 @@ public:
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
         controller.entites[msg.entity_id] =
                 controller.ecs.entityManager.create_entity(msg.entity_id);
-		cout << "New entity: " << controller.playerId.id() << endl;
         auto &entity = controller.entites[msg.entity_id];
         EntityComponentSystem::add_components(entity, msg.components);
     }
@@ -105,7 +104,6 @@ public:
     void operator()(MsgPlayerAssignedEntityId const &msg) {
         std::lock_guard<std::mutex> guard{controller.mutexGameObjects};
         controller.playerId = msg.entityId;
-		cout << "Player's entity: " << controller.playerId.id() << endl;
 		controller.playerEntity = controller.entites.at(controller.playerId);
     }
 

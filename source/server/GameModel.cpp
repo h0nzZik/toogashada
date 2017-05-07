@@ -150,13 +150,12 @@ public:
 
         log() << "Found place for player on " << counter << "th try";
 
-        playerInfo.hp = DEFAULT_HP;
         entity.add_component<PlayerInfo>(playerInfo);
         entity.add_component<Position>(pos);
         entity.add_component<Shape>(playerShape);
         entity.add_component<geometry::Object2D>(std::move(object2d));
         entity.add_component<EntityMotion>();
-		entity.add_component<Health>(Health{80});
+		entity.add_component<Health>(Health{DEFAULT_HP});
 
         gameInfo.addPlayer(playerInfo);
 
