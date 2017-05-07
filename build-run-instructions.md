@@ -1,5 +1,5 @@
 # Instructions to build and run the program on Linux platform.
-(Just follow CMake and linker errors)
+(AKA Just follow CMake and linker errors)
 
 ## Requirements:
 * CMake, Clang >= 3.9
