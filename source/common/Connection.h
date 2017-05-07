@@ -14,6 +14,15 @@ public:
   void listen(IHandler &handler) override;
   // </IConnection >
 
+  struct Statistics {
+	  size_t bytes_sent = 0;
+	  size_t bytes_received = 0;
+  };
+
+  Statistics getStatistics() const {
+	  return m_statistics;
+  }
+
 private:
   void start_rx_header();
   void start_rx_data();
@@ -21,6 +30,8 @@ private:
   bool whatIfDisconnected(boost::system::error_code const &error);
 
   boost::asio::ip::tcp::socket &socket;
+
+  Statistics m_statistics;
 
   uint8_t rx_header_buffer[8];
 

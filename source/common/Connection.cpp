@@ -38,6 +38,8 @@ void Connection::start_rx_header() {
                  throw boost::system::system_error(error);
                }
 
+               m_statistics.bytes_received += bytes_transferred;
+
                if (bytes_transferred != sizeof(rx_header_buffer))
                  throw std::runtime_error("Header problem");
 
@@ -59,6 +61,8 @@ void Connection::start_rx_header() {
                               cout << "Connection::rx error: " << error << endl;
                               throw boost::system::system_error(error);
                             }
+
+                            m_statistics.bytes_received += bytes_transferred;
 
                             if (bytes_transferred != rx_message.data.size())
                               throw std::runtime_error("Data problem");
@@ -97,6 +101,7 @@ void Connection::send(Message message) {
     memcpy(tx_header_buf, &tx_header, sizeof(Header));
     write(socket, boost::asio::buffer(tx_header_buf));
     write(socket, boost::asio::buffer(message.data));
+    m_statistics.bytes_sent += sizeof(Header) + message.data.size();
   } catch (exception &e) {
     cout << "Connection::send: " << e.what() << endl;
     handler->disconnected(*this);

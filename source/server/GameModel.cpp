@@ -342,6 +342,7 @@ private:
         broadcaster.updateEntity(entity, {pos});
     }
 
+    // TODO make it more random
     void generateMap() {
         // A polygon
         entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
