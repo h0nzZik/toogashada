@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseEntityComponentSystem.h"
+#include <common/BaseEntityComponentSystem.h>
 #include <common/GameInfo.h>
 #include <common/components/EntityID.h>
 #include <common/components/Explosive.h>

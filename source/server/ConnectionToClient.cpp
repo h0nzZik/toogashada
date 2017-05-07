@@ -1,5 +1,6 @@
-#include "ConnectionToClient.hpp"
 #include <iostream>
+
+#include "ConnectionToClient.hpp"
 
 using namespace std;
 

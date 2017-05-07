@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <string>
 #include <tuple>
-#include <iostream>
 
 #include <cereal/types/tuple.hpp>
 

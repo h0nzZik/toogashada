@@ -1,6 +1,7 @@
-#include <boost/array.hpp>
 #include <cstring> // std::memcpy
 #include <iostream>
+
+#include <boost/array.hpp>
 
 #include "Connection.h"
 #include "Tag.h"

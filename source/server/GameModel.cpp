@@ -7,8 +7,9 @@
 #include <random>
 #include <thread>
 
-#include "common/GameInfo.h"
+// Common
 #include <common/EntityComponentSystem.h>
+#include <common/GameInfo.h>
 #include <common/Geometry.h>
 #include <common/PlayerAction.h>
 #include <common/ServerMessage.h>

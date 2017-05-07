@@ -6,11 +6,12 @@
 #include <common/Messages.h>
 #include <common/Tag.h>
 
+#include <common/components/PlayerInfo.h>
+
 #include "ClientController.h"
 #include "ClientGui.h"
 #include "ConnectionToServer.h"
 #include "RemoteServerWrapper.h"
-#include "common/components/PlayerInfo.h"
 
 #include "Client.h"
 

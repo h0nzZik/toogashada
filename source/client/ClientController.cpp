@@ -20,10 +20,10 @@
 #include <common/Messages.h>
 #include <common/ServerMessage.h>
 #include <common/Tag.h>
+#include <common/components/PlayerInfo.h>
 
 #include "ClientGui.h"
 #include "RemoteServerWrapper.h"
-#include "common/components/PlayerInfo.h"
 
 // self
 #include "ClientController.h"

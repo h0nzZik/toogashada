@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/variant/variant.hpp>
+
 #include <common/components/Position.h>
 #include <common/components/Shape.h>
 

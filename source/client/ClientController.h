@@ -15,7 +15,6 @@
 #include <boost/variant/static_visitor.hpp>
 
 // project
-#include "common/components/EntityID.h"
 #include <common/AnyComponent.h>
 #include <common/ClientMessage.h>
 #include <common/IConnection.h>
@@ -23,10 +22,11 @@
 #include <common/Messages.h>
 #include <common/ServerMessage.h>
 #include <common/Tag.h>
+#include <common/components/EntityID.h>
+#include <common/components/PlayerInfo.h>
 
 #include "ClientGui.h"
 #include "RemoteServerWrapper.h"
-#include "common/components/PlayerInfo.h"
 
 struct PlayerInfo;
 

@@ -4,14 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "EntityComponentSystem.h"
-
-#include "common/components/EntityID.h"
-
-#include "PlayerAction.h"
-#include "common/components/PlayerInfo.h"
-
-#include "common/GameInfo.h"
+#include <common/EntityComponentSystem.h>
+#include <common/GameInfo.h>
+#include <common/PlayerAction.h>
+#include <common/components/EntityID.h>
+#include <common/components/PlayerInfo.h>
 
 // Server to client
 // =====================================

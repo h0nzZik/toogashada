@@ -5,6 +5,7 @@
 #include <cereal/types/boost_variant.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
+
 #include <common/ClientMessage.h>
 
 #include "AnyComponent.h"

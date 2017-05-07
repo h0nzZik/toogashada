@@ -1,9 +1,10 @@
 #pragma once
 
 #include <boost/variant/variant.hpp>
+
 #include <entityplus/entity.h>
 
-#include "AnyComponent.h"
+#include <common/AnyComponent.h>
 #include <common/components/EntityID.h>
 
 using TagList = entityplus::tag_list<struct TA, struct TB>; // just an example

@@ -1,6 +1,7 @@
-#include <boost/program_options.hpp>
 #include <iostream>
 #include <string.h>
+
+#include <boost/program_options.hpp>
 
 // Project
 #include "Client.h"

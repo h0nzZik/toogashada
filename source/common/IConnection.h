@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Message.h"
 #include <functional>
+
+#include "Message.h"
 
 class IConnection {
 public:
