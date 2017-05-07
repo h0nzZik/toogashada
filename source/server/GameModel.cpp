@@ -393,29 +393,63 @@ private:
   void generateMap() {
 
     static std::vector<std::pair<PolygonalShape, Position>> obstacles = {
-            {
-                    PolygonalShape{{0, 70}, {1280, 70}, // top outer line
-                            {1280, 0}, {1300, 0}, // top spur top line
-                            {1300, 670}, {1280, 670}, // right bottom line
-                            {1280, 90,}, {20, 90}, // top inner line
-                            {20, 300},   { 0,300}// left bottom line
+            /********************************/
+            /*     TOP SHAPE                */
+            /********************************/
+            {       // long horizontal line
+                    PolygonalShape{{0, 0}, {1280, 0}, // top outer line
+                                   {1280, 20}, {0, 20} // top inner line
                     },
-                    Position::create({150,80})
+                    Position::create({150,150})
             },
-            {
+            {       // left vertical line
+                    PolygonalShape{{0,0},     {20,0}, // top line
+                                   {20, 210}, { 0,210}// bottom line
+                    },
+                    Position::create({150,170})
+            },
+            {       // right vertical line
+                    PolygonalShape{{0, 0}, {20, 0}, // top line
+                                   {20, 670}, {0, 670}, // bottom line
+                    },
+                    Position::create({1430,80})
+            },
+            /*****************************************/
+
+            {       // bottom right shape
                     PolygonalShape{{0, 0}, {20, 0}, {20, 530}, {0, 530}},
                     Position::create({1260,370})
             },
-            {
-              PolygonalShape{{0,   0}, {690, 0}, // top line
-                             {690, 300}, {490, 400}, // bottom diagonal line
-                             {0, 400}, {0, 380}, // bottom left line
-                             {490, 380}, {490 , 20}, // left inner line
-                             {20, 20}, {20, 100}, // top left spur inner right line
-                             {0, 100} // top left spur bottom left corner
-              },
-              Position::create({470, 320})
+
+            /********************************/
+            /*     PLIERS SHAPE             */
+            /********************************/
+            {       // body
+                    PolygonalShape{{0,   0}, {200, 0}, // top line
+                                   {200, 300}, {0, 400}, // bottom diagonal line
+                    },
+                    Position::create({960, 320})
             },
+            {       // top arm upper horizontal line
+                    PolygonalShape{{0,   0}, {490, 0}, // top line
+                                   {490, 20}, {0, 20} // bototm line
+                    },
+                    Position::create({470, 320})
+            },
+            {       // top arm vertical line
+                    PolygonalShape{{0,   0}, {20, 0}, // top line
+                                   {20, 80}, {0, 80} // bottom line
+                    },
+                    Position::create({470, 340})
+            },
+            {       // bottom arm
+                    PolygonalShape{{490, 20}, {0, 20}, // top line
+                                   {0, 0},{490, 0} // bottom line
+                    },
+                    Position::create({470, 700})
+            },
+            /*****************************************/
+
             {
               PolygonalShape{{0, 180}, {260, 0}, {260, 20}, {30, 180}},
               Position::create({900,720})
