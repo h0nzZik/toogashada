@@ -391,12 +391,38 @@ private:
   void generateMap() {
 
     static std::vector<std::pair<PolygonalShape, Position>> obstacles = {
-        {PolygonalShape{{0, 0}, {1400, 0}, {1400, 40}, {0, 40}},
-         Position::create({100, 100})},
-        /*PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
-        PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},*/
+            {
+                    PolygonalShape{{0, 70}, {1280, 70}, // top outer line
+                            {1280, 0}, {1300, 0}, // top spur top line
+                            {1300, 670}, {1280, 670}, // right bottom line
+                            {1280, 90,}, {20, 90}, // top inner line
+                            {20, 300},   { 0,300}// left bottom line
+                    },
+                    Position::create({150,80})
+            },
+            {
+                    PolygonalShape{{0, 0}, {20, 0}, {20, 530}, {0, 530}},
+                    Position::create({1260,370})
+            },
+            {
+              PolygonalShape{{0,   0}, {690, 0}, // top line
+                             {690, 300}, {490, 400}, // bottom diagonal line
+                             {0, 400}, {0, 380}, // bottom left line
+                             {490, 380}, {490 , 20}, // left inner line
+                             {20, 20}, {20, 100}, // top left spur inner right line
+                             {0, 100} // top left spur bottom left corner
+              },
+              Position::create({470, 320})
+            },
+            {
+              PolygonalShape{{0, 180}, {260, 0}, {260, 20}, {30, 180}},
+              Position::create({900,720})
+            },
+            {
+              PolygonalShape{{100, 0}, {350, 0}, // top line
+                             {160, 220}, {0, 170}}, // bottom line
+              Position::create({80, 620})
+            }
     };
 
     // A polygon
