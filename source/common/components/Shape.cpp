@@ -5,6 +5,7 @@
 
 using namespace geometry;
 
+#if 0
 bool in(Point const & point, Shape const & shape, RectangularArea const &area) {
 	class Visitor : public boost::static_visitor<bool> {
 		Point const & point;
@@ -24,4 +25,4 @@ bool in(Point const & point, Shape const & shape, RectangularArea const &area) {
 	Visitor visitor{point, area};
 	return boost::apply_visitor(visitor, shape);
 }
-
+#endif

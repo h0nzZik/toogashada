@@ -2,6 +2,8 @@
 #include <numeric> // accumulate
 #include <ostream>
 
+#include <boost/variant/static_visitor.hpp>
+
 #include "Geometry.h"
 
 namespace geometry {
@@ -63,6 +65,12 @@ PolygonalShape &operator+=(PolygonalShape &shape, Vector const &vec) {
   return shape;
 }
 
+PolygonalShape &operator*=(PolygonalShape &shape, Scalar scale) {
+	  for (auto &v : shape)
+	    v *= scale;
+	return shape;
+}
+
 PolygonalShape &operator-=(PolygonalShape &shape, Vector const &vec) {
   for (auto &v : shape)
     v -= vec;
@@ -119,16 +127,36 @@ bool in(Point const &point, CircleShape const &shape,
   return true;
 }
 
-bool in(Point const &point, PolygonalShape const &shape,
+bool in(Polygon const & polygon,
         RectangularArea const &area) {
   // TODO use accumulate with ranges
-  for (auto const &v : shape) {
-    Point shape_point = point + v;
-    if (!in(shape_point, area))
+  for (auto const &p : polygon) {
+    if (!in(p, area))
       return false;
   }
 
   return true;
+}
+
+bool in(Object2D const & object, RectangularArea const &area) {
+	class Visitor : public boost::static_visitor<bool> {
+	private:
+		RectangularArea const &area;
+
+	public:
+		Visitor(RectangularArea const &area) : area(area) {}
+
+		bool operator()(Polygon const & polygon) {
+			return in(polygon, area);
+		}
+
+		bool operator()(Circle const &circle) {
+			return in(circle, area);
+		}
+	};
+
+	Visitor visitor{area};
+	return boost::apply_visitor(visitor, object);
 }
 
 Scalar deg2rad(Scalar degrees) { return degrees * 3.141592653589793 / 180.0; }

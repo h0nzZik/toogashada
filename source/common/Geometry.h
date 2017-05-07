@@ -10,6 +10,7 @@
 #include <common/geometry/PolygonalShape.h>
 #include <common/geometry/RectangularArea.h>
 #include <common/geometry/Vector.h>
+#include <common/geometry/Object2D.h>
 
 namespace geometry {
 
@@ -106,6 +107,8 @@ inline Vector operator-(Point const &p1, Point const &p2) {
 }
 
 PolygonalShape &operator+=(PolygonalShape &shape, Vector const &vec);
+PolygonalShape &operator*=(PolygonalShape &shape, Scalar scale);
+
 
 std::ostream &operator<<(std::ostream &o, Point const &point);
 std::ostream &operator<<(std::ostream &o, Vector const &point);
@@ -119,8 +122,10 @@ bool in(Point const &point, RectangularArea const &area);
 bool in(Circle const &circle, RectangularArea const &area);
 bool in(Point const &point, CircleShape const &shape,
         RectangularArea const &area);
-bool in(Point const &point, PolygonalShape const &shape,
+bool in(Polygon const & polygon,
         RectangularArea const &area);
+
+bool in(Object2D const & object, RectangularArea const &area);
 
 Vector rotate(Vector const &vec, Angle angle);
 Point rotate_around(Point const &center, Point const &point, Angle angle);

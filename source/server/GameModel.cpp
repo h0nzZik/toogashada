@@ -125,31 +125,37 @@ public:
                 geometry::createObject2D(position.center, position.rotation, shape));
     }
 
-	// What about some 'player factory'?
-    SEntity newPlayer(PlayerInfo playerInfo) {
-        entity_t entity = newEntity();
+    std::tuple<Position, Object2D> randomPosition(Shape const &shape) {
         Position pos;
 
         // Hope it will eventually find a good place.
         int counter = 0;
-        geometry::Object2D object2d;
+        Object2D object2d;
 
-        // TODO refacto this to separate function
         vector<entity_t> collisions;
         do {
             pos.center = randomPoint();
-            object2d = createObject2D(pos.center, 0, playerShape);
+            pos.rotation = randomEngine() % 360;
+            object2d = createObject2D(pos.center, pos.rotation, shape);
             collisions = collidesWithSomething(object2d);
 
         } while (++counter < 50 &&
                  (!collisions.empty() ||
-                  !geometry::in(pos.center, playerShape, gameInfo.getArea())));
+                  !geometry::in(object2d, gameInfo.getArea())));
 
         if (counter >= 50)
             throw std::runtime_error("Cannot fit player to area");
 
-        log() << "Found place for player on " << counter << "th try";
+        return {pos, object2d};
+    }
 
+	// What about some 'player factory'?
+    SEntity newPlayer(PlayerInfo playerInfo) {
+        entity_t entity = newEntity();
+
+        Position pos;
+        geometry::Object2D object2d;
+        std::tie(pos, object2d) = randomPosition(playerShape);
         entity.add_component<PlayerInfo>(playerInfo);
         entity.add_component<Position>(pos);
         entity.add_component<Shape>(playerShape);
@@ -324,7 +330,7 @@ private:
                     log() << "  with: " << e.get_component<EntityID>().id();
             }
 
-            if (!in(new_center, shape, gameInfo.getArea()))
+            if (!in(currentObject2d, gameInfo.getArea()))
                 return collisionHappenedWithArea(entity, pos);
 
             if (!collisions.empty()) {
@@ -342,24 +348,37 @@ private:
         broadcaster.updateEntity(entity, {pos});
     }
 
+    void generateRandomObstacle() {
+    	static std::vector<PolygonalShape> shapes = {
+                PolygonalShape{{-1, 0}, {-2, -1}, {+2, -1}, {+1, 0}},
+				PolygonalShape{{0, 0}, {0, 1}, {1, 0}},
+				PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+				PolygonalShape{{0, 0}, {0, 1}, {3, 1}, {2, 0}},
+				PolygonalShape{{0, 0}, {0, 1}, {1, 1}, {1, 0}},
+    	};
+
+    	int const which = randomEngine() % shapes.size();
+    	Scalar const resize = Scalar(4 + ((randomEngine() % 50)/10.0));
+    	PolygonalShape shape = shapes[which];
+    	shape *= resize;
+
+    	Object2D obj;
+        Position pos;
+        std::tie(pos, obj) = randomPosition(shape);
+
+    	entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
+    	entity.add_component<Shape>(shape);
+
+        entity.add_component<Position>(pos);
+        entity.add_component<geometry::Object2D>(obj);
+    }
+
     // TODO make it more random
     void generateMap() {
         // A polygon
-        entity_t entity = ecs.entityManager.create_entity(EntityID::newID());
-        entity.add_component<Shape>(
-                geometry::PolygonalShape{{-10, 0},
-                                         {-20, -10},
-                                         {+20, -10},
-                                         {+10, 0}});
-        Position pos;
-        pos.speed = {0, 0};
-        pos.center = geometry::Point{30, 30};
-        pos.angularSpeed = 0;
-        pos.rotation = 0;
-        entity.add_component<Position>(pos);
-        entity.add_component<geometry::Object2D>(
-                geometry::createObject2D(pos.center, 0, entity.get_component<Shape>()));
-
+    	for (int i = 0; i < 5; i++) {
+    		generateRandomObstacle();
+    	}
     }
 
     class Log {
