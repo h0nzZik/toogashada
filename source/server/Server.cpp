@@ -18,10 +18,11 @@
 #include <common/Messages.h>
 #include <common/ServerMessage.h>
 
-#include "ConnectionToClient.hpp"
-#include "GameModel.h"
-#include "SEntity.h"
+#include <server/ConnectionToClient.hpp>
+#include <server/GameModel.h>
+#include <server/SEntity.h>
 #include <server/IBroadcaster.h>
+#include <server/Connection2Entity.h>
 
 #include "Server.h"
 
@@ -47,69 +48,7 @@ public:
 
 private:
   class Receiver;
-
-  void received(ConnectionToClient &connection, ClientMessage msg) {
-    Receiver receiver{*this, connection};
-    boost::apply_visitor(receiver, msg.data);
-  }
-
-  class Receiver : public boost::static_visitor<void> {
-  public:
-    explicit Receiver(Impl &self, ConnectionToClient &connection)
-        : self(self), connection(connection) {}
-
-    void operator()(MsgIntroduceMyPlayer const &msg) {
-
-      if (self.connection2entity.find(&connection) ==
-          self.connection2entity.end()) {
-        // new logic
-        self.sendAllEntities(connection);
-
-        SEntity sentity = self.gameModel.newPlayer(msg.playerInfo);
-        self.connection2entity[&connection] = sentity.entity;
-
-        // misc info for player
-        MsgGameInfo msgGameInfo = {self.gameModel.getGameInfo()};
-        self.broadcast({msgGameInfo});
-
-        MsgNewEntity msgNewEntity;
-        msgNewEntity.components =
-            EntityComponentSystem::all_components(sentity.entity);
-        msgNewEntity.entity_id = sentity.entity.get_component<EntityID>();
-
-        MsgPlayerAssignedEntityId msgAssignedEntityId = {
-            msgNewEntity.entity_id};
-        self.broadcast({msgNewEntity});
-        self.send(connection, {msgAssignedEntityId});
-
-      } else {
-
-        cerr << "Client " << connection.socket().remote_endpoint()
-             << " already introduced. Introduction ignored!" << endl;
-      }
-    }
-
-    void operator()(MsgPlayerRotation const &msg) {
-      self.gameModel.playerRotatesTo({self.getEntity(connection)},
-                                     msg.rotation);
-    }
-
-    void operator()(MsgPlayerActionChange const &msg) {
-      self.gameModel.playerKeyPress({self.getEntity(connection)}, msg.movement,
-                                    bool(msg.state));
-    }
-
-  private:
-    Impl &self;
-    ConnectionToClient &connection;
-  };
-
-  // TODO make standalone class from this
-  entity_t getEntity(ConnectionToClient &connection) {
-    entity_t &entity = connection2entity.at(&connection);
-    entity.sync();
-    return entity;
-  }
+  void received(ConnectionToClient &connection, ClientMessage msg);
 
   /* < IConnection::IHandler > */
   void received(IConnection &connection, Message msg) override {
@@ -146,32 +85,7 @@ private:
     }
   }
 
-  std::set<ConnectionToClient *> connectionsToClear;
-  void clearConnections() {
-    std::set<ConnectionToClient *> localConnectionsToClear;
-    using std::swap;
-    swap(localConnectionsToClear, connectionsToClear);
-
-    // Clear them
-    for (ConnectionToClient *toClear : localConnectionsToClear) {
-      connections.erase(toClear);
-    }
-
-    // Clear associated entities
-    for (ConnectionToClient *toClear : localConnectionsToClear) {
-      auto it = connection2entity.find(toClear);
-      if (it != connection2entity.end()) {
-        entity_t entity = it->second;
-        entity.sync();
-        connection2entity.erase(toClear);
-        gameModel.removeEntity({entity});
-      }
-    }
-
-    for (ConnectionToClient *toClear : localConnectionsToClear) {
-      delete toClear;
-    }
-  }
+  void clearConnections();
 
   void iter() override {
     io_service.poll();
@@ -219,10 +133,96 @@ private:
 
   // We do not use smart pointers to ease removal of items from set
   std::set<ConnectionToClient *> connections;
-  std::map<ConnectionToClient const *, entity_t> connection2entity;
+  std::set<ConnectionToClient *> connectionsToClear;
+  Connection2Entity m_connection2entity;
   EntityComponentSystem ecs;
   GameModel gameModel;
 };
+
+
+class Server::Impl::Receiver : public boost::static_visitor<void> {
+public:
+  explicit Receiver(Impl &self, ConnectionToClient &connection)
+      : self(self), connection(connection) {}
+
+  void operator()(MsgIntroduceMyPlayer const &msg) {
+
+	  bool const has = self.m_connection2entity.do_for(connection, [&](entity_t /*entity*/){
+		  cerr << "Client " << connection.socket().remote_endpoint()
+	        		   << " already introduced. Introduction ignored!" << endl;
+	  });
+	  if (has)
+		  return;
+
+	  // new logic
+	  self.sendAllEntities(connection);
+
+	  SEntity sentity = self.gameModel.newPlayer(msg.playerInfo);
+	  self.m_connection2entity.insert(connection, sentity.entity);
+
+	  // misc info for player
+	  MsgGameInfo msgGameInfo = {self.gameModel.getGameInfo()};
+	  self.broadcast({msgGameInfo});
+
+	  MsgNewEntity msgNewEntity;
+	  msgNewEntity.components =
+			  EntityComponentSystem::all_components(sentity.entity);
+	  msgNewEntity.entity_id = sentity.entity.get_component<EntityID>();
+
+	  MsgPlayerAssignedEntityId msgAssignedEntityId = {
+			  msgNewEntity.entity_id};
+	  self.broadcast({msgNewEntity});
+	  self.send(connection, {msgAssignedEntityId});
+  }
+
+  void operator()(MsgPlayerRotation const &msg) {
+    self.gameModel.playerRotatesTo({self.m_connection2entity.getEntity(connection)},
+                                   msg.rotation);
+  }
+
+  void operator()(MsgPlayerActionChange const &msg) {
+    self.gameModel.playerKeyPress({self.m_connection2entity.getEntity(connection)}, msg.movement,
+                                  bool(msg.state));
+  }
+
+private:
+  Impl &self;
+  ConnectionToClient &connection;
+};
+
+
+void Server::Impl::received(ConnectionToClient &connection, ClientMessage msg) {
+    Receiver receiver{*this, connection};
+    boost::apply_visitor(receiver, msg.data);
+}
+
+void Server::Impl::clearConnections() {
+  std::set<ConnectionToClient *> localConnectionsToClear;
+  using std::swap;
+  swap(localConnectionsToClear, connectionsToClear);
+
+  // Clear them
+  for (ConnectionToClient *toClear : localConnectionsToClear) {
+    connections.erase(toClear);
+  }
+
+  // Clear associated entities
+  for (ConnectionToClient *toClear : localConnectionsToClear) {
+  	m_connection2entity.do_for(*toClear, [&](entity_t entity){
+  		m_connection2entity.erase(*toClear);
+  		gameModel.removeEntity({entity});
+  	});
+  }
+
+  for (ConnectionToClient *toClear : localConnectionsToClear) {
+    delete toClear;
+  }
+}
+
+
+/***********************************/
+/* Outer                           */
+/***********************************/
 
 Server::Server(int port) { pImpl = make_unique<Impl>(port); }
 
