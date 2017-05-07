@@ -144,7 +144,7 @@ public:
                   !geometry::in(object2d, gameInfo.getArea())));
 
         if (counter >= 50)
-            throw std::runtime_error("Cannot fit player to area");
+            throw std::runtime_error("Cannot fit object to area");
 
         return {pos, object2d};
     }
@@ -253,7 +253,7 @@ private:
         return v * Scalar(15);
     }
 
-    GameInfo gameInfo {100, 100, {}};
+    GameInfo gameInfo {500, 500, {}};
 
     // TODO we should measure the diffeence between client's and server's time.
 
