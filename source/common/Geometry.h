@@ -123,6 +123,7 @@ bool in(Point const &point, CircleShape const &shape,
         RectangularArea const &area);
 bool in(Polygon const &polygon, RectangularArea const &area);
 
+bool in(Object2D const &object1, Object2D const &object2);
 bool in(Object2D const &object, RectangularArea const &area);
 
 Vector rotate(Vector const &vec, Angle angle);

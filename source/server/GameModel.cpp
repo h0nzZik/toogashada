@@ -47,6 +47,8 @@ public:
 
           if (geometry::collision(object, oldObject))
             colliding.push_back(oldEntity);
+          else if (in(object, oldObject))
+        	  colliding.push_back(oldEntity);
         });
 
     return colliding;
