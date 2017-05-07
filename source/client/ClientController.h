@@ -58,13 +58,13 @@ private:
 	std::map<EntityID, entity_t> mEntites;
 
 
-  std::map<SDL_Scancode, std::pair<PlayerAction, bool>> keyMap{
+  std::map<SDL_Scancode, std::pair<PlayerAction, bool>> mKeyMap{
       {SDL_SCANCODE_W, {PlayerAction::Up, 0}},
       {SDL_SCANCODE_S, {PlayerAction::Down, 0}},
       {SDL_SCANCODE_A, {PlayerAction::Left, 0}},
       {SDL_SCANCODE_D, {PlayerAction::Right, 0}},
       {SDL_SCANCODE_SPACE, {PlayerAction::Fire, 0}}};
-
+	bool mLeftMouse = false;
 
   class Receiver;
 	void received(ServerMessage msg);

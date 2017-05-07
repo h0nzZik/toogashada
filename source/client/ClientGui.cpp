@@ -298,7 +298,7 @@ void ClientGui::drawCircle(geometry::Point center, Scalar radius,
                    color.b, color.a);
 }
 
-void ClientGui::renderHealth() {
+void ClientGui::drawHealth() {
 
   entity_t my_player = mController.getMyPlayer();
 
@@ -320,7 +320,7 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
   drawRect(infoBoundingBox);
   drawRect(mapProp);
   drawText(nameTeamProp);
-  renderHealth();
+	drawHealth();
 
   entities.entityManager.for_each<Shape, Position>(
       std::bind(&ClientGui::drawEntity, this, _1, _2, _3));
@@ -417,11 +417,6 @@ void ClientGui::setTeamInfo(const std::vector<TeamInfo> &teamInfo) {
     float factor = static_cast<float>(teamId) / teamCount;
     teamColors[team.mName] = HSVtoRGB(static_cast<int>(360 * factor), 1, 1);
   }
-}
-
-void ClientGui::setPlayerHealth(int health) {
-
-  healthProp.mText = "HP: " + to_string(health);
 }
 
 geometry::Point

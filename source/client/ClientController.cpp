@@ -155,7 +155,7 @@ void ClientController::sendUserInteractionToServer() {
 	// Keyboard
 	const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
 
-	for (auto &keyMapping : keyMap) {
+	for (auto &keyMapping : mKeyMap) {
 
 		bool prevState = keyMapping.second.second;
 		bool curState = keyboard[keyMapping.first];
@@ -171,7 +171,12 @@ void ClientController::sendUserInteractionToServer() {
 
 	int mouseX;
 	int mouseY;
-	SDL_GetMouseState(&mouseX, &mouseY);
+	bool prevLeftMouse = mLeftMouse;
+	mLeftMouse = (SDL_GetMouseState(&mouseX, &mouseY) && SDL_BUTTON_LMASK);
+
+	if (prevLeftMouse != mLeftMouse) {
+		send({MsgPlayerActionChange{PlayerAction::Fire, mLeftMouse}});
+	}
 
 	// TODO this might be very slow, maybe I should cach a reference
 
