@@ -18,7 +18,7 @@ Server/clients will be run and configured from command line. GUI for menu may be
 example:
 ```
 $ game --server --port=1000 --player-name="honza" --player-team="red"
-$ game --client --address=192.168.1.18 --port=10000 --player-name="pepa" --player-team="blue"
+$ game --client --ip=192.168.1.18 --port=10000 --player-name="pepa" --player-team="blue"
 ```
 
 When players are connected, the game admin can initiate the game.
