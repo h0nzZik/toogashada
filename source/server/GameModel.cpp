@@ -234,7 +234,7 @@ public:
   void main() { do_main(); }
 
 private:
-  static constexpr Scalar BULLET_RADIUS = 1.0;
+  static constexpr Scalar BULLET_RADIUS = 2.0;
   static constexpr Scalar BULLER_SPEED = 500;
   static constexpr Scalar PLAYER_SPEED = 150;
   static constexpr Scalar PLAYER_RADIUS = 20;

@@ -23,6 +23,7 @@ struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
 	Position const &position;
 	SDL_Color color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
 
+
 	EntityDrawer(ClientGui &gui, entity_t const &entity, Position const &position)
 					: gui(gui), entity(entity), position(position) {}
 
@@ -37,6 +38,7 @@ struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
 							position, shape, entity.get_component<PlayerInfo>(),
 							gui.mController.isMyPlayer(entity.get_component<EntityID>()));
 		} else {
+			SDL_Color color = {255, 0, 0, 255};
 			gui.drawCircle(gui.projectToMapCoords(position.center),
 			               gui.scaleToMapCoords(shape.radius), color);
 		}
