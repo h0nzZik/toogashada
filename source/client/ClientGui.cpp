@@ -69,13 +69,13 @@ ClientGui::ClientGui(ClientController &controller,
 
   cout << "Width: " << SCREEN_WIDTH << " Height: " << SCREEN_HEIGHT << endl;
 
-  mWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED,
+  mWindow = MySDL::Window(SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-                             SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+                             SCREEN_HEIGHT, SDL_WINDOW_SHOWN));
   if (!mWindow)
     throw std::runtime_error("Cannot create window: " + string(SDL_GetError()));
 
-  mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
+  mRenderer = MySDL::Renderer(SDL_CreateRenderer(mWindow.get(), -1, SDL_RENDERER_ACCELERATED));
   if (!mRenderer)
     throw std::runtime_error("Cannot create renderer: " +
                              string(SDL_GetError()));
@@ -87,15 +87,6 @@ ClientGui::ClientGui(ClientController &controller,
 }
 
 ClientGui::~ClientGui() {
-
-  TTF_CloseFont(mFont);
-  mFont = nullptr;
-
-  SDL_DestroyRenderer(mRenderer);
-  SDL_DestroyWindow(mWindow);
-  mRenderer = nullptr;
-  mWindow = nullptr;
-
   TTF_Quit();
   SDL_Quit();
 }
@@ -184,13 +175,9 @@ void ClientGui::initGui() {
 }
 
 void ClientGui::loadMedia() {
-
-	mFont = TTF_OpenFont("Biotypc.ttf", mFontLoadSize);
-
-	if (mFont == nullptr) {
-
-		std::cerr << "Font cannot load.";
-	}
+	mFont = MySDL::Font(TTF_OpenFont("Biotypc.ttf", mFontLoadSize));
+	if (!mFont)
+		throw std::runtime_error("Cannot load font.");
 }
 
 Scalar ClientGui::scaleToMapCoords(Scalar coord) const {
@@ -225,13 +212,13 @@ ClientGui::getScreenCoords(const geometry::Point &point) const {
 
 void ClientGui::drawClearBg(const SDL_Color &color) const {
 
-  SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a);
-  SDL_RenderClear(mRenderer);
+  SDL_SetRenderDrawColor(mRenderer.get(), color.r, color.g, color.b, color.a);
+  SDL_RenderClear(mRenderer.get());
 }
 
 void ClientGui::drawAppBg() const { drawClearBg(mColors.at(Color::BG)); }
 
-void ClientGui::render() const { SDL_RenderPresent(mRenderer); }
+void ClientGui::render() const { SDL_RenderPresent(mRenderer.get()); }
 
 void ClientGui::drawText(TextProperties property) const {
 
@@ -240,14 +227,14 @@ void ClientGui::drawText(TextProperties property) const {
   DrawProp &dp = property.mDrawProp;
 
   SDL_Surface *textSurface =
-      TTF_RenderText_Blended(mFont, text.c_str(), dp.color);
+      TTF_RenderText_Blended(mFont.get(), text.c_str(), dp.color);
 
   if (textSurface == nullptr) {
 
     cerr << "Error creating text. Err: " << TTF_GetError();
   } else {
 
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, textSurface);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer.get(), textSurface);
     if (texture == nullptr) {
 
       cerr << "Error creating texture text. Err: " << SDL_GetError();
@@ -288,7 +275,7 @@ void ClientGui::drawText(TextProperties property) const {
       SDL_Rect boundingBox = {centeredX, centeredY, textBoxW, textBoxH};
       SDL_SetTextureAlphaMod(texture, dp.color.a);
 
-      SDL_RenderCopy(mRenderer, texture, nullptr, &boundingBox);
+      SDL_RenderCopy(mRenderer.get(), texture, nullptr, &boundingBox);
 
       SDL_DestroyTexture(texture);
     }
@@ -306,14 +293,14 @@ void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
     ys[i] = point.y;
   }
 
-  filledPolygonRGBA(mRenderer, xs.get(), ys.get(), n, color.r, color.g, color.b,
+  filledPolygonRGBA(mRenderer.get(), xs.get(), ys.get(), n, color.r, color.g, color.b,
                     color.a);
 }
 
 void ClientGui::drawCircle(geometry::Point center, Scalar radius,
                            const SDL_Color &color) {
 
-  filledCircleRGBA(mRenderer, center.x, center.y, radius, color.r, color.g,
+  filledCircleRGBA(mRenderer.get(), center.x, center.y, radius, color.r, color.g,
                    color.b, color.a);
 }
 
@@ -386,11 +373,11 @@ void ClientGui::drawEntity(entity_t const &entity, Shape const &shape,
 
 void ClientGui::drawRect(const DrawProp &dp) {
 
-  SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderDrawColor(mRenderer, dp.color.r, dp.color.g, dp.color.b,
+  SDL_SetRenderDrawBlendMode(mRenderer.get(), SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(mRenderer.get(), dp.color.r, dp.color.g, dp.color.b,
                          dp.color.a);
   SDL_Rect rect = {dp.x(), dp.y(), dp.w(), dp.h()};
-  SDL_RenderFillRect(mRenderer, &rect);
+  SDL_RenderFillRect(mRenderer.get(), &rect);
 }
 
 void ClientGui::setMapSize(int w, int h) {
@@ -424,18 +411,18 @@ void ClientGui::drawLine(geometry::Point center, Scalar radius,
                      radiusInt};
 
   SDL_Texture *texture =
-      SDL_CreateTexture(mRenderer, SDL_GetWindowPixelFormat(mWindow),
+      SDL_CreateTexture(mRenderer.get(), SDL_GetWindowPixelFormat(mWindow.get()),
                         SDL_TEXTUREACCESS_TARGET, thickness, radius);
   SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderTarget(mRenderer, texture);
-  SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 0);
-  SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
-  SDL_RenderClear(mRenderer);
-  SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a);
-  SDL_RenderFillRect(mRenderer, nullptr);
-  SDL_SetRenderTarget(mRenderer, nullptr);
+  SDL_SetRenderTarget(mRenderer.get(), texture);
+  SDL_SetRenderDrawColor(mRenderer.get(), 255, 255, 255, 0);
+  SDL_SetRenderDrawBlendMode(mRenderer.get(), SDL_BLENDMODE_BLEND);
+  SDL_RenderClear(mRenderer.get());
+  SDL_SetRenderDrawColor(mRenderer.get(), color.r, color.g, color.b, color.a);
+  SDL_RenderFillRect(mRenderer.get(), nullptr);
+  SDL_SetRenderTarget(mRenderer.get(), nullptr);
 
   SDL_Point ref = {target.w / 2, radiusInt};
-  SDL_RenderCopyEx(mRenderer, texture, NULL, &target, rotation, &ref,
+  SDL_RenderCopyEx(mRenderer.get(), texture, NULL, &target, rotation, &ref,
                    SDL_RendererFlip::SDL_FLIP_NONE);
 }

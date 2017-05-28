@@ -12,8 +12,10 @@
 #include <SDL_ttf.h>
 #include <SDL_video.h>
 
+// Boost
 #include <boost/variant/static_visitor.hpp>
 
+// Common
 #include <common/EntityComponentSystem.h>
 #include <common/Geometry.h>
 #include <common/Message.h>
@@ -22,8 +24,10 @@
 #include <common/geometry/Point.h>
 #include <common/geometry/RectangularArea.h>
 
+// Client
 #include "DrawProp.h"
 #include "TextProperties.h"
+#include "SDLDeleter.h"
 
 struct EntityComponentSystem;
 struct EntityDrawer;
@@ -39,9 +43,12 @@ class ClientGui {
 	std::string mPlayerName, mPlayerTeam;
 	std::map<std::string, SDL_Color> teamColors;
 
-	SDL_Window *mWindow;
-	SDL_Renderer *mRenderer;
-	TTF_Font *mFont;
+	MySDL::Window mWindow;
+	//SDL_Window *mWindow;
+	MySDL::Renderer mRenderer;
+	//SDL_Renderer *mRenderer;
+	MySDL::Font mFont;
+	//TTF_Font *mFont;
 
   /* const */ int SCREEN_WIDTH;
   /* const */ int SCREEN_HEIGHT;
