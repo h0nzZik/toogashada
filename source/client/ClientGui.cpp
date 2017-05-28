@@ -1,30 +1,141 @@
+// Standard
 #include <iostream>
 #include <map>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 // SDL2
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h>
+#include <SDL_ttf.h>
+#include <SDL_video.h>
 
+// Boost
 #include <boost/variant/static_visitor.hpp>
 
+// Common
 #include <common/EntityComponentSystem.h>
+#include <common/Geometry.h>
+#include <common/Message.h>
+#include <common/Messages.h>
+#include <common/Tag.h>
+#include <common/geometry/Point.h>
+#include <common/geometry/RectangularArea.h>
+
+// Client
+#include "DrawProp.h"
+#include "TextProperties.h"
 #include "ClientController.h"
 #include "ColorConverter.h"
+#include "SDLDeleter.h"
 
 using namespace std;
 using namespace geometry;
 
+class ClientGui::Impl {
 
-struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
-	ClientGui &gui;
+	struct EntityDrawer;
+	friend EntityDrawer;
+
+  ClientController &mController;
+	std::string mPlayerName, mPlayerTeam;
+	std::map<std::string, SDL_Color> teamColors;
+
+	MySDL::SDL sdl{SDL_INIT_VIDEO};
+	MySDL::TTF ttf;
+	MySDL::Window mWindow;
+	//SDL_Window *mWindow;
+	MySDL::Renderer mRenderer;
+	//SDL_Renderer *mRenderer;
+	MySDL::Font mFont;
+	//TTF_Font *mFont;
+
+  /* const */ int SCREEN_WIDTH;
+  /* const */ int SCREEN_HEIGHT;
+
+  // GUI settings
+  DrawProp mapBoundingBoxRatio{{0, 0, 100, 90}, {}};
+  DrawProp mapRatio{{0, 0, 100, 100}, {}};
+
+  enum class Color {
+    BG,
+    INFO_BG,
+    MAP_BG,
+    TEXT,
+    MY_PLAYER,
+    DEFAULT_MAP_OBJECT,
+    PLAYER_GUN
+  };
+
+  std::map<Color, SDL_Color> mColors = {
+				  {Color::BG,                 {0,   0,   0,   255}},
+				  {Color::MAP_BG,             {200,  200,  200,  255}},//{14,  50,  25,  255}},
+				  {Color::INFO_BG,            {255, 255, 255, 255}},
+				  {Color::TEXT,               {0,   0,   0,   255}},
+				  {Color::MY_PLAYER,          {255, 255, 255, 255}},
+				  {Color::DEFAULT_MAP_OBJECT, {0,   0,   0,   255}},
+				  {Color::PLAYER_GUN,         {255, 255, 0,   255}}};
+
+	int mFontLoadSize = 200;
+	int mFontHeightOffset = 10;
+
+  // Dimensions computed at init
+  DrawProp mapBoundingBox{{}, mColors[Color::BG]};
+  DrawProp infoBoundingBox{{}, mColors[Color::INFO_BG]};
+  DrawProp mapProp{{}, mColors[Color::MAP_BG]};
+  TextProperties nameTeamProp = {{}, "", -1};
+  TextProperties healthProp = {{}, "", -1};
+
+
+
+	void initGui();
+	void loadMedia();
+
+	void drawAppBg() const;
+	void drawClearBg(const SDL_Color &color) const;
+
+	void drawRect(const DrawProp &dp);
+	void drawCircle(geometry::Point center, Scalar radius, const SDL_Color &color);
+	void drawLine(geometry::Point center, Scalar radius, geometry::Angle rotation, const SDL_Color &color);
+	void drawText(TextProperties property) const;
+
+	void draw(geometry::Polygon const &polygon, const SDL_Color &color);
+	void drawEntity(const entity_t &entity, const Shape &shape, const Position &position);
+	void drawPlayer(const Position &pos, const geometry::CircleShape &shape, const PlayerInfo &playerInfo, bool ownPlayer);
+	void drawHealth();
+
+	void render() const;
+
+
+	geometry::Point placeToMapCoords(const geometry::Point &point) const;
+	Scalar scaleToMapCoords(Scalar coord) const;
+	template <typename T> T scaleToMapCoords(T coord) const;
+	geometry::Point projectToMapCoords(const geometry::Point &point) const;
+
+public:
+  Impl(ClientController &controller, const std::string &playerName,
+            const std::string &playerTeam, int windowWidth = -1,
+            int windowHeight = -1);
+
+  ~Impl();
+
+	void setMapSize(int w, int h);
+	void setTeamInfo(const std::vector<TeamInfo> &teamInfo);
+	void renderGui(EntityComponentSystem &entities);
+	geometry::Point getScreenCoords(const geometry::Point &point) const;
+
+};
+
+struct ClientGui::Impl::EntityDrawer : public boost::static_visitor<void> {
+	ClientGui::Impl &gui;
 	entity_t const &entity;
 	Position const &position;
 	SDL_Color color = gui.mColors[Color::DEFAULT_MAP_OBJECT];
 
 
-	EntityDrawer(ClientGui &gui, entity_t const &entity, Position const &position)
+	EntityDrawer(ClientGui::Impl &gui, entity_t const &entity, Position const &position)
 					: gui(gui), entity(entity), position(position) {}
 
 	void operator()(PolygonalShape const &shape) {
@@ -46,7 +157,7 @@ struct ClientGui::EntityDrawer : public boost::static_visitor<void> {
 };
 
 
-ClientGui::ClientGui(ClientController &controller,
+ClientGui::Impl::Impl(ClientController &controller,
                      const std::string &playerName, const std::string &playerTeam,
                      int windowWidth, int windowHeight)
     : mController{controller}, mPlayerName{playerName},
@@ -83,12 +194,12 @@ ClientGui::ClientGui(ClientController &controller,
   initGui();
 }
 
-ClientGui::~ClientGui() {
+ClientGui::Impl::~Impl() {
 	;
 }
 
 
-void ClientGui::initGui() {
+void ClientGui::Impl::initGui() {
 	{
 		auto bbr = mapBoundingBoxRatio;
 		auto &bb = mapBoundingBox;
@@ -170,18 +281,18 @@ void ClientGui::initGui() {
 	}
 }
 
-void ClientGui::loadMedia() {
+void ClientGui::Impl::loadMedia() {
 	mFont = MySDL::Font(TTF_OpenFont("Biotypc.ttf", mFontLoadSize));
 	if (!mFont)
 		throw std::runtime_error("Cannot load font.");
 }
 
-Scalar ClientGui::scaleToMapCoords(Scalar coord) const {
+Scalar ClientGui::Impl::scaleToMapCoords(Scalar coord) const {
 
   return coord * (static_cast<float>(mapProp.w()) / mapRatio.w());
 }
 
-template <typename T> T ClientGui::scaleToMapCoords(T coord) const {
+template <typename T> T ClientGui::Impl::scaleToMapCoords(T coord) const {
 
   static_assert(std::is_same<T, Vector>::value || std::is_same<T, Point>::value,
                 "Cannot scale given type.");
@@ -190,33 +301,33 @@ template <typename T> T ClientGui::scaleToMapCoords(T coord) const {
            coord.y * (static_cast<float>(mapProp.h()) / mapRatio.h())};
 }
 
-geometry::Point ClientGui::placeToMapCoords(const geometry::Point &point) const {
+geometry::Point ClientGui::Impl::placeToMapCoords(const geometry::Point &point) const {
 
   return {mapProp.x() + point.x, mapProp.y() + point.y};
 }
 
-geometry::Point ClientGui::projectToMapCoords(const geometry::Point &point) const {
+geometry::Point ClientGui::Impl::projectToMapCoords(const geometry::Point &point) const {
 
   return placeToMapCoords(scaleToMapCoords(point));
 }
 
 geometry::Point
-ClientGui::getScreenCoords(const geometry::Point &point) const {
+ClientGui::Impl::getScreenCoords(const geometry::Point &point) const {
 
 	return projectToMapCoords(point);
 }
 
-void ClientGui::drawClearBg(const SDL_Color &color) const {
+void ClientGui::Impl::drawClearBg(const SDL_Color &color) const {
 
   SDL_SetRenderDrawColor(mRenderer.get(), color.r, color.g, color.b, color.a);
   SDL_RenderClear(mRenderer.get());
 }
 
-void ClientGui::drawAppBg() const { drawClearBg(mColors.at(Color::BG)); }
+void ClientGui::Impl::drawAppBg() const { drawClearBg(mColors.at(Color::BG)); }
 
-void ClientGui::render() const { SDL_RenderPresent(mRenderer.get()); }
+void ClientGui::Impl::render() const { SDL_RenderPresent(mRenderer.get()); }
 
-void ClientGui::drawText(TextProperties property) const {
+void ClientGui::Impl::drawText(TextProperties property) const {
 
   int fontSize = property.mSize;
   std::string &text = property.mText;
@@ -278,7 +389,7 @@ void ClientGui::drawText(TextProperties property) const {
   }
 }
 
-void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
+void ClientGui::Impl::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
   size_t const n = polygon.size();
   auto xs = make_unique<Sint16[]>(n);
   auto ys = make_unique<Sint16[]>(n);
@@ -293,14 +404,14 @@ void ClientGui::draw(geometry::Polygon const &polygon, const SDL_Color &color) {
                     color.a);
 }
 
-void ClientGui::drawCircle(geometry::Point center, Scalar radius,
+void ClientGui::Impl::drawCircle(geometry::Point center, Scalar radius,
                            const SDL_Color &color) {
 
   filledCircleRGBA(mRenderer.get(), center.x, center.y, radius, color.r, color.g,
                    color.b, color.a);
 }
 
-void ClientGui::drawHealth() {
+void ClientGui::Impl::drawHealth() {
 
   entity_t my_player = mController.getMyPlayer();
 
@@ -314,7 +425,7 @@ void ClientGui::drawHealth() {
   drawText(healthProp);
 }
 
-void ClientGui::renderGui(EntityComponentSystem &entities) {
+void ClientGui::Impl::renderGui(EntityComponentSystem &entities) {
   using namespace std::placeholders;
 
   drawAppBg();
@@ -325,14 +436,14 @@ void ClientGui::renderGui(EntityComponentSystem &entities) {
 	drawHealth();
 
   entities.entityManager.for_each<Shape, Position>(
-      std::bind(&ClientGui::drawEntity, this, _1, _2, _3));
+      std::bind(&ClientGui::Impl::drawEntity, this, _1, _2, _3));
 
   render();
 }
 
 
 
-void ClientGui::drawPlayer(const Position &position, const CircleShape &shape,
+void ClientGui::Impl::drawPlayer(const Position &position, const CircleShape &shape,
                            const PlayerInfo &playerInfo, bool ownPlayer) {
 
   Point projectedCenter = projectToMapCoords(position.center);
@@ -360,14 +471,14 @@ void ClientGui::drawPlayer(const Position &position, const CircleShape &shape,
             -1});
 }
 
-void ClientGui::drawEntity(entity_t const &entity, Shape const &shape,
+void ClientGui::Impl::drawEntity(entity_t const &entity, Shape const &shape,
                            Position const &position) {
 
   EntityDrawer processor{*this, entity, position};
   boost::apply_visitor(processor, shape);
 }
 
-void ClientGui::drawRect(const DrawProp &dp) {
+void ClientGui::Impl::drawRect(const DrawProp &dp) {
 
   SDL_SetRenderDrawBlendMode(mRenderer.get(), SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(mRenderer.get(), dp.color.r, dp.color.g, dp.color.b,
@@ -376,7 +487,7 @@ void ClientGui::drawRect(const DrawProp &dp) {
   SDL_RenderFillRect(mRenderer.get(), &rect);
 }
 
-void ClientGui::setMapSize(int w, int h) {
+void ClientGui::Impl::setMapSize(int w, int h) {
 
   mapRatio.w() = w;
   mapRatio.h() = h;
@@ -384,7 +495,7 @@ void ClientGui::setMapSize(int w, int h) {
   initGui();
 }
 
-void ClientGui::setTeamInfo(const std::vector<TeamInfo> &teamInfo) {
+void ClientGui::Impl::setTeamInfo(const std::vector<TeamInfo> &teamInfo) {
 
   int teamCount = teamInfo.size();
 
@@ -396,7 +507,7 @@ void ClientGui::setTeamInfo(const std::vector<TeamInfo> &teamInfo) {
   }
 }
 
-void ClientGui::drawLine(geometry::Point center, Scalar radius,
+void ClientGui::Impl::drawLine(geometry::Point center, Scalar radius,
                          geometry::Angle rotation, const SDL_Color &color) {
 
   int thickness = 2;
@@ -422,3 +533,30 @@ void ClientGui::drawLine(geometry::Point center, Scalar radius,
   SDL_RenderCopyEx(mRenderer.get(), texture, NULL, &target, rotation, &ref,
                    SDL_RendererFlip::SDL_FLIP_NONE);
 }
+
+
+
+ClientGui::ClientGui(ClientController &controller, const std::string &playerName,
+            const std::string &playerTeam, int windowWidth,
+            int windowHeight) {
+	impl = make_unique<Impl>(controller, playerName, playerTeam, windowWidth, windowHeight);
+}
+
+ClientGui::~ClientGui() = default;
+		
+void ClientGui::setMapSize(int w, int h) {
+	return impl->setMapSize(w, h);
+}
+
+void ClientGui::setTeamInfo(const std::vector<TeamInfo> &teamInfo) {
+	return impl->setTeamInfo(teamInfo);
+}
+
+void ClientGui::renderGui(EntityComponentSystem &entities) {
+	return impl->renderGui(entities);
+}
+
+geometry::Point ClientGui::getScreenCoords(const geometry::Point &point) const {
+	return impl->getScreenCoords(point);
+}
+
