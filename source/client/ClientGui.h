@@ -43,6 +43,8 @@ class ClientGui {
 	std::string mPlayerName, mPlayerTeam;
 	std::map<std::string, SDL_Color> teamColors;
 
+	MySDL::SDL sdl{SDL_INIT_VIDEO};
+	MySDL::TTF ttf;
 	MySDL::Window mWindow;
 	//SDL_Window *mWindow;
 	MySDL::Renderer mRenderer;

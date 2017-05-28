@@ -52,10 +52,7 @@ ClientGui::ClientGui(ClientController &controller,
     : mController{controller}, mPlayerName{playerName},
       mPlayerTeam{playerTeam} {
 
-  if (SDL_Init(SDL_INIT_VIDEO) < 0 || TTF_Init() < 0)
-    throw std::runtime_error("Cannot initialize SDL: " +
-                             string(SDL_GetError()));
-
+		  
   SDL_DisplayMode dm;
   SDL_GetCurrentDisplayMode(0, &dm);
 
@@ -87,8 +84,7 @@ ClientGui::ClientGui(ClientController &controller,
 }
 
 ClientGui::~ClientGui() {
-  TTF_Quit();
-  SDL_Quit();
+	;
 }
 
 
