@@ -1,0 +1,17 @@
+language: c++
+
+addons:
+    apt:
+        sources:
+            - llvm-toolchain-precise
+            - ubuntu-toolchain-r-test
+        packages:
+            - clang-3.7
+            - g++-5
+            - gcc-5
+#install:
+#  - sudo apt-get update -qq
+#  - sudo apt-get install -y -qq lcov curl
+script:
+  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
+
