@@ -50,22 +50,10 @@ inline Vector &operator+=(Vector &v1, Vector const &v2) {
   return v1;
 }
 
-inline Vector &operator-=(Vector &v1, Vector const &v2) {
-  v1.x -= v2.x;
-  v1.y -= v2.y;
-  return v1;
-}
-
 inline Vector &operator*=(Vector &vector, Scalar scalar) {
   vector.x *= scalar;
   vector.y *= scalar;
   return vector;
-}
-
-inline Vector operator*(Vector const &vector, Scalar scalar) {
-  Vector vec = vector;
-  vec *= scalar;
-  return vec;
 }
 
 inline Vector operator*(Scalar scalar, Vector const &vector) {
@@ -98,8 +86,10 @@ inline Vector operator+(Vector const &v) { return {+v.x, +v.y}; }
 
 inline Vector operator-(Vector const &v) { return {-v.x, -v.y}; }
 
-inline Vector operator+(Vector const &v1, Vector const &v2) {
-  return Vector{v1.x + v2.x, v1.y + v2.y};
+inline Vector & operator-=(Vector & v1, Vector const &v2) {
+  v1.x -= v2.x;
+  v1.y -= v2.y;
+  return v1;
 }
 
 inline Vector operator-(Point const &p1, Point const &p2) {

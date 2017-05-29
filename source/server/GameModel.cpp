@@ -519,6 +519,10 @@ private:
 };
 
 const std::chrono::milliseconds GameModel::Impl::dt;
+constexpr Scalar GameModel::Impl::BULLET_RADIUS;
+constexpr Scalar GameModel::Impl::BULLER_SPEED;
+constexpr Scalar GameModel::Impl::PLAYER_SPEED;
+constexpr Scalar GameModel::Impl::PLAYER_RADIUS;
 
 /*******************************************************/
 /* </GameModel::Impl> <GameModel>                      */

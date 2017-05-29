@@ -1,12 +1,20 @@
 #pragma once
 
 #include <common/Scalar.h>
+#include <common/Arith.h>
 
 namespace geometry {
 
-struct Vector {
+struct Vector : Arith {
 	Scalar x;
 	Scalar y;
+
+	Vector() = default;
+	Vector(Scalar x, Scalar y) : x(x), y(y) {}
+	Vector(Vector const & /* orig */) = default;
+	Vector(Vector && /* old */) = default;
+	Vector & operator=(Vector const & /* orig */) = default;
+	Vector & operator=(Vector && /* orig */) = default;
 
 	template < typename Archive >
 	void serialize(Archive & archive) {
