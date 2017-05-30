@@ -1,6 +1,7 @@
 language: c++
 
 before_install:
+  - sudo dpkg --add-architecture i386
   - sudo apt-get -qq update
 
 addons:
