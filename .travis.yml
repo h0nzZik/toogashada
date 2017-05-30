@@ -1,5 +1,8 @@
 language: c++
 
+before_install:
+  - sudo apt-get -qq update
+
 addons:
     apt:
         sources:
@@ -11,6 +14,7 @@ addons:
             - gcc-5
             - libsdl2-ttf-dev
             - libsdl2-dev
+            - libboost-all-dev
 script:
   - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
 
