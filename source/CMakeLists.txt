@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.7)
 project(toogashada)
 
 find_package(Boost COMPONENTS system program_options REQUIRED)
