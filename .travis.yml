@@ -3,6 +3,7 @@ language: c++
 before_install:
   - sudo dpkg --add-architecture i386
   - sudo apt-get -qq update
+  - sudo apt-get -qq -y install libsdl2-dev libsdl2-ttf-dev
 
 addons:
     apt:
@@ -13,8 +14,6 @@ addons:
             - clang-3.7
             - g++-5
             - gcc-5
-            - libsdl2-ttf-dev
-            - libsdl2-dev
             - libboost-all-dev
 script:
   - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
