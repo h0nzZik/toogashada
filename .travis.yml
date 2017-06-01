@@ -3,7 +3,7 @@ language: c++
 os:
     - linux
 
-distro: trusty
+dist: trusty
 
 addons:
     apt:
