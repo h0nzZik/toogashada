@@ -3,22 +3,22 @@ language: c++
 os:
     - linux
 
-distro: precise
+distro: trusty
 
 addons:
     apt:
         sources:
-            - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise
             - ubuntu-toolchain-r-test
         packages:
-            - clang-3.6
-              #            - g++-5
-              #            - gcc-5
+            #- clang-3.9
+            - g++-5
+            - gcc-5
             - libboost-dev
             - libboost-program-options-dev
             - libboost-system-dev
             - libsdl2-dev
             - libsdl2-ttf-dev
 script:
-  - mkdir build && cd build && cmake -DCMAKE_CXX_COMPILER=clang++-3.6 -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
+  - mkdir build && cd build && cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
 
