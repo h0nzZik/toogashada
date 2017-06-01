@@ -31,12 +31,13 @@ string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
 # based on used compiler version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 	-std=c++14 \
-	-Wall -Wextra -pedantic -Werror \
+	-Wall -Wextra -pedantic \
 	-Wold-style-cast -Weffc++ \
 	-Wno-error=parentheses \
 	-Wno-error=unused-variable \
 	-Wno-error=unused-parameter \
 ")
+#	-Werror \
 #	-Wno-error=unused-private-field \
 #")
 
