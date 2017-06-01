@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.7)
 project(toogashada)
 
+set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(cotire)
+
 find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(SDL2 COMPONENTS ttf gfx REQUIRED)
 find_package(Threads REQUIRED)
@@ -33,7 +36,8 @@ add_library(ToogashadaCommon
 	./common/geometry/collision.cpp
 	./common/geometry/Polygon.cpp
 	./common/components/EntityID.cpp
-	./common/components/Shape.cpp)
+	./common/components/Shape.cpp
+)
 
 target_include_directories(ToogashadaCommon
 	PUBLIC
@@ -45,6 +49,8 @@ target_include_directories(ToogashadaCommon
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/third_party/cereal/include
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/third_party/EntityPlus
 )
+
+cotire(ToogashadaCommon)
 
 ## Server
 
@@ -61,6 +67,8 @@ target_link_libraries(server
 	${CMAKE_THREAD_LIBS_INIT}
 )
 
+cotire(server)
+
 add_executable(server_main
 	./server/server_main.cpp
 )
@@ -68,6 +76,8 @@ add_executable(server_main
 target_link_libraries(server_main
 	server
 )
+
+cotire(server_main)
 
 ## Client
 
@@ -90,7 +100,7 @@ target_link_libraries(client
 	SDL2_ttf
 )
 
-
+cotire(client)
 
 add_executable(client_main
 	./client/client_main.cpp
@@ -99,6 +109,8 @@ add_executable(client_main
 target_link_libraries(client_main
 	client
 )
+
+cotire(client_main)
 
 # Tests
 add_executable(tester
