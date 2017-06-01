@@ -8,17 +8,32 @@ dist: trusty
 addons:
     apt:
         sources:
-            - llvm-toolchain-precise
             - ubuntu-toolchain-r-test
         packages:
             #- clang-3.9
-            #- g++-5
-              #- gcc-5
+            - g++-5
+            - g++-4.9
             - libboost-dev
             - libboost-program-options-dev
             - libboost-system-dev
             - libsdl2-dev
             - libsdl2-ttf-dev
+
+        
+matrix:
+  include:
+    - os: linux
+      sudo: false
+      env: GCC_VER="4.9"
+      compiler: gcc
+    - os: linux
+      sudo: false
+      env: GCC_VER="5"
+      compiler: gcc
+
+before_install:
+  - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
+
 script:
-  - mkdir build && cd build && cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
+  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
 
