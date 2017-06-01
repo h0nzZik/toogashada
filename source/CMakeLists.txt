@@ -27,6 +27,8 @@ find_package(Threads REQUIRED)
 # workaround for the trailing whitespace problem
 string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
 
+# TODO hanle warning flags separately,
+# based on used compiler version
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 	-std=c++14 \
 	-Wall -Wextra -pedantic -Werror \
@@ -34,8 +36,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 	-Wno-error=parentheses \
 	-Wno-error=unused-variable \
 	-Wno-error=unused-parameter \
-	-Wno-error=unused-private-field \
 ")
+#	-Wno-error=unused-private-field \
+#")
 
 include_directories(${Boost_INCLUDE_DIRS})
 
