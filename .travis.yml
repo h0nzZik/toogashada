@@ -8,15 +8,15 @@ dist: trusty
 addons:
     apt:
         sources:
-            - llvm-toolchain-precise
+            - llvm-toolchain-precise-3.9
             - ubuntu-toolchain-r-test
         packages:
-            - clang-3.7
+            - clang-3.9
             - g++-5
             - gcc-5
             - libboost-all-dev
             - libsdl2-dev
             - libsdl2-ttf-dev
 script:
-  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
+  - mkdir build && cd build && cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_BUILD_TYPE=Debug ../source && cmake --build .
 
