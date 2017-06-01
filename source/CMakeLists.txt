@@ -8,7 +8,7 @@ find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(PkgConfig)
 pkg_search_module(SDL2 sdl2)
 pkg_search_module(SDL2_TTF SDL2_ttf)
-pkg_search_module(SDL2_GFX SDL2_gfx)
+#pkg_search_module(SDL2_GFX SDL2_gfx)
 
 if(NOT "${SDL2_FOUND}")
 	message("looking for SDL2")
@@ -17,11 +17,11 @@ endif()
 if(NOT "${SDL2_TTF_FOUND}")
 	find_package(SDL2_ttf REQUIRED)
 endif()
-if(NOT "${SDL2_GFX_FOUND}")
-	find_package(SDL2_gfx REQUIRED)
-endif()
+#if(NOT "${SDL2_GFX_FOUND}")
+#	find_package(SDL2_gfx REQUIRED)
+#endif()
 
-find_package(SDL2 COMPONENTS ttf gfx REQUIRED)
+#find_package(SDL2 COMPONENTS ttf gfx REQUIRED)
 find_package(Threads REQUIRED)
 
 # workaround for the trailing whitespace problem
@@ -109,11 +109,10 @@ target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS}	)
 target_link_libraries(client
 	ToogashadaCommon
 	${Boost_LIBRARIES}
-	${SDL2_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	SDL2_gfx
-	${Boost_LIBRARIES}
-	SDL2_ttf
+	#	${SDL2_GFX_LIBRARIES}
+	${SDL2_LIBRARIES}
+	${SDL2_TTF_LIBRARIES}
 )
 
 cotire(client)
