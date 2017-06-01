@@ -3,8 +3,6 @@ language: c++
 os:
     - linux
 
-dist: trusty
-
 addons:
     apt:
         sources:
@@ -14,7 +12,9 @@ addons:
             - clang-3.9
             - g++-5
             - gcc-5
-            - libboost-all-dev
+            - libboost-dev
+            - libboost-program-options-dev
+            - libboost-system-dev
             - libsdl2-dev
             - libsdl2-ttf-dev
 script:
