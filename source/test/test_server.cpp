@@ -5,10 +5,15 @@
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/boost_variant.hpp>
 
+#include "common/Connection.h"
 #include "common/components/Position.h"
 #include "doctest.h"
 
 #include <entityplus/entity.h>
+
+static_assert(!std::is_copy_constructible<Connection>::value, "Should it be?");
+static_assert(!std::is_copy_assignable<Connection>::value, "Should it be?");
+
 
 TEST_CASE("Serialization") {
 	std::stringstream ss; // any stream can be used

@@ -13,8 +13,6 @@ Connection::Connection(boost::asio::ip::tcp::socket &socket) : socket{socket} {
   ;
 }
 
-Connection::~Connection() {}
-
 bool Connection::whatIfDisconnected(boost::system::error_code const &error) {
   if ((boost::asio::error::eof == error) ||
       (boost::asio::error::connection_reset == error)) {

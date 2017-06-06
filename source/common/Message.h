@@ -12,7 +12,7 @@ enum class Tag : uint32_t;
 struct Message {
   using Data = std::vector<uint8_t>;
 
-  Message() : tag(Tag(0)) {}
+  Message() : Message(Tag(0)) {}
   Message(Tag tag, Data data = {}) : tag(tag), data(std::move(data)) { ; }
 
   Tag tag;

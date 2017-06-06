@@ -7,7 +7,10 @@
 class Connection : public IConnection {
 public:
   explicit Connection(boost::asio::ip::tcp::socket &socket);
-  ~Connection();
+  ~Connection() = default;
+
+  Connection(Connection const & /*other*/) = delete;
+  Connection& operator=(Connection const & /*other*/) = delete;
 
   // < IConnection >
   void send(Message message) override;
