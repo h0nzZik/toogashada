@@ -8,7 +8,6 @@ find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(PkgConfig)
 pkg_search_module(SDL2 sdl2)
 pkg_search_module(SDL2_TTF SDL2_ttf)
-#pkg_search_module(SDL2_GFX SDL2_gfx)
 
 if(NOT "${SDL2_FOUND}")
 	message("looking for SDL2")
@@ -17,11 +16,7 @@ endif()
 if(NOT "${SDL2_TTF_FOUND}")
 	find_package(SDL2_ttf REQUIRED)
 endif()
-#if(NOT "${SDL2_GFX_FOUND}")
-#	find_package(SDL2_gfx REQUIRED)
-#endif()
 
-#find_package(SDL2 COMPONENTS ttf gfx REQUIRED)
 find_package(Threads REQUIRED)
 
 # workaround for the trailing whitespace problem
@@ -40,6 +35,25 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 #	-Werror \
 #	-Wno-error=unused-private-field \
 #")
+
+include(ExternalProject)
+
+# SDL2_gfx
+
+ExternalProject_Add(project_sdl2_gfx
+	URL http://www.ferzkopp.net/Software/SDL2_gfx/SDL2_gfx-1.0.3.tar.gz
+	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL2_gfx
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL2_gfx/configure --prefix=<INSTALL_DIR>
+    BUILD_COMMAND ${MAKE}
+)
+
+add_library(libsdl2_gfx STATIC IMPORTED)
+ExternalProject_Get_Property(project_sdl2_gfx install_dir)
+set_property(TARGET libsdl2_gfx PROPERTY IMPORTED_LOCATION ${install_dir}/lib/libSDL2_gfx.a)
+add_dependencies(libsdl2_gfx project_sdl2_gfx)
+SET(LIBSDL2_GFX_INCLUDE_PATH "${install_dir}/include/SDL2")
+
+
 
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -108,10 +122,10 @@ add_library(client
 	./client/ClientGui.cpp
 )
 
-
-target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS}	)
+target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS} ${LIBSDL2_GFX_INCLUDE_PATH})
 target_link_libraries(client
 	ToogashadaCommon
+	libsdl2_gfx
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	#	${SDL2_GFX_LIBRARIES}
