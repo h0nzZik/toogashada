@@ -3,8 +3,6 @@ language: c++
 os:
     - linux
 
-dist: trusty
-
 addons:
     apt:
         sources:
