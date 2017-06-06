@@ -49,8 +49,6 @@ struct T{};
 TEST_CASE("Serialization of variant  with empty struct") {
 	using V = boost::variant<S, T>;
 
-	S s{};
-	//serialize(s, s);
 	V v(S{});
 	std::stringstream ss;
 	cereal::BinaryOutputArchive oarchive(ss);
@@ -72,7 +70,7 @@ TEST_CASE("Entity management") {
 
 	auto sum = 0;
 	entityManager.for_each<int>(
-			[&](entity_t ent, int i) {
+			[&](entity_t /*ent*/, int i) {
 			sum +=i;
 			});
 	CHECK(sum == 1225);

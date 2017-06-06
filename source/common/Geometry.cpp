@@ -172,7 +172,7 @@ bool in_circle(Point const &point, Circle const &circle) {
 	return std::hypot(vec.x, vec.y) <= circle.radius;
 }
 
-bool in_circle(Circle const &circle1, Circle const & circle2) {
+bool in_circle(Circle const & /*circle1*/, Circle const & /*circle2*/) {
 	return false;
 }
 

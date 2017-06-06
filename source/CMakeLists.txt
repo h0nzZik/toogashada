@@ -27,6 +27,7 @@ string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 	-std=c++14 \
 	-Wall -Wextra -pedantic \
+	-Weffc++ \
 	-Wold-style-cast -Weffc++ \
 	-Wno-error=parentheses \
 	-Wno-error=unused-variable \

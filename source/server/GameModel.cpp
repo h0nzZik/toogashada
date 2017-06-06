@@ -145,7 +145,7 @@ public:
     if (counter >= 50)
       throw std::runtime_error("Cannot fit object to area");
 
-    return {pos, object2d};
+    return std::tuple<Position, Object2D>{pos, object2d};
   }
 
   // What about some 'player factory'?
@@ -518,7 +518,7 @@ private:
   std::chrono::steady_clock::time_point gameTime;
 };
 
-const std::chrono::milliseconds GameModel::Impl::dt;
+constexpr const std::chrono::milliseconds GameModel::Impl::dt;
 constexpr Scalar GameModel::Impl::BULLET_RADIUS;
 constexpr Scalar GameModel::Impl::BULLER_SPEED;
 constexpr Scalar GameModel::Impl::PLAYER_SPEED;
