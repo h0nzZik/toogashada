@@ -123,7 +123,12 @@ add_library(client
 	./client/ClientGui.cpp
 )
 
-target_include_directories(client PRIVATE ${SDL2_INCLUDE_DIRS} ${LIBSDL2_GFX_INCLUDE_PATH})
+target_include_directories(client PRIVATE
+	${SDL2_INCLUDE_DIRS}
+	${LIBSDL2_GFX_INCLUDE_PATH}
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/third_party/ColorConverter
+)
+
 target_link_libraries(client
 	ToogashadaCommon
 	libsdl2_gfx

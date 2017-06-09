@@ -15,6 +15,9 @@
 // Boost
 #include <boost/variant/static_visitor.hpp>
 
+// ColorConverter
+#include <ColorConverter.h>
+
 // Common
 #include <common/EntityComponentSystem.h>
 #include <common/Geometry.h>
@@ -28,7 +31,6 @@
 #include "DrawProp.h"
 #include "TextProperties.h"
 #include "ClientController.h"
-#include "ColorConverter.h"
 #include "SDLDeleter.h"
 
 using namespace std;
