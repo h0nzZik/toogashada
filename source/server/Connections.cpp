@@ -1,6 +1,7 @@
 // standard
-#include <set>
+#include <memory>  // std::unique_ptr
 #include <utility> // std::swap
+#include <vector>
 
 // server
 #include <server/ConnectionToClient.hpp>
@@ -13,63 +14,71 @@ using namespace std;
 class Connections::Impl {
 public:
   Impl() = default;
-  ~Impl();
+  ~Impl() = default;
+
   ConnectionToClient &insert(unique_ptr<ConnectionToClient> connection);
   void erase(ConnectionToClient &connection);
   void for_each(function<void(ConnectionToClient &)> f);
   void handle_erase(function<void(ConnectionToClient &)> f);
 
 private:
-  set<ConnectionToClient *> connections;
-  set<ConnectionToClient *> connectionsToClear;
+  bool isToBeCleared(ConnectionToClient const &connection) const;
+  vector<unique_ptr<ConnectionToClient>> connections;
+  vector<ConnectionToClient *> connectionsToClear;
 };
-
-Connections::Impl::~Impl() {
-  for (ConnectionToClient *conn : connections)
-    delete conn;
-}
 
 ConnectionToClient &
 Connections::Impl::insert(unique_ptr<ConnectionToClient> connection) {
-  ConnectionToClient *con = connection.release();
-  connections.insert(con);
+  ConnectionToClient *con = connection.get();
+  connections.push_back(move(connection));
   return *con;
 }
 
+bool Connections::Impl::isToBeCleared(
+    ConnectionToClient const &connection) const {
+  return find(connectionsToClear.begin(), connectionsToClear.end(),
+              &connection) != connectionsToClear.end();
+}
+
 void Connections::Impl::erase(ConnectionToClient &connection) {
-  connectionsToClear.insert(&connection);
+  if (!isToBeCleared(connection))
+    connectionsToClear.push_back(&connection);
 }
 
 void Connections::Impl::for_each(function<void(ConnectionToClient &)> f) {
-  for (ConnectionToClient *conn : connections) {
+  for (unique_ptr<ConnectionToClient> const &conn : connections) {
     // This is not needed in the time of writing,
     // but it might be useful later
-    if (connectionsToClear.find(conn) != connectionsToClear.end())
+    if (isToBeCleared(*conn))
       continue;
 
     f(*conn);
   }
 }
 
-// It is not really exception safe
+/*
+ * If the callback does not throw, then this does not throw, either.
+ * Otherwise it provides normal exception guarantee.
+ */
 void Connections::Impl::handle_erase(function<void(ConnectionToClient &)> f) {
-  set<ConnectionToClient *> localConnectionsToClear;
-  using std::swap;
-  swap(localConnectionsToClear, connectionsToClear);
 
-  // Clear them
-  for (ConnectionToClient *toClear : localConnectionsToClear) {
-    connections.erase(toClear);
-  }
+  auto end = connectionsToClear.end();
+  for (auto it = connectionsToClear.begin(); it != end; ++it) {
+    ConnectionToClient *toClear = *it;
+    connectionsToClear.erase(it);
 
-  // Callback
-  for (ConnectionToClient *toClear : localConnectionsToClear) {
+    // Find the unique pointer
+    auto found = find_if(connections.begin(), connections.end(),
+                         [&](auto const &u) { return u.get() == toClear; });
+    assert(found != connections.end());
+
+    unique_ptr<ConnectionToClient> connection;
+    connection.swap(*found);
+    connections.erase(found);
+
+    // Until now, no exception could occur.
+    // Now it can, but we do not mind it.
     f(*toClear);
-  }
-
-  // Real desotroy
-  for (ConnectionToClient *toClear : localConnectionsToClear) {
-    delete toClear;
   }
 }
 
