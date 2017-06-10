@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.7)
 project(toogashada)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cotire)
 
@@ -22,17 +24,20 @@ find_package(Threads REQUIRED)
 # workaround for the trailing whitespace problem
 string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
 
+SET(MY_CXX_FLAGS "-std=c++14 -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast")
+list(APPEND CMAKE_CXX_FLAGS ${MY_CXX_FLAGS})
+
 # TODO hanle warning flags separately,
 # based on used compiler version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
-	-std=c++14 \
-	-Wall -Wextra -pedantic \
-	-Weffc++ \
-	-Wold-style-cast -Weffc++ \
-	-Wno-error=parentheses \
-	-Wno-error=unused-variable \
-	-Wno-error=unused-parameter \
-")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
+#	-std=c++14 \
+#	-Wall -Wextra -pedantic \
+#	-Weffc++ \
+#	-Wold-style-cast -Weffc++ \
+#	-Wno-error=parentheses \
+#	-Wno-error=unused-variable \
+#	-Wno-error=unused-parameter \
+#")
 #	-Werror \
 #	-Wno-error=unused-private-field \
 #")
