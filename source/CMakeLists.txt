@@ -2,9 +2,16 @@ cmake_minimum_required(VERSION 2.7)
 project(toogashada)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cotire)
+include(ExternalProject)
+
+# Clang-tidy integration
+if ( NOT ${CMAKE_VERSION} VERSION_LESS "3.6")
+	message(STATUS "Will use clang-tidy")
+	SET(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+endif()
 
 find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(PkgConfig)
@@ -42,7 +49,6 @@ list(APPEND CMAKE_CXX_FLAGS ${MY_CXX_FLAGS})
 #	-Wno-error=unused-private-field \
 #")
 
-include(ExternalProject)
 
 # SDL2_gfx
 
