@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string.h>
 
 #include <boost/program_options.hpp>
 
@@ -7,51 +6,41 @@
 #include "Client.h"
 
 using namespace std;
-
-namespace {
-  const size_t ERROR_IN_COMMAND_LINE = 1;
-
-
-}
+using namespace boost::program_options;
 
 int main(int argc, const char **argv) {
 
-	namespace po = boost::program_options;
-	boost::program_options::options_description desc("Options");
-	boost::program_options::variables_map vm;
+  options_description desc("Options");
+  variables_map vm;
 
-	desc.add_options()("ip,i", po::value<std::string>()->default_value("localhost"),"Server address")
-					("port,p", po::value<std::string>()->default_value("2061"),"Server port")
-					("player-name,n", po::value<std::string>()->required())
-					("player-team,t", po::value<std::string>())
-					("window-width,w", po::value<int>())
-					("window-height,h", po::value<int>());
-
-
+  desc.add_options()("ip,i", value<string>()->default_value("localhost"),
+                     "Server address")(
+      "port,p", value<string>()->default_value("2061"),
+      "Server port")("player-name,n", value<string>()->required())(
+      "player-team,t", value<string>())("window-width,w", value<int>())(
+      "window-height,h", value<int>());
 
   cout << "Toogashada Client" << endl;
 
   try {
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
-    po::notify(vm);
+    store(command_line_parser(argc, argv).options(desc).run(), vm);
+    notify(vm);
 
-	  Client client{
-					  vm["ip"].as<std::string>(),
-					  vm["port"].as<std::string>(),
-					  vm["player-name"].as<std::string>(),
-					  vm.count("player-team") ? vm["player-team"].as<std::string>() : "",
-					  vm.count("window-width") ? vm["window-width"].as<int>() : -1,
-					  vm.count("window-height") ? vm["window-height"].as<int>() : -1};
-	  client.run();
+    Client client{
+        vm["ip"].as<string>(),
+        vm["port"].as<string>(),
+        vm["player-name"].as<string>(),
+        vm.count("player-team") ? vm["player-team"].as<string>() : "",
+        vm.count("window-width") ? vm["window-width"].as<int>() : -1,
+        vm.count("window-height") ? vm["window-height"].as<int>() : -1};
+    client.run();
 
-  } catch (std::exception &e) {
+  } catch (exception &e) {
 
-    std::cerr << "Error: \n"
-              << e.what() << std::endl
-              << std::endl;
+    cerr << "Error: \n" << e.what() << endl << endl;
 
-    std::cerr << desc << std::endl;
-    return ERROR_IN_COMMAND_LINE;
+    cerr << desc << endl;
+    return 1;
   }
 }
