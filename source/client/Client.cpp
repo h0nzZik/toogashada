@@ -1,12 +1,17 @@
+// Standard
 #include <iostream>
 #include <thread>
 
+// Common
 #include <common/ClientMessage.h>
 
+// Client
 #include "ClientController.h"
 #include "ClientGui.h"
+#include "ClientOptions.h"
 #include "ConnectionToServer.h"
 
+// self
 #include "Client.h"
 
 using namespace std;
@@ -15,8 +20,13 @@ using namespace std;
 class Client::Impl : private IConnection::IHandler {
 
 public:
-  Impl(std::string ip, std::string port, std::string playerName,
-       std::string playerTeam, int windowWidth = -1, int windowHeight = -1);
+  Impl(ClientOptions const &options)
+      : clientGui{clientController, options.playerName, options.playerTeam,
+                  options.windowWidth, options.windowHeight},
+        serverConnection{options.ip, options.port},
+        clientController{{options.playerName, options.playerTeam},
+                         clientGui,
+                         serverConnection} {}
 
   ~Impl() = default;
 
@@ -32,14 +42,6 @@ private:
   ConnectionToServer serverConnection;
   ClientController clientController;
 };
-
-Client::Impl::Impl(std::string ip, std::string port, std::string playerName,
-                   std::string playerTeam, int windowWidth, int windowHeight)
-    : clientGui{clientController, playerName, playerTeam, windowWidth,
-                windowHeight},
-      serverConnection{ip, port}, clientController{{playerName, playerTeam},
-                                                   clientGui,
-                                                   serverConnection} {}
 
 void Client::Impl::received(IConnection & /*connection*/, Message msg) {
 
@@ -67,10 +69,8 @@ void Client::Impl::run() {
 }
 
 // Client Wrapper Definition
-Client::Client(std::string ip, std::string port, std::string playerName,
-               std::string playerTeam, int windowWidth, int windowHeight)
-    : mImpl(make_unique<Impl>(move(ip), move(port), move(playerName),
-                              move(playerTeam), windowWidth, windowHeight)) {}
+Client::Client(ClientOptions const &options)
+    : mImpl(make_unique<Impl>(options)) {}
 Client::~Client() = default;
 
 void Client::run() { mImpl->run(); }

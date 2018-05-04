@@ -4,30 +4,23 @@
 
 // Project
 #include "Client.h"
+#include "ClientOptions.h"
 
 using namespace boost::program_options;
 
 boost::program_options::options_description client_options() {
   boost::program_options::options_description desc("Options");
 
-  desc.add_options()("ip,i", value<std::string>()->default_value("localhost"),
-                     "Server address")(
-      "port,p", value<std::string>()->default_value("2061"),
-      "Server port")("player-name,n", value<std::string>()->required())(
-      "player-team,t", value<std::string>())("window-width,w", value<int>())(
-      "window-height,h", value<int>());
+  desc.add_options()
+	  ("ip,i", value<std::string>()->default_value("localhost"),"Server address")
+	  ("port,p", value<std::string>()->default_value("2061"),"Server port")
+	  ("player-name,n", value<std::string>()->required())
+	  ("player-team,t", value<std::string>())
+	  ("window-width,w", value<int>())
+	  ("window-height,h", value<int>());
 
   return desc;
 }
-
-struct ClientOptions {
-  std::string ip;
-  std::string port;
-  std::string playerName;
-  std::string playerTeam;
-  int windowWidth;
-  int windowHeight;
-};
 
 ClientOptions parseClientOptions(int argc, char const *argv[]) noexcept {
   options_description desc = client_options();
@@ -57,18 +50,18 @@ ClientOptions parseClientOptions(int argc, char const *argv[]) noexcept {
   }
 }
 
+void runClientWithOptions(ClientOptions const &options) {
+  try {
+    Client client{options};
+    client.run();
+  } catch (std::exception &e) {
+    std::cerr << "Error: \n" << e.what() << std::endl << std::endl;
+	std::exit(1);
+  }
+}
+
 int main(int argc, const char **argv) {
   std::cout << "Toogashada Client" << std::endl;
   ClientOptions options = parseClientOptions(argc, argv);
-  try {
-    // TODO: pass the structure as it is
-    Client client{options.ip,          options.port,
-                  options.playerName,  options.playerTeam,
-                  options.windowWidth, options.windowHeight};
-    client.run();
-
-  } catch (std::exception &e) {
-    std::cerr << "Error: \n" << e.what() << std::endl << std::endl;
-    return 1;
-  }
+  runClientWithOptions(options);
 }

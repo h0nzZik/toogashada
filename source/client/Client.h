@@ -1,13 +1,16 @@
 #ifndef SRC_CLIENT_H_
 #define SRC_CLIENT_H_
 
+// Standard
 #include <memory>
 #include <string>
 
+// Client
+#include "ClientOptions_fwd.h"
+
 class Client {
 public:
-  Client(std::string ip, std::string port, std::string playerName,
-         std::string playerTeam, int windowWidth = -1, int windowHeight = -1);
+  Client(ClientOptions const &options);
   ~Client();
 
   void run();

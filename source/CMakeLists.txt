@@ -160,6 +160,8 @@ target_link_libraries(client
 
 cotire(client)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/media/Biotypc.ttf ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
 add_executable(client_main
 	./client/client_main.cpp
         )
