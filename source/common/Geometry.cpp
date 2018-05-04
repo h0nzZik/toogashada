@@ -102,86 +102,87 @@ std::ostream &operator<<(std::ostream &o, RectangularArea const &area) {
   return o;
 }
 
-bool in_triangle(Point const &p, Point const &p1, Point const &p2, Point const &p3) {
-	auto alpha = ((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y)) /
-	        ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y));
-	auto beta = ((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y)) /
-	       ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y));
-	auto gamma = 1.0f - alpha - beta;
+bool in_triangle(Point const &p, Point const &p1, Point const &p2,
+                 Point const &p3) {
+  auto alpha = ((p2.y - p3.y) * (p.x - p3.x) + (p3.x - p2.x) * (p.y - p3.y)) /
+               ((p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y));
+  auto beta = ((p3.y - p1.y) * (p.x - p3.x) + (p1.x - p3.x) * (p.y - p3.y)) /
+              ((p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y));
+  auto gamma = 1.0f - alpha - beta;
 
-	return alpha >= 0 && beta >= 0 && gamma >= 0;
+  return alpha >= 0 && beta >= 0 && gamma >= 0;
 }
 
-
 Vector perpendicularDistance(Point const &p, Point const &A, Point const &B) {
-	Scalar const t = projection(p, A, B);
-	Point const projectedCenter = A + t*(B - A);
-	return p - projectedCenter;
+  Scalar const t = projection(p, A, B);
+  Point const projectedCenter = A + t * (B - A);
+  return p - projectedCenter;
 }
 
 bool onLeftOf(Point const &point, Point const &A, Point const &B) {
-	return ((A.x - point.x)*(B.y - point.y) - (A.y - point.y)*(B.y - point.x)) > 0;
+  return ((A.x - point.x) * (B.y - point.y) -
+          (A.y - point.y) * (B.y - point.x)) > 0;
 }
 
 // http://stackoverflow.com/a/21096006/6209703
-bool in_polygon(Point const &point, Polygon const & polygon_old) {
-	Polygon polygon = polygon_old;
+bool in_polygon(Point const &point, Polygon const &polygon_old) {
+  Polygon polygon = polygon_old;
 
-	assert(polygon.size() >= 3);
+  assert(polygon.size() >= 3);
 
-	while (polygon.size() > 3) {
-		// TODO detect automatically polygons rotation/order of verteces
-		Polygon newPolygon;
-		if (onLeftOf(point, polygon[0], polygon[polygon.size()/2])) {
-			for (size_t i = 0; i <= polygon.size()/2; i++)
-				newPolygon.push_back(polygon[i]);
-		} else {
-			for (size_t i = polygon.size()/2; i < polygon.size(); i++)
-				newPolygon.push_back(polygon[i]);
-			newPolygon.push_back(polygon[0]);
-		}
+  while (polygon.size() > 3) {
+    // TODO detect automatically polygons rotation/order of verteces
+    Polygon newPolygon;
+    if (onLeftOf(point, polygon[0], polygon[polygon.size() / 2])) {
+      for (size_t i = 0; i <= polygon.size() / 2; i++)
+        newPolygon.push_back(polygon[i]);
+    } else {
+      for (size_t i = polygon.size() / 2; i < polygon.size(); i++)
+        newPolygon.push_back(polygon[i]);
+      newPolygon.push_back(polygon[0]);
+    }
 
-		assert(newPolygon.size() < polygon.size());
-		using std::swap;
-		swap(newPolygon, polygon);
-	}
+    assert(newPolygon.size() < polygon.size());
+    using std::swap;
+    swap(newPolygon, polygon);
+  }
 
-	return in_triangle(point, polygon[0], polygon[1], polygon[2]);
+  return in_triangle(point, polygon[0], polygon[1], polygon[2]);
 }
 
-bool in_polygon(Circle const & circle, Polygon const & polygon) {
-	for (Point const & p : polygon) {
-		Vector const direction = unit(p - circle.center);
-		Point const outer = circle.center + circle.radius*direction;
-		if (!in_polygon(outer, polygon))
-			return false;
-	}
-	return true;
+bool in_polygon(Circle const &circle, Polygon const &polygon) {
+  for (Point const &p : polygon) {
+    Vector const direction = unit(p - circle.center);
+    Point const outer = circle.center + circle.radius * direction;
+    if (!in_polygon(outer, polygon))
+      return false;
+  }
+  return true;
 }
 
-bool in_polygon(Polygon const & polygon1, Polygon const &polygon2) {
-	for (Point const & p : polygon1) {
-		if (!in_polygon(p, polygon2))
-			return false;
-	}
-	return true;
+bool in_polygon(Polygon const &polygon1, Polygon const &polygon2) {
+  for (Point const &p : polygon1) {
+    if (!in_polygon(p, polygon2))
+      return false;
+  }
+  return true;
 }
 
 bool in_circle(Point const &point, Circle const &circle) {
-	auto vec = point - circle.center;
-	return std::hypot(vec.x, vec.y) <= circle.radius;
+  auto vec = point - circle.center;
+  return std::hypot(vec.x, vec.y) <= circle.radius;
 }
 
 bool in_circle(Circle const & /*circle1*/, Circle const & /*circle2*/) {
-	return false;
+  return false;
 }
 
-bool in_circle(Polygon const & polygon, Circle const &circle) {
-	for (Point const & p : polygon) {
-		if (!in_circle(p, circle))
-			return false;
-	}
-	return true;
+bool in_circle(Polygon const &polygon, Circle const &circle) {
+  for (Point const &p : polygon) {
+    if (!in_circle(p, circle))
+      return false;
+  }
+  return true;
 }
 
 bool in(Point const &point, RectangularArea const &area) {
@@ -223,52 +224,45 @@ bool in(Polygon const &polygon, RectangularArea const &area) {
   return true;
 }
 
-
 namespace {
 
-template < typename Object1 >
-class InVisitor1 : public boost::static_visitor<bool>{
-	Object1 const & object1;
+template <typename Object1>
+class InVisitor1 : public boost::static_visitor<bool> {
+  Object1 const &object1;
+
 public:
-	explicit InVisitor1(Object1 const & object1) :
-		object1(object1) {
-	}
+  explicit InVisitor1(Object1 const &object1) : object1(object1) {}
 
-	bool operator()(Polygon const & object2) {
-		return in_polygon(object1, object2);
-	}
+  bool operator()(Polygon const &object2) {
+    return in_polygon(object1, object2);
+  }
 
-	bool operator()(Circle const & object2) {
-		return in_circle(object1, object2);
-	}
+  bool operator()(Circle const &object2) { return in_circle(object1, object2); }
 };
 
+class InVisitor2 : public boost::static_visitor<bool> {
+  Object2D const &object2;
 
-class InVisitor2 : public boost::static_visitor<bool>{
-	Object2D const & object2;
 public:
-	explicit InVisitor2(Object2D const & object2) :
-		object2(object2) {
-	}
+  explicit InVisitor2(Object2D const &object2) : object2(object2) {}
 
-	bool operator()(Polygon const & object1) {
-		InVisitor1<Polygon> visitor{object1};
-		return boost::apply_visitor(visitor, object2);
-	}
+  bool operator()(Polygon const &object1) {
+    InVisitor1<Polygon> visitor{object1};
+    return boost::apply_visitor(visitor, object2);
+  }
 
-	bool operator()(Circle const & object1) {
-		InVisitor1<Circle> visitor{object1};
-		return boost::apply_visitor(visitor, object2);
-	}
+  bool operator()(Circle const &object1) {
+    InVisitor1<Circle> visitor{object1};
+    return boost::apply_visitor(visitor, object2);
+  }
 };
 
 } // anonymous namespace
 
 bool in(Object2D const &object1, Object2D const &object2) {
-	InVisitor2 visitor{object2};
-	return boost::apply_visitor(visitor, object1);
+  InVisitor2 visitor{object2};
+  return boost::apply_visitor(visitor, object1);
 }
-
 
 bool in(Object2D const &object, RectangularArea const &area) {
   class Visitor : public boost::static_visitor<bool> {

@@ -96,7 +96,7 @@ private:
         make_unique<ConnectionToClient>(acceptor.get_io_service());
 
     // Capturing unique pointers is not easy,
-	// since the std::function must be copyable
+    // since the std::function must be copyable
     acceptor.async_accept(
         waiting_connection->socket(),
         [this](const boost::system::error_code &error) {

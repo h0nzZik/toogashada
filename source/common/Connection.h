@@ -10,7 +10,7 @@ public:
   ~Connection() = default;
 
   Connection(Connection const & /*other*/) = delete;
-  Connection& operator=(Connection const & /*other*/) = delete;
+  Connection &operator=(Connection const & /*other*/) = delete;
 
   // < IConnection >
   void send(Message message) override;

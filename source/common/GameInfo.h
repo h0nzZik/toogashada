@@ -71,7 +71,8 @@ struct GameInfo {
 
   geometry::RectangularArea getArea() const {
     return {{
-                0, 0,
+                0,
+                0,
             },
             {mapW, mapH}};
   };

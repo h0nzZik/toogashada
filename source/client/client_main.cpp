@@ -5,42 +5,70 @@
 // Project
 #include "Client.h"
 
-using namespace std;
 using namespace boost::program_options;
 
-int main(int argc, const char **argv) {
+boost::program_options::options_description client_options() {
+  boost::program_options::options_description desc("Options");
 
-  options_description desc("Options");
-  variables_map vm;
-
-  desc.add_options()("ip,i", value<string>()->default_value("localhost"),
+  desc.add_options()("ip,i", value<std::string>()->default_value("localhost"),
                      "Server address")(
-      "port,p", value<string>()->default_value("2061"),
-      "Server port")("player-name,n", value<string>()->required())(
-      "player-team,t", value<string>())("window-width,w", value<int>())(
+      "port,p", value<std::string>()->default_value("2061"),
+      "Server port")("player-name,n", value<std::string>()->required())(
+      "player-team,t", value<std::string>())("window-width,w", value<int>())(
       "window-height,h", value<int>());
 
-  cout << "Toogashada Client" << endl;
+  return desc;
+}
+
+struct ClientOptions {
+  std::string ip;
+  std::string port;
+  std::string playerName;
+  std::string playerTeam;
+  int windowWidth;
+  int windowHeight;
+};
+
+ClientOptions parseClientOptions(int argc, char const *argv[]) noexcept {
+  options_description desc = client_options();
 
   try {
+    variables_map vm;
 
     store(command_line_parser(argc, argv).options(desc).run(), vm);
     notify(vm);
 
-    Client client{
-        vm["ip"].as<string>(),
-        vm["port"].as<string>(),
-        vm["player-name"].as<string>(),
-        vm.count("player-team") ? vm["player-team"].as<string>() : "",
+    // Looking forward to C++20 designated initializers
+    ClientOptions opts{
+        vm["ip"].as<std::string>(),
+        vm["port"].as<std::string>(),
+        vm["player-name"].as<std::string>(),
+        vm.count("player-team") ? vm["player-team"].as<std::string>() : "",
         vm.count("window-width") ? vm["window-width"].as<int>() : -1,
         vm.count("window-height") ? vm["window-height"].as<int>() : -1};
+
+    return opts;
+  } catch (std::exception const &e) {
+    std::cerr << "Cannot parse arguments:\n"
+              << e.what() << std::endl
+              << std::endl;
+    std::cerr << desc << std::endl;
+    std::exit(1);
+  }
+}
+
+int main(int argc, const char **argv) {
+  std::cout << "Toogashada Client" << std::endl;
+  ClientOptions options = parseClientOptions(argc, argv);
+  try {
+    // TODO: pass the structure as it is
+    Client client{options.ip,          options.port,
+                  options.playerName,  options.playerTeam,
+                  options.windowWidth, options.windowHeight};
     client.run();
 
-  } catch (exception &e) {
-
-    cerr << "Error: \n" << e.what() << endl << endl;
-
-    cerr << desc << endl;
+  } catch (std::exception &e) {
+    std::cerr << "Error: \n" << e.what() << std::endl << std::endl;
     return 1;
   }
 }

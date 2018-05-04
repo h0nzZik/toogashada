@@ -32,10 +32,10 @@ public:
   Impl(EntityComponentSystem &ecs, IBroadcaster &broadcaster)
       : ecs{ecs}, broadcaster{broadcaster} {
     generateMap();
-	auto seed = d();
-	cout << "GameModel seed: " << seed << endl;
-	// TODO it should be possible to specify the seed on command line.
-	randomEngine = std::default_random_engine(seed);
+    auto seed = d();
+    cout << "GameModel seed: " << seed << endl;
+    // TODO it should be possible to specify the seed on command line.
+    randomEngine = std::default_random_engine(seed);
   }
 
   ~Impl() { m_stop = true; }
@@ -52,7 +52,7 @@ public:
           if (geometry::collision(object, oldObject))
             colliding.push_back(oldEntity);
           else if (in(object, oldObject))
-        	  colliding.push_back(oldEntity);
+            colliding.push_back(oldEntity);
         });
 
     return colliding;
@@ -397,73 +397,83 @@ private:
   void generateMap() {
 
     static std::vector<std::pair<PolygonalShape, Position>> obstacles = {
-            /********************************/
-            /*     TOP SHAPE                */
-            /********************************/
-            {       // long horizontal line
-                    PolygonalShape{{0, 0}, {1280, 0}, // top outer line
-                                   {1280, 20}, {0, 20} // top inner line
-                    },
-                    Position::create({150,150})
-            },
-            {       // left vertical line
-                    PolygonalShape{{0,0},     {20,0}, // top line
-                                   {20, 210}, { 0,210}// bottom line
-                    },
-                    Position::create({150,170})
-            },
-            {       // right vertical line
-                    PolygonalShape{{0, 0}, {20, 0}, // top line
-                                   {20, 670}, {0, 670}, // bottom line
-                    },
-                    Position::create({1430,80})
-            },
-            /*****************************************/
+        /********************************/
+        /*     TOP SHAPE                */
+        /********************************/
+        {// long horizontal line
+         PolygonalShape{
+             {0, 0},
+             {1280, 0}, // top outer line
+             {1280, 20},
+             {0, 20} // top inner line
+         },
+         Position::create({150, 150})},
+        {// left vertical line
+         PolygonalShape{
+             {0, 0},
+             {20, 0}, // top line
+             {20, 210},
+             {0, 210} // bottom line
+         },
+         Position::create({150, 170})},
+        {// right vertical line
+         PolygonalShape{
+             {0, 0},
+             {20, 0}, // top line
+             {20, 670},
+             {0, 670}, // bottom line
+         },
+         Position::create({1430, 80})},
+        /*****************************************/
 
-            {       // bottom right shape
-                    PolygonalShape{{0, 0}, {20, 0}, {20, 530}, {0, 530}},
-                    Position::create({1260,370})
-            },
+        {// bottom right shape
+         PolygonalShape{{0, 0}, {20, 0}, {20, 530}, {0, 530}},
+         Position::create({1260, 370})},
 
-            /********************************/
-            /*     PLIERS SHAPE             */
-            /********************************/
-            {       // body
-                    PolygonalShape{{0,   0}, {200, 0}, // top line
-                                   {200, 300}, {0, 400}, // bottom diagonal line
-                    },
-                    Position::create({960, 320})
-            },
-            {       // top arm upper horizontal line
-                    PolygonalShape{{0,   0}, {490, 0}, // top line
-                                   {490, 20}, {0, 20} // bototm line
-                    },
-                    Position::create({470, 320})
-            },
-            {       // top arm vertical line
-                    PolygonalShape{{0,   0}, {20, 0}, // top line
-                                   {20, 80}, {0, 80} // bottom line
-                    },
-                    Position::create({470, 340})
-            },
-            {       // bottom arm
-                    PolygonalShape{{490, 20}, {0, 20}, // top line
-                                   {0, 0},{490, 0} // bottom line
-                    },
-                    Position::create({470, 700})
-            },
-            /*****************************************/
+        /********************************/
+        /*     PLIERS SHAPE             */
+        /********************************/
+        {// body
+         PolygonalShape{
+             {0, 0},
+             {200, 0}, // top line
+             {200, 300},
+             {0, 400}, // bottom diagonal line
+         },
+         Position::create({960, 320})},
+        {// top arm upper horizontal line
+         PolygonalShape{
+             {0, 0},
+             {490, 0}, // top line
+             {490, 20},
+             {0, 20} // bototm line
+         },
+         Position::create({470, 320})},
+        {// top arm vertical line
+         PolygonalShape{
+             {0, 0},
+             {20, 0}, // top line
+             {20, 80},
+             {0, 80} // bottom line
+         },
+         Position::create({470, 340})},
+        {// bottom arm
+         PolygonalShape{
+             {490, 20},
+             {0, 20}, // top line
+             {0, 0},
+             {490, 0} // bottom line
+         },
+         Position::create({470, 700})},
+        /*****************************************/
 
-            {
-              PolygonalShape{{0, 180}, {260, 0}, {260, 20}, {30, 180}},
-              Position::create({900,720})
-            },
-            {
-              PolygonalShape{{100, 0}, {350, 0}, // top line
-                             {160, 220}, {0, 170}}, // bottom line
-              Position::create({80, 620})
-            }
-    };
+        {PolygonalShape{{0, 180}, {260, 0}, {260, 20}, {30, 180}},
+         Position::create({900, 720})},
+        {PolygonalShape{{100, 0},
+                        {350, 0}, // top line
+                        {160, 220},
+                        {0, 170}}, // bottom line
+         Position::create({80, 620})}};
 
     // A polygon
     for (size_t i = 0; i < obstacles.size(); i++) {

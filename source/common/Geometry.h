@@ -86,7 +86,7 @@ inline Vector operator+(Vector const &v) { return {+v.x, +v.y}; }
 
 inline Vector operator-(Vector const &v) { return {-v.x, -v.y}; }
 
-inline Vector & operator-=(Vector & v1, Vector const &v2) {
+inline Vector &operator-=(Vector &v1, Vector const &v2) {
   v1.x -= v2.x;
   v1.y -= v2.y;
   return v1;

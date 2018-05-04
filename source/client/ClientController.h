@@ -23,10 +23,9 @@
 #include <common/components/EntityID.h>
 #include <common/components/PlayerInfo.h>
 
-#include "ClientGui.h"
+#include "ClientGui_fwd.h"
 
 struct PlayerInfo;
-class ClientGui;
 class ConnectionToServer;
 struct Message;
 
@@ -36,27 +35,24 @@ public:
                             ConnectionToServer &server);
 
   void start();
-	void stop();
-	void received(Message msg);
-
+  void stop();
+  void received(Message msg);
 
   bool isMyPlayer(const EntityID &id) const;
   entity_t getMyPlayer();
 
 private:
+  ClientGui &mClientGui;
+  ConnectionToServer &mRemoteServer;
+  PlayerInfo mPlayerInfo;
+  EntityID mPlayerId;
+  entity_t mPlayerEntity;
+  GameInfo mGameInfo;
 
-	ClientGui &mClientGui;
-	ConnectionToServer &mRemoteServer;
-	PlayerInfo mPlayerInfo;
-	EntityID mPlayerId;
-	entity_t mPlayerEntity;
-	GameInfo mGameInfo;
+  bool mEndLoop = false;
 
-	bool mEndLoop = false;
-
-	EntityComponentSystem mEcs;
-	std::map<EntityID, entity_t> mEntites;
-
+  EntityComponentSystem mEcs;
+  std::map<EntityID, entity_t> mEntites;
 
   std::map<SDL_Scancode, std::pair<PlayerAction, bool>> mKeyMap{
       {SDL_SCANCODE_W, {PlayerAction::Up, 0}},
@@ -64,15 +60,15 @@ private:
       {SDL_SCANCODE_A, {PlayerAction::Left, 0}},
       {SDL_SCANCODE_D, {PlayerAction::Right, 0}},
       {SDL_SCANCODE_SPACE, {PlayerAction::Fire, 0}}};
-	bool mLeftMouse = false;
+  bool mLeftMouse = false;
 
   class Receiver;
-	void received(ServerMessage msg);
+  void received(ServerMessage msg);
 
-	void send(ClientMessage const &msg);
+  void send(ClientMessage const &msg);
   void sendUserInteractionToServer();
 
-	void loopWork();
+  void loopWork();
 
-	entity_t getEntity(const EntityID &id);
+  entity_t getEntity(const EntityID &id);
 };

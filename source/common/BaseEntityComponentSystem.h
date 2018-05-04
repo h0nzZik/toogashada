@@ -16,7 +16,7 @@ struct get_component_impl;
 template <typename Entity, typename... Comps> struct impl_removeComponent;
 
 template <typename Component, typename... Comps> struct impl_getComponentNumber;
-}
+} // namespace detail
 
 /**
  * Provides a wrapper over EntityPlus.

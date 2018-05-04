@@ -8,18 +8,18 @@ include(cotire)
 include(ExternalProject)
 
 # Clang-tidy integration
-if (NOT ${CMAKE_VERSION} VERSION_LESS "3.6")
-	if(NOT CMAKE_CXX_CLANG_TIDY)
-		SET(CMAKE_CXX_CLANG_TIDY "clang-tidy")
-	endif()
-endif()
+#if (NOT ${CMAKE_VERSION} VERSION_LESS "3.6")
+#	if(NOT CMAKE_CXX_CLANG_TIDY)
+#		SET(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+#	endif()
+#endif()
 
 # Include what you use integration
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.4")
-	if(NOT CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
-		SET(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "include-what-you-use")
-	endif()
-endif()
+#if(NOT ${CMAKE_VERSION} VERSION_LESS "3.4")
+#	if(NOT CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
+#		SET(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "include-what-you-use")
+#	endif()
+#endif()
 
 find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(PkgConfig)

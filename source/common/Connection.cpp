@@ -25,9 +25,9 @@ bool Connection::whatIfDisconnected(boost::system::error_code const &error) {
 
 void Connection::start_rx_header() {
   async_read(socket, boost::asio::buffer(rx_header_buffer),
-             /*boost::asio::transfer_all(), */ [this](
-                 const boost::system::error_code &error,
-                 std::size_t bytes_transferred) {
+             /*boost::asio::transfer_all(), */
+             [this](const boost::system::error_code &error,
+                    std::size_t bytes_transferred) {
 
                if (whatIfDisconnected(error))
                  return;
