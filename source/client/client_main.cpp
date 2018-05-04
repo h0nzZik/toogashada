@@ -11,13 +11,14 @@ using namespace boost::program_options;
 boost::program_options::options_description client_options() {
   boost::program_options::options_description desc("Options");
 
-  desc.add_options()
-	  ("ip,i", value<std::string>()->default_value("localhost"),"Server address")
-	  ("port,p", value<std::string>()->default_value("2061"),"Server port")
-	  ("player-name,n", value<std::string>()->required())
-	  ("player-team,t", value<std::string>())
-	  ("window-width,w", value<int>())
-	  ("window-height,h", value<int>());
+  desc.add_options()("ip,i", value<std::string>()->default_value("localhost"),
+                     "Server address");
+  desc.add_options()("port,p", value<std::string>()->default_value("2061"),
+                     "Server port");
+  desc.add_options()("player-name,n", value<std::string>()->required());
+  desc.add_options()("player-team,t", value<std::string>());
+  desc.add_options()("window-width,w", value<int>());
+  desc.add_options()("window-height,h", value<int>());
 
   return desc;
 }
@@ -56,7 +57,7 @@ void runClientWithOptions(ClientOptions const &options) {
     client.run();
   } catch (std::exception &e) {
     std::cerr << "Error: \n" << e.what() << std::endl << std::endl;
-	std::exit(1);
+    std::exit(1);
   }
 }
 
