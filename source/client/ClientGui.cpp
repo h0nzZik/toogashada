@@ -116,6 +116,31 @@ class ClientGui::Impl {
 
   void render() const;
 
+  struct WH {
+    int width;
+    int height;
+  };
+
+  WH textBoxDimensions(TextProperties const &property,
+                       SDL_Surface *textSurface) const {
+    int fontSize = property.mSize;
+    DrawProp const &dp = property.mDrawProp;
+
+    if (fontSize < 0) {
+
+      double ratioSource = static_cast<double>(textSurface->w) / textSurface->h;
+      double ratioTarget = static_cast<double>(dp.w()) / dp.h();
+
+      if (ratioSource > ratioTarget) {
+        return {dp.w(), dp.w() / ratioSource};
+      }
+      return { dp.h() * ratioSource, dp.h() };
+    }
+
+    double multiplier = static_cast<double>(fontSize) / mFontLoadSize;
+    return { textSurface->w *multiplier, textSurface->h *multiplier };
+  }
+
   geometry::Point placeToMapCoords(const geometry::Point &point) const;
   Scalar scaleToMapCoords(Scalar coord) const;
   template <typename T> T scaleToMapCoords(T coord) const;
@@ -334,7 +359,6 @@ void ClientGui::Impl::render() const { SDL_RenderPresent(mRenderer.get()); }
 
 void ClientGui::Impl::drawText(TextProperties property) const {
 
-  int fontSize = property.mSize;
   std::string &text = property.mText;
   DrawProp &dp = property.mDrawProp;
 
@@ -342,7 +366,6 @@ void ClientGui::Impl::drawText(TextProperties property) const {
       TTF_RenderText_Blended(mFont.get(), text.c_str(), dp.color);
 
   if (textSurface == nullptr) {
-
     cerr << "Error creating text. Err: " << TTF_GetError();
     return;
   }
@@ -350,43 +373,20 @@ void ClientGui::Impl::drawText(TextProperties property) const {
   SDL_Texture *texture =
       SDL_CreateTextureFromSurface(mRenderer.get(), textSurface);
   if (texture == nullptr) {
-
     cerr << "Error creating texture text. Err: " << SDL_GetError();
     return;
   }
 
-  int textBoxW, textBoxH;
-
-  if (fontSize < 0) {
-
-    double ratioSource = static_cast<double>(textSurface->w) / textSurface->h;
-    double ratioTarget = static_cast<double>(dp.w()) / dp.h();
-
-    if (ratioSource > ratioTarget) {
-
-      textBoxW = dp.w();
-      textBoxH = textBoxW / ratioSource;
-
-    } else {
-
-      textBoxH = dp.h();
-      textBoxW = textBoxH * ratioSource;
-    }
-  } else {
-
-    double multiplier = static_cast<double>(fontSize) / mFontLoadSize;
-    textBoxW = textSurface->w * multiplier;
-    textBoxH = textSurface->h * multiplier;
-  }
+  WH dim = textBoxDimensions(property, textSurface);
 
   SDL_FreeSurface(textSurface);
 
   int correction = static_cast<int>(
-      textBoxH * (static_cast<double>(mFontHeightOffset) / 100));
-  int centeredX = dp.x() + (dp.w() / 2 - textBoxW / 2);
-  int centeredY = (dp.y() + (dp.h() / 2 - textBoxH / 2)) + correction;
+      dim.height * (static_cast<double>(mFontHeightOffset) / 100));
+  int centeredX = dp.x() + (dp.w() / 2 - dim.width / 2);
+  int centeredY = (dp.y() + (dp.h() / 2 - dim.height / 2)) + correction;
 
-  SDL_Rect boundingBox = {centeredX, centeredY, textBoxW, textBoxH};
+  SDL_Rect boundingBox = {centeredX, centeredY, dim.width, dim.height};
   SDL_SetTextureAlphaMod(texture, dp.color.a);
 
   SDL_RenderCopy(mRenderer.get(), texture, nullptr, &boundingBox);
