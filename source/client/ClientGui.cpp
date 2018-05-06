@@ -343,55 +343,54 @@ void ClientGui::Impl::drawText(TextProperties property) const {
   if (textSurface == nullptr) {
 
     cerr << "Error creating text. Err: " << TTF_GetError();
-  } else {
+    return;
+  }
 
-    SDL_Texture *texture =
-        SDL_CreateTextureFromSurface(mRenderer.get(), textSurface);
-    if (texture == nullptr) {
+  SDL_Texture *texture =
+      SDL_CreateTextureFromSurface(mRenderer.get(), textSurface);
+  if (texture == nullptr) {
 
-      cerr << "Error creating texture text. Err: " << SDL_GetError();
+    cerr << "Error creating texture text. Err: " << SDL_GetError();
+    return;
+  }
+
+  int textBoxW, textBoxH;
+
+  if (fontSize < 0) {
+
+    double ratioSource = static_cast<double>(textSurface->w) / textSurface->h;
+    double ratioTarget = static_cast<double>(dp.w()) / dp.h();
+
+    if (ratioSource > ratioTarget) {
+
+      textBoxW = dp.w();
+      textBoxH = textBoxW / ratioSource;
+
     } else {
 
-      int textBoxW, textBoxH;
-
-      if (fontSize < 0) {
-
-        double ratioSource =
-            static_cast<double>(textSurface->w) / textSurface->h;
-        double ratioTarget = static_cast<double>(dp.w()) / dp.h();
-
-        if (ratioSource > ratioTarget) {
-
-          textBoxW = dp.w();
-          textBoxH = textBoxW / ratioSource;
-
-        } else {
-
-          textBoxH = dp.h();
-          textBoxW = textBoxH * ratioSource;
-        }
-      } else {
-
-        double multiplier = static_cast<double>(fontSize) / mFontLoadSize;
-        textBoxW = textSurface->w * multiplier;
-        textBoxH = textSurface->h * multiplier;
-      }
-
-      SDL_FreeSurface(textSurface);
-
-      int correction = static_cast<int>(
-          textBoxH * (static_cast<double>(mFontHeightOffset) / 100));
-      int centeredX = dp.x() + (dp.w() / 2 - textBoxW / 2);
-      int centeredY = (dp.y() + (dp.h() / 2 - textBoxH / 2)) + correction;
-
-      SDL_Rect boundingBox = {centeredX, centeredY, textBoxW, textBoxH};
-      SDL_SetTextureAlphaMod(texture, dp.color.a);
-
-      SDL_RenderCopy(mRenderer.get(), texture, nullptr, &boundingBox);
-
-      SDL_DestroyTexture(texture);
+      textBoxH = dp.h();
+      textBoxW = textBoxH * ratioSource;
     }
+  } else {
+
+    double multiplier = static_cast<double>(fontSize) / mFontLoadSize;
+    textBoxW = textSurface->w * multiplier;
+    textBoxH = textSurface->h * multiplier;
   }
+
+  SDL_FreeSurface(textSurface);
+
+  int correction = static_cast<int>(
+      textBoxH * (static_cast<double>(mFontHeightOffset) / 100));
+  int centeredX = dp.x() + (dp.w() / 2 - textBoxW / 2);
+  int centeredY = (dp.y() + (dp.h() / 2 - textBoxH / 2)) + correction;
+
+  SDL_Rect boundingBox = {centeredX, centeredY, textBoxW, textBoxH};
+  SDL_SetTextureAlphaMod(texture, dp.color.a);
+
+  SDL_RenderCopy(mRenderer.get(), texture, nullptr, &boundingBox);
+
+  SDL_DestroyTexture(texture);
 }
 
 void ClientGui::Impl::draw(geometry::Polygon const &polygon,

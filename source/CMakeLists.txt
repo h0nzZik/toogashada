@@ -140,6 +140,7 @@ add_library(client
 	./client/ClientController.cpp
 	./client/ConnectionToServer.cpp
 	./client/ClientGui.cpp
+	./client/SDLWrapper.cpp
 )
 
 target_include_directories(client PRIVATE
