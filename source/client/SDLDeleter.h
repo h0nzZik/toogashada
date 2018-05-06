@@ -16,8 +16,6 @@ extern "C" void SDL_DestroyWindow(SDL_Window *window);
 
 extern "C" int SDL_Init(Uint32 flags);
 extern "C" void SDL_Quit();
-extern "C" int TTF_Init();
-extern "C" void TTF_Quit();
 
 namespace MySDL {
 struct SDLDeleter {
@@ -40,16 +38,6 @@ public:
   }
 
   ~SDL() { SDL_Quit(); }
-};
-
-class TTF {
-public:
-  TTF() {
-    if (TTF_Init() < 0)
-      throw std::runtime_error("Cannot initialize TTF");
-  }
-
-  ~TTF() { TTF_Quit(); }
 };
 
 } // namespace MySDL

@@ -31,6 +31,7 @@
 #include "ClientController.h"
 #include "DrawProp.h"
 #include "SDLDeleter.h"
+#include "SDLWrapper.h"
 #include "TextProperties.h"
 
 // Self
@@ -48,8 +49,8 @@ class ClientGui::Impl {
   std::string mPlayerName, mPlayerTeam;
   std::map<std::string, SDL_Color> teamColors;
 
-  MySDL::SDL sdl{SDL_INIT_VIDEO};
-  MySDL::TTF ttf;
+  SDLw::SDL sdl{SDL_INIT_VIDEO};
+  SDLw::TTF ttf;
   MySDL::Window mWindow;
   // SDL_Window *mWindow;
   MySDL::Renderer mRenderer;
